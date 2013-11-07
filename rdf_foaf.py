@@ -39,6 +39,17 @@ for t,ii in types.items():
 	for n,i in enumerate(ii):
 		print "{}. {}".format(n+1,i)
 
+FOAF = rdflib.Namespace("http://xmlns.com/foaf/0.1/")
+#g.add((rdflib.term.URIRef("http://bigasterisk.com/foaf.rdf#drewp"),
+			#FOAF['knows'],
+			#rdflib.term.URIRef("http://collectivesource.com/foaf.rdf#nathan")))
+#g.add((rdflib.term.URIRef("http://collectivesource.com/foaf.rdf#nathan"),
+			#FOAF['knows'],
+			#rdflib.term.URIRef("http://bigasterisk.com/foaf.rdf#drewp")))
+#g.add((rdflib.term.URIRef("http://collectivesource.com/foaf.rdf#nathan"),
+			#FOAF["interest"],
+			#rdflib.term.URIRef("http://fantasyfamegame.com/")))
+
 print "\nAha. Who is Nathan?"
 print "-------------------"
 print "\n".join(["{} {}".format(p,o) 
