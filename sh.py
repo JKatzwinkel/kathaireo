@@ -6,6 +6,14 @@ from rdflib_sqlalchemy.SQLAlchemy import SQLAlchemy
 
 #https://pypi.python.org/pypi/getch
 
+class Prompter:
+	def __init__(self):
+		self.history=[]
+		self.buffer=None
+		self.currIn=""
+		self.suggestions=[]
+
+
 history=[]
 
 inputStr=""
