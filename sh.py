@@ -2,6 +2,7 @@
 from getch import getch
 import rdflib
 from rdflib_sqlalchemy.SQLAlchemy import SQLAlchemy
+import readline
 
 
 combos=[([27,91,65], None), # up
@@ -21,6 +22,12 @@ combos=[([27,91,65], None), # up
 				([22], None), # ctrl+v
 				]
 
+commands=["exit", # just leave
+		"load <graphname> file *.(rdf|owl)", # load existing ontology from current directory
+		"load <graphname> <url>", # download ontology
+		"load namespace <namespace> <url>"]
+
+
 keypaths={}
 for k,f in combos:
 	level=keypaths
@@ -34,13 +41,14 @@ for k,f in combos:
 #https://pypi.python.org/pypi/getch
 #print("\033[6;3HHello")
 
-class Prompter:
-	def __init__(self):
+class Prompter(object):
+	def __init__(self, cmds):
 		self.history=[]
 		self.buf=[]
 		self.keylvl=keypaths
 		self.currIn=""
-		self.suggestions=[]
+		self.suggestions=sorted(cmds)
+		self.prefix = ""
 
 	def waitForInput(self):
 		ch = getch()
@@ -56,27 +64,26 @@ class Prompter:
 			self.keylvl=keypaths
 			self.buf=[]
 
+	def complete(self, text, state):
+		if state == 0:
+			# new prefix!
+			self.cmpl=[c for c in self.suggestions
+						if c.startswith(text)]
+			self.prefix = text
+		return self.cmpl[state]
 
-	def onCombo(ch):
-		level=keypaths
-		if not buf:
-			globals()["buf"] = [ord(ch)]
-		for k in buf:
-			if type(level) is dict:
-				level = level.get(k)
-		if not level:
-			globals()["buf"] = None
-			return False
-		if type(level) != dict:
-			globals()["buf"] = None
-		else:
-			buf.append(ord(ch))
-		return True
 
+	def prompt(self):
+		self.abort=False
+		while not self.abort:
+			self.line = raw_input('> ')
+			if self.line == "exit":
+				self.abort=True
 
 
 
-prompt = Prompter()
+
+prompt = Prompter(commands)
 
 #while True:
 	#inp = prompt.waitForInput()
@@ -86,11 +93,11 @@ prompt = Prompter()
 # http://stackoverflow.com/a/7821956/1933494
 # http://docs.python.org/2/library/readline.html
 
-import readline, glob
+import glob
 def complete(text, state):
     return (glob.glob(text+'*')+[None])[state]
 
 readline.set_completer_delims(' \t\n;')
 readline.parse_and_bind("tab: complete")
-readline.set_completer(complete)
-raw_input('file? ')
+readline.set_completer(prompt.complete)
+prompt.prompt()
