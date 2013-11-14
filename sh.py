@@ -32,7 +32,7 @@ for k,f in combos:
 	level[k[-1]] = f
 
 #https://pypi.python.org/pypi/getch
-
+#print("\033[6;3HHello")
 
 class Prompter:
 	def __init__(self):
@@ -52,6 +52,9 @@ class Prompter:
 			self.buf=[]
 		if len(self.buf)<1:
 			print ch
+		if not self.keylvl:
+			self.keylvl=keypaths
+			self.buf=[]
 
 
 	def onCombo(ch):
@@ -75,5 +78,19 @@ class Prompter:
 
 prompt = Prompter()
 
-while True:
-	inp = prompt.waitForInput()
+#while True:
+	#inp = prompt.waitForInput()
+
+# input completion:
+# http://stackoverflow.com/q/5637124/1933494
+# http://stackoverflow.com/a/7821956/1933494
+# http://docs.python.org/2/library/readline.html
+
+import readline, glob
+def complete(text, state):
+    return (glob.glob(text+'*')+[None])[state]
+
+readline.set_completer_delims(' \t\n;')
+readline.parse_and_bind("tab: complete")
+readline.set_completer(complete)
+raw_input('file? ')
