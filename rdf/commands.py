@@ -15,3 +15,7 @@ for phrase in phrases:
 			level[i] = down
 		level = down
 	level[words[-1]] = None
+
+
+def register(syntax, function):
+	pass
