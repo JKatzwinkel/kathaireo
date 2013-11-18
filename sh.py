@@ -4,6 +4,7 @@ import rdflib
 from rdflib_sqlalchemy.SQLAlchemy import SQLAlchemy
 import readline
 
+import rdf
 
 combos=[([27,91,65], None), # up
 				([27,91,66], None), # down
@@ -22,10 +23,6 @@ combos=[([27,91,65], None), # up
 				([22], None), # ctrl+v
 				]
 
-commands=["exit", # just leave
-		"load <graphname> file *.(rdf|owl)", # load existing ontology from current directory
-		"load <graphname> <url>", # download ontology
-		"load namespace <namespace> <url>"]
 
 
 keypaths={}
