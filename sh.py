@@ -39,12 +39,12 @@ for k,f in combos:
 #print("\033[6;3HHello")
 
 class Prompter(object):
-	def __init__(self, cmds):
+	def __init__(self):
 		self.history=[]
 		self.buf=[]
 		self.keylvl=keypaths
 		self.currIn=""
-		self.suggestions=sorted(cmds)
+		self.suggestions=[]
 		self.prefix = ""
 
 	def waitForInput(self):
@@ -63,8 +63,8 @@ class Prompter(object):
 
 	def complete(self, text, state):
 		if state == 0:
-			# new prefix!
-			self.cmpl=[c for c in self.suggestions
+			#TODO: parsen, aufloesen, richtigen prefix zuordnen
+			self.cmpl=[c for c in rnd.cmd.phrases
 						if c.startswith(text)]
 			self.prefix = text
 		return self.cmpl[state]
