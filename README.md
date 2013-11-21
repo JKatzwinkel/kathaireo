@@ -16,20 +16,20 @@ This might make it easier to hack specialized plugins at some point.
 
 Registration of a new command works like this:
 
-  import commands
-  import rdf
-  
-  def triples_with_object(*args, **kwargs):
-    name = kwargs.get("graphname") # access argument values as defined
-    objid = kwargs.get("ontoclass") # in command syntax
-    o = rdf.rdflib.URIRef(objid)
-    g = rdf.get_graph(name)
-    for s,p in g.subject_predicates(o):
-      print s,p
-    g.subject_predicates(rdf.rdflib.URIRef()):
-  
-  commands.register("triples <graphname> object <ontoclass>", triples_with_object)
-  commands.parse("create g") # create a new RDF graph with identifier 'g'
-  commands.parse("load file.rdf g") # import contents of local RDF file
-  commands.parse("triples g object http://www.w3.org/2000/01/rdf-schema#Class")
+    import commands
+    import rdf
+    
+    def triples_with_object(*args, **kwargs):
+      name = kwargs.get("graphname") # access argument values as defined
+      objid = kwargs.get("ontoclass") # in command syntax
+      o = rdf.rdflib.URIRef(objid)
+      g = rdf.get_graph(name)
+      for s,p in g.subject_predicates(o):
+        print s,p
+      g.subject_predicates(rdf.rdflib.URIRef()):
+    
+    commands.register("triples <graphname> object <ontoclass>", triples_with_object)
+    commands.parse("create g") # create a new RDF graph with identifier 'g'
+    commands.parse("load file.rdf g") # import contents of local RDF file
+    commands.parse("triples g object http://www.w3.org/2000/01/rdf-schema#Class")
   
