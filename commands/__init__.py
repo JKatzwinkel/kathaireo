@@ -37,22 +37,23 @@ import re
 import os
 
 import rdf
-import commands.arg as arg
+import commands.arguments as arguments
 import commands.handlers as handlers
 
-# phrases=["exit", # just leave
-# 		"load <graphname> file *.(rdf|owl)", # load existing ontology from current directory
-# 		"load <graphname> <url>", # download ontology
-# 		"load namespace <namespace> <url>"]
+reg_arg = arguments.register
 
-# dictionary holding command term paths to functions,
-# like {"exit": {"\n": quit}}
+# command syntax language grammar tree
 cmdict={}
 
 # define regular expressions for command resolution
+# argument placeholder
 argex=re.compile('<([a-zA-Z_]\w*)>')
-
-
+# single term
+trmex=re.compile('(\".+\"|\S+)')
+# file name TODO: besser
+flnex=re.compile('\S+\.rdf')
+# url TODO: verbessern
+urlex=re.compile('(https?|ftp)://\w+\.[a-z]+(/.*)*')
 
 def register(syntax, function):
 	"""
@@ -96,8 +97,7 @@ def register(syntax, function):
 	# anchor at top level of command path dict
 	level=cmdict
 	# split generic syntax string and append linebreak
-	terms = [t for t in re.split('\s', syntax)
-			if len(t)>0]
+	terms = trmex.findall(syntax)
 	# insert new command binding into cmd dict tree
 	# term-wise
 	for term in terms:
@@ -129,6 +129,7 @@ def register(syntax, function):
 	print msg.format(function.func_name, 
 		function.func_code.co_varnames[:2],
 		' '.join(terms))
+	#TODO: register argument placeholders
 	return res
 
 
@@ -145,22 +146,118 @@ def parse(input):
 	passed to the handler function.
 	"""
 	# split input string into single terms
-	terms = [t for t in re.split('\s', input)
-			if len(t)>0]
-	print '_'.join(terms)
-	# check if terms match known commands
+	terms = trmex.findall(input)
+	# init path log for recreation of generic command
+	path = []
+	args = []
+	kwargs = {}
+	# check if terms match known commands:
+	# begin at grammar tree root
 	level = cmdict
+	# walk down as long as input seems to be
+	# a valid command language word, i.e. input
+	# term reachable by walking along its predecessors
+	for term in terms:
+		#print ' '.join(level.keys())
+		# still on track?
+		if term in level:
+			level = level.get(term)
+			path.append(term)
+		else:
+			# might be just an argument value that we
+			# need to recognize, validate and extract
+			# first, get all argument ids that
+			# might be applicable
+			argnames = [t for t in level.keys()
+				if argex.search(t)]
+			resolved = False
+			if len(argnames)>0:
+				# then test if found input is valid for
+				# at least one of them
+				#TODO: we will probably have to recurse
+				#TODO here, because we might get on the
+				# wrong track by picking just any matching
+				# placeholder here
+				for a in argnames:
+					if not resolved:
+						arg = argex.findall(a)[0]
+						if arguments.validate(arg, term):
+							#print 'reading value for argument',
+							#print '{}: {}.'.format(a,term)
+							# input valid! collect value
+							args.append(term)
+							kwargs[arg] = term
+							# proceed
+							level = level.get(a)
+							path.append(a)
+							resolved=True
+			if not resolved:
+				# path lost -> input not in language/not
+				# a valid command
+				print 'Error at term', term
+				term = None
+				break
+	# do we have a match? or not?
+	if term is None:
+		print 'Syntax error!'
+		return False
+	else:
+		# if EOL code terminates term sequence, we are good.
+		# if not, input is incomplete
+		if level.get('\n') is None:
+			print "Error: command is incomplete."
+			# print simple help
+			print "Previous input should be extended by",
+			suggestions = level.keys()
+			if len(suggestions)>1:
+				print ' or '.join([', '.join(suggestions[:-1]), 
+					suggestions[-1]])
+			else:
+				print suggestions[0]
+			return False
+		else:
+			# command is valid! get handler
+			print ' '.join(path)
+			func = level.get('\n')
+			#print 'Calling {}'.format(func.__name__)
+			func(*args, **kwargs)
+			return True
+
+
+
+
 
 
 ###############################################
 ###############################################
 ##############                  ###############
+##############     default      ###############
+##############     commands     ###############
+##############        +         ###############
 ##############     handlers     ###############
 ##############                  ###############
 ###############################################
 ###############################################
 
+default_cmds = {
+	'exit': handlers.quit,
+	'create <graphname>': handlers.create_graph,
+	'load <resource> <graphname>': handlers.parse_rdf,
+	'show <graphname> <attribute>': handlers.graph_info
+	}
 
+for command, handler in default_cmds.items():
+	register(command, handler)
 
+print 'Number of default commands registered:',
+print len(default_cmds)
 
+#################################################
+# command argument placeholder handling
 
+# <resources>
+#TODO: proposer ueberschreiben (dateinamen globs!)
+reg_arg("resource", format=[flnex, urlex])
+
+# <attribute>
+reg_arg("attribute", format=[re.compile('(size|source)')])

@@ -74,3 +74,20 @@ def load_into(location, name):
 			location, g)
 	return g
 
+
+# info output templates
+rdfinfotempl={"size": "Number of statements in graph {}: {}"}
+# show info
+def graph_info(name, attr):
+	"""Show info about specified graph.
+	Info is available about: size, source, ..."""
+	if not name in _graphs:
+		return "Failed: No graph {} known.".format(name)
+	else:
+		g = _graphs.get(name)
+	if attr in rdfinfotempl:
+		template = rdfinfotempl.get(attr)
+		if attr == "size":
+			return template.format(name, len(g))
+	else:
+		return "Failed: Don't know attribute", attr

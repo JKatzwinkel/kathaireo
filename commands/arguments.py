@@ -137,7 +137,7 @@ def validate(arg, input):
 	"""Validates given input string according to specified
 	argument's value restrictions.
 	Return true if input is ok."""
-	validator = argvals.get(name, ArgEntry(name))
+	validator = argvals.get(arg, ArgEntry(arg))
 	return validator.validate(input)
 
 

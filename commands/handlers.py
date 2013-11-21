@@ -36,8 +36,13 @@ def create_graph(*args, **kwargs):
 		- The resulting `rdflib.Graph` instance when
 		  successful, `None` otherwise.
 	"""
+	print args, kwargs
 	if len(args)>0 and type(args[0]) is str:
 		return rdf.create_graph(args[0])
+	elif "graphname" in kwargs:
+		return rdf.create_graph(kwargs.get("graphname"))
+	else:
+		print "Error: wrong number of arguments."
 
 
 # load resource content into graph
@@ -67,3 +72,18 @@ def parse_rdf(*args, **kwargs):
 	if not(None in [location, name]):
 		return rdf.load_into(location, name)
 
+
+# show info about given graph
+def graph_info(*args, **kwargs):
+	"""Display information about certain rdf graph.
+	Possible keywords: size, ...
+	"""
+	field = kwargs.get('attribute')
+	name = kwargs.get('graphname')
+	if None in [field, name]:
+		print "Error. Can't find attribute {} for graph {}".format(
+			field, name)
+	else:
+		info = rdf.graph_info(name, field)
+		print info
+		return info
