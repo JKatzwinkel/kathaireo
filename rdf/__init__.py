@@ -54,6 +54,12 @@ def create_graph(name):
 	print "graph {} already existing!".format(name)
 
 
+def get_graph(name):
+	"""Returns the graph identified by the given name, or `None`
+	if no such graph is available."""
+	return _graphs.get(name)
+
+
 def load_into(location, name):
 	"""Loads rdf graph at location (file/url) and names it.
 	Reuses (overwrites?) an existing graph if one going by the given name
