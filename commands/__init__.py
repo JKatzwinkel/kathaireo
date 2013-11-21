@@ -1,9 +1,44 @@
 #!/usr/bin/python
+"""\
+This package offers a way for convenient registration
+of custom commands. By calling its `register` method,
+a formal representation of a command syntax can be
+bound to a handling function desired to be called for
+user input matching said command. 
+Functions intended to serve as handlers, when declared
+like `def func(*args, **kwargs)` have access to 
+their command's arguments marked by surrounding angle
+brackets (<>).
+
+The internal representation of the resulting command
+language grammar can be found in the `cmdict` member
+of this module, which resembles a syntax tree in which
+by traversing down along a command syntax' terms, the
+thereby reached leafe refers to the corresponding
+handler function.
+
+Example:
+
+	>>> import commands
+	>>> def handler(*args, **kwargs):
+	... 	name = kwargs.get("graphname") # or = args[0]
+	... 	[...]
+	...
+	>>>	commands.register("create <graphname>", handler)
+	Registered handling function handler('args', [...]
+	>>> commands.cmdict
+	{'create': {'<graphname>': {'\n': <function handler at 0x86c26f4>}}}
+
+"""
+__docformat__ = "restructuredtext en"
+__version__ = "0.0.1-dev"
 
 import re
 import os
 
 import rdf
+import commands.arg as arg
+import commands.handlers as handlers
 
 # phrases=["exit", # just leave
 # 		"load <graphname> file *.(rdf|owl)", # load existing ontology from current directory
@@ -14,6 +49,8 @@ import rdf
 # like {"exit": {"\n": quit}}
 cmdict={}
 
+# define regular expressions for command resolution
+argex=re.compile('<([a-zA-Z_]\w*)>')
 
 
 
@@ -59,7 +96,7 @@ def register(syntax, function):
 	# anchor at top level of command path dict
 	level=cmdict
 	# split generic syntax string and append linebreak
-	terms = [t for t in syntax.split(' ')
+	terms = [t for t in re.split('\s', syntax)
 			if len(t)>0]
 	# insert new command binding into cmd dict tree
 	# term-wise
@@ -95,6 +132,26 @@ def register(syntax, function):
 	return res
 
 
+
+
+def parse(input):
+	"""\
+	Tests given input string against currently
+	registered command syntaxes. If input turns out
+	to be a valid command, a corresponding handler 
+	function is called. If matching syntax contains
+	argument placeholders (`"command <arg>"`), their
+	respective values are extracted from the input and
+	passed to the handler function.
+	"""
+	# split input string into single terms
+	terms = [t for t in re.split('\s', input)
+			if len(t)>0]
+	print '_'.join(terms)
+	# check if terms match known commands
+	level = cmdict
+
+
 ###############################################
 ###############################################
 ##############                  ###############
@@ -103,59 +160,6 @@ def register(syntax, function):
 ###############################################
 ###############################################
 
-
-def quit(*args, **kwargs):
-	"""Simply calls `exit()`."""
-	exit()
-
-
-
-
-def create_graph(*args, **kwargs):
-	"""
-	Creates a new `rdflib.Graph` instance going by
-	the identifier passed as first argument.
-
-	:Parameters:
-
-		- `identifier`: Id for the new Graph
-
-	:Returns:
-
-		- The resulting `rdflib.Graph` instance when
-		  successful, `None` otherwise.
-	"""
-	if len(args)>0 and type(args[0]) is str:
-		return rdf.create_graph(args[0])
-
-
-
-
-def parse_rdf(*args, **kwargs):
-	"""
-	Parses the resource at a given location and reads it into
-	a `rdflib.Graph` identified by its name.
-
-	:Parameters:
-
-		- `location`: A String specifying the location of 
-		  the resource to be read. Can be a path to a local
-		  file or a URL.
-
-		- `graphname`: A String identifying an `rdflib.Graph`
-		  instance.
-
-	:Returns:
-
-		- `True`, if parsing was successful.
-	"""
-	location = kwargs.get('resource')
-	name = kwargs.get('graphname')
-	if None in [location, name]:
-		if len(args)>1:
-			location, name = args[:2]
-	if not(None in [location, name]):
-		return rdf.load_into(location, name)
 
 
 
