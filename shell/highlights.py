@@ -30,7 +30,7 @@ _colscheme = {
 	wrnex: 22, # red
 	angex: 4,  # red
 	qutex: 5,  # green
-	urlex: 1,  # bright white
+	urlex: 2,  # underscore
 	sqrex: 23, # bright green
 	flnex: 9,  # turquois
 	nmrex: 6   # yellow
@@ -39,7 +39,7 @@ _colscheme = {
 _colors=[
 '\033[0m', # normal      0
 '\033[1m', # bright white
-'\033[4m', # normal
+'\033[4m', # underscored
 '\033[7m', # white background
 '\033[31m', # red
 '\033[32m', # green      5
@@ -82,10 +82,17 @@ _colors=[
 def color(i):
 	return _colors[i]
 
+# demonstrates how applied color codes look
+def col_demo():
+	for i,col in enumerate(_colors):
+		print '{}{:2}{}'.format(color(i), i, color(0)),
+		if i % 8 > 6:
+			print
+
 # returns a colored representation of a given token
 def hilite(token):
-	cid = rnd(13)
-	return '{}'.format(color(cid)+token+color(0))
+	#cid = rnd(13)
+	#return '{}'.format(color(cid)+token+color(0))
 	#
 	for rex, cid in _colscheme.items():
 		if rex.match(token):

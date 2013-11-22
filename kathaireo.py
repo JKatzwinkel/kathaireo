@@ -31,6 +31,7 @@ if __name__=='__main__':
 			mod.__name__, mod.__path__, mod.__version__))
 	del sqlalchemy
 	del html5lib
+	#shell.prompt.col_demo()
 	shell.prompt.display(welcome)
 	shell.run()
 

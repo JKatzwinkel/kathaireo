@@ -351,12 +351,13 @@ def choices_left(input):
 
 default_cmds = {
 	'exit': handlers.quit,
+	':q': handlers.quit,
 	'create <graphname>': handlers.create_graph,
 	'load <resource> <graphname>': handlers.parse_rdf,
 	'show <graphname> <attribute>': handlers.graph_info,
 	'load namespaces <graphname>': handlers.import_namespaces,
 	'store <graphname> sqlite <sqlite>': handlers.store_sqlite,
-	'store <graphname> xml <filename>': handlers.store_xml
+	'store <graphname> xml <filename>': handlers.store_xml,
 	}
 
 for command, handler in default_cmds.items():

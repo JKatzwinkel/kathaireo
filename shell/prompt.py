@@ -6,15 +6,24 @@ __docformat__ = "restructuredtext en"
 
 import re
 
-from highlights import color, hilite
+from highlights import color, hilite, col_demo
 
 
 # colored prompt
 ps = "\001\033[32m\002>>>\001\033[0m\002 "
 
 # tokenizer regex
-tokex = re.compile('(\"[^\"]*?\"|\'[^\']*?\'|[ ,]+|\S*|\w*|<[^>]*?>|.*)')
-
+#tokex = re.compile('(\"[^\"]*?\"|\'[^\']*?\'|[ ,]+|\S*|\w*|<[^>]*?>|.*)')
+splits = [
+	r'[ ,;]+',
+	r'"[^"]*?"',
+	r'\'[^\']*?\'',
+	r'<[^<>]*?>',
+	r'\b[0-9.]{1,}\d\b',
+	r'\b\D[a-z0-9_./~-]+\b',
+	r'\S+?',
+	]
+tokex = re.compile('({})'.format('|'.join(splits)), re.I)
 
 
 # wait for input
