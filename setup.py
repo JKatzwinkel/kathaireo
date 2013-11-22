@@ -17,7 +17,7 @@ f = open('kathaireo/kathaireo.py')
 for line in f:
 	for field, rex in metex.items():
 		if not field in meta:
-			if rex.matches(line):
+			if rex.match(line):
 				meta[field] = rex.findall(line)[0]
 
 
