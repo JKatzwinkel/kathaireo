@@ -6,6 +6,7 @@ import rdflib
 _namespaces={}
 
 class Namespace:
+	"""Dokudoku"""
 	def __init__(self, name, url):
 		self.name = name
 		self.url = url
@@ -31,8 +32,8 @@ class Namespace:
 										if not i in self.properties]
 
 	def __repr__(self):
-		return "<namespace '{}' at '{}'>".format(
-			self.name, self.url)
+		return "<namespace '{}' at {}>: {} triples".format(
+			self.name, self.url, len(self.rdf))
 
 
 # parse source of given namespace
@@ -58,7 +59,7 @@ def provide_for(ontology):
 	_namespaces.update({n.name:n for n in rdfns})
 	globals().update(_namespaces)
 	#print "Namespaces:\n--------------"
-	print "\n".join(["{}".format(n) for n in _namespaces.values()])
+	#print "\n".join(["{}".format(n) for n in _namespaces.values()])
 	return rdfns
 
 # list known namespace names

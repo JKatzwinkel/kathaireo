@@ -1,8 +1,28 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*- 
 """\
-Doku doku doku.
+The contents of the `shell` package implement a simple
+interactive command-line shell for operating on RDF resources.
+
+Main concern of this package is assisting the user's input, e.g.
+by providing autocompletion and feedback like error messages.
+Nonetheless, the `shell` package serves merely as an interface 
+between user and the actual `kathaireo` functionality, which is
+realized in the `rdf` and `commands` packages. In fact, the 
+interactive shell is mainly intended to just take care of useful
+input/output features. Everything beyond that is delegated 
+elsewhere.
+
+Some of the more interesting functions of the package's root 
+module are `run` and `execute`. 
+By calling `run()`, an 
+interactive shell is started which passes user input to the
+`commands` package for execution. When called as a script, 
+this module will automatically start a shell.
+The `execute(line)` function requests execution of a given
+command.
 """
+
 __docformat__ = "restructuredtext en"
 __version__ = "0.0.1-dev"
 __all__ = ['rdf', 'commands']
@@ -11,6 +31,7 @@ import readline
 
 import rdf
 import commands
+import prompt
 
 
 def complete(input, state):
@@ -34,10 +55,11 @@ def run():
 	#TODO: naja...
 	# go!
 	line=''
-	prompt = "\001\033[32m\002>>>\001\033[0m\002 "
 	while True:
-		line = raw_input(prompt)
-		commands.execute(line)
+		line = prompt.input()
+		output = commands.execute(line)
+		prompt.display(output)
+
 
 
 if __name__=='__main__':

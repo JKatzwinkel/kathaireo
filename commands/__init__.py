@@ -143,6 +143,21 @@ def register(syntax, function):
 
 
 
+# message: incomplete input string
+def msg_incomplete_cmd(keywords):
+	"""Returns a helpful error message in case an input string
+	didn't contain a complete command, and the parser had still been
+	expecting upcoming content at the time of termination.
+	"""
+	if len(keywords)>1:
+		msg = ' or '.join([', '.join(keywords[:-1]), 
+			keywords[-1]])
+	else:
+		msg = keywords[0]
+	msg = "Incomplete command: expecting {} instead of EOL.".format(
+		msg)
+	return msg
+
 
 def execute(input):
 	"""\
@@ -160,6 +175,8 @@ def execute(input):
 	path = []
 	args = []
 	kwargs = {}
+	# return message
+	msg = ''
 	# check if terms match known commands:
 	# begin at language tree root
 	level = cmdict
@@ -202,39 +219,32 @@ def execute(input):
 							path.append(a)
 							resolved=True
 			if not resolved:
-				# path lost -> input not in language/not
-				# a valid command
-				print 'Error at term', term
+				# path lost -> input not in language
+				# not a valid command
+				msg = term
 				term = None
 				break
 	# do we have a match? or not?
 	if term is None:
-		print 'Syntax error!'
-		return False
+		return 'Syntax error at term {}.'.format(msg)
 	else:
 		# if EOL code terminates term sequence, we are good.
 		# if not, input is incomplete
 		if level.get('') is None:
-			print "Error: command is incomplete."
-			# print simple help
-			print "Previous input should be extended by",
-			suggestions = level.keys()
-			if len(suggestions)>1:
-				print ' or '.join([', '.join(suggestions[:-1]), 
-					suggestions[-1]])
-			else:
-				print suggestions[0]
-			return False
+			msg = msg_incomplete_cmd(level.keys())
+			# return a hint on expected input
+			return msg
 		else:
-			# command is valid! get handler
-			print ' '.join(path)
+			# we have a match!
+			# command is valid! get handler!
+			# print ' '.join(path)
 			func = level.get('')
 			#print 'Calling {}'.format(func.__name__)
-			func(*args, **kwargs)
+			ret = func(*args, **kwargs)
 			# log argument values
 			for arg,v in kwargs.items():
 				arguments.to_history(arg,v)
-			return True
+			return ret
 
 
 
@@ -321,6 +331,9 @@ def choices_left(input):
 				choices.append(c)
 	#print 'suggestions:',choices, ''
 	return choices
+
+
+
 
 
 

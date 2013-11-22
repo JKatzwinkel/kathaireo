@@ -37,13 +37,14 @@ def create_graph(*args, **kwargs):
 		- The resulting `rdflib.Graph` instance when
 		  successful, `None` otherwise.
 	"""
-	print args, kwargs
 	if len(args)>0 and type(args[0]) is str:
-		return rdf.create_graph(args[0])
+		g = rdf.create_graph(args[0])
 	elif "graphname" in kwargs:
-		return rdf.create_graph(kwargs.get("graphname"))
+		g = rdf.create_graph(kwargs.get("graphname"))
 	else:
-		print "Error: wrong number of arguments."
+		return "Error: wrong number of arguments."
+	return rdf.repr_graph(g)
+
 
 
 # load resource content into graph
@@ -71,7 +72,9 @@ def parse_rdf(*args, **kwargs):
 		if len(args)>1:
 			location, name = args[:2]
 	if not(None in [location, name]):
-		return rdf.load_into(location, name)
+		rdf.load_into(location, name)
+		return 'Succesfully read from {} into graph "{}".'.format(
+			location, name)
 
 
 # show info about given graph
@@ -82,11 +85,10 @@ def graph_info(*args, **kwargs):
 	field = kwargs.get('attribute')
 	name = kwargs.get('graphname')
 	if None in [field, name]:
-		print "Error. Can't find attribute {} for graph {}".format(
+		return "Error. Can't find attribute {} for graph {}".format(
 			field, name)
 	else:
 		info = rdf.graph_info(name, field)
-		print info
 		return info
 
 
@@ -104,7 +106,10 @@ def store_sqlite(*args, **kwargs):
 	"""Set sqlite as store for graph."""
 	name = kwargs.get('graphname')
 	filename = kwargs.get('sqlite')
-	return rdf.store_sqlite(name, filename)
+	g, store = rdf.store_sqlite(name, filename)
+	return rdf.repr_graph(g)+' at '+ store.configuration
+
+
 	
 
 def store_xml(*args, **kwargs):

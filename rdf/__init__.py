@@ -47,18 +47,26 @@ def suggest_and_load_files():
 		return g
 
 
+# returns a nicer output of this graph than he default
+def repr_graph(g):
+	if g != None:
+		return '<Graph "{}"; stored in "{}">'.format(
+			g.identifier, g.store.__class__.__name__)
+	return '!nullgraph!'
+
+
 # create and return new graph
 def create_graph(name):
 	"""Returns a new `rdflib.Graph` instance with the
 	given identifier, if said identifier has not already
 	been given to an existing graph."""
-	print "attempting to create new graph with name", name
+	#print "attempting to create new graph with name", name
 	if not name in _graphs:
 		g = rdflib.Graph(identifier=name)
 		_graphs[name] = g
-		print g
+		#print g
 		return g
-	print "graph {} already existing!".format(name)
+	return "graph {} already exists.".format(name)
 
 
 # find graph known by name
@@ -84,19 +92,19 @@ def load_into(location, name):
 	else:
 		g = _graphs.get(name)
 	if g is None:
-		print "graph '{}' is null!".format(name)
+		return "graph '{}' is null!".format(name)
 	else:
 		g.parse(location)
-		print "parsed contents at {} into {}.".format(
-			location, g)
+		#print "parsed contents at {} into {}.".format(
+			#location, g)
 	return g
 
 
 # info output templates
-rdfinfotempl={"size": "Number of statements in graph {}: {}",
-	"namespaces": "Graph {} binds the following namespaces:\n{}",
-	"n3": "N3 representation of graph {} is {}",
-	"types": "Types mentioned in RDF graph {} are:\n{}"}
+rdfinfotempl={"size": "Number of statements in graph '{}': {}",
+	"namespaces": "Graph '{}'' binds the following namespaces:\n{}",
+	"n3": "N3 representation of graph '{}'' is {}",
+	"types": "Types used in RDF graph '{}'' are:\n{}"}
 # show info
 def graph_info(name, attr):
 	"""Show info about specified graph.
@@ -111,7 +119,7 @@ def graph_info(name, attr):
 			return template.format(name, len(g))
 		elif attr == "namespaces":
 			return template.format(name, 
-				'\n'.join(['{}: {}'.format(ns, ref) 
+				'\n'.join(['"{}": {}'.format(ns, ref) 
 				for ns,ref in g.namespaces()]))
 		elif attr == "n3":
 			return template.format(name, g.n3())
@@ -140,14 +148,14 @@ def import_ns(name):
 def store_sqlite(name, filename):
 	"""Store. Sqlite. database.
 	"""
-	g = get_graph(name)
-	if g:
-		store = storage.sqlite(g, filename)
-		g = rdflib.Graph(store, name)
-		_graphs[name]=g
-		g.store.open(store.configuration)
-		print '{} store configuration: {}'.format(g, store.configuration)
-		return g
+	#g = get_graph(name)
+	#if g:
+	store = storage.sqlite(filename)
+	g = rdflib.Graph(store, name)
+	g.store.open(store.configuration)
+	_graphs[name] = g
+	return (g, store)
+
 
 # save xml dump
 def save_xml(name, filename):
@@ -155,6 +163,7 @@ def save_xml(name, filename):
 	"""
 	g = get_graph(name)
 	if g:
-		storage.save_xml(g, filename)
-		return True
+		return storage.save_xml(g, filename)
+	return None
+
 	
