@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*- 
 """\
 The `arg` module keeps track of command argument usage.
 
@@ -21,18 +22,19 @@ __version__ = "0.0.1-dev"
 
 import re
 import os
+from glob import glob
 
 import rdf
 
 # value history for each known argument placeholder
 arghist = {}
-# directory of known arguments and their ArgEntry instances
+# directory of known arguments and their ArgValidator instances
 argvals = {}
 
 # default regex for e.g identifiers, names
 namex = re.compile('\A[a-zA-Z_]\w*\Z')
 
-class ArgEntry:
+class ArgValidator:
 	"""
 	"""
 	def __init__(self, name):
@@ -56,13 +58,9 @@ class ArgEntry:
 
 
 
-# default argument placeholder validator for non-registered
-# arguments
-
-
 
 # default function for value proposal
-def propose_default(name, prefix):
+def propose_default(arg, prefix):
 	"""Default function for argument value proposal.
 	Looks up previous values for this argument and
 	suggests those that match the given prefix.
@@ -72,6 +70,7 @@ def propose_default(name, prefix):
 	suggestions = [v for v in hist if v.startswith(prefix)]
 	return suggestions
 
+
 # calls an argument placeholder's propose handler and
 # returns resulting suggestions
 def get_suggestions(name, prefix):
@@ -79,7 +78,7 @@ def get_suggestions(name, prefix):
 	function and returns resulting suggestions.
 	"""
 	# get validator or assign a new default instance
-	validator = argvals.get(name, ArgEntry(name))
+	validator = argvals.get(name, ArgValidator(name))
 	# call it
 	suggestions = validator.propose(prefix)
 	return suggestions
@@ -89,7 +88,7 @@ def get_suggestions(name, prefix):
 def register(name, proposer=propose_default, format=None):
 	"""Registers an argument placeholder. This means,
 	for an arguments name/identifier, a user input history
-	and an `ArgEntry` instance are created.
+	and an `ArgValidator` instance are created.
 
 	The latter is responsible for suggesting appropriate 
 	input values for this argument (which might be useful
@@ -120,7 +119,7 @@ def register(name, proposer=propose_default, format=None):
 		arghist[name] = []
 	# create or retrieve validator
 	if not name in argvals:
-		validator = ArgEntry(name)
+		validator = ArgValidator(name)
 		argvals[name] = validator
 		print 'Registered argument \"{}\".'.format(name)
 	else:
@@ -137,7 +136,31 @@ def validate(arg, input):
 	"""Validates given input string according to specified
 	argument's value restrictions.
 	Return true if input is ok."""
-	validator = argvals.get(arg, ArgEntry(arg))
+	validator = argvals.get(arg, ArgValidator(arg))
 	return validator.validate(input)
 
+
+# add to arg history
+def to_history(arg, value):
+	"""Write a value to an argument's input history."""
+	hist = arghist.get(arg, [])
+	if not arg in arghist:
+		arghist[arg] = hist
+	hist.append(value)
+
+
+########################################################
+# argument handler functions
+########################################################
+
+# list of globs matching potential ontology files
+rdfglobs = ["*.rdf", "*.RDF", "*.owl", "*.OWL", "*.n3", "*.xml"]
+# list ontology files in current directory (rdf, owl, n3, xml)
+def list_files_rdf(arg, prefix):
+	files = []
+	for rdfglob in rdfglobs:
+		files.extend(glob(rdfglob))
+	suggestions = [fn for fn in files if fn.startswith(prefix)]
+	suggestions.extend(propose_default(arg, prefix))
+	return suggestions # TODO: +[None] ??
 

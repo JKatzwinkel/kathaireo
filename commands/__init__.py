@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*- 
 """\
 This package offers a way for convenient registration
 of custom commands. By calling its `register` method,
@@ -11,7 +12,7 @@ their command's arguments marked by surrounding angle
 brackets (<>).
 
 The internal representation of the resulting command
-language grammar can be found in the `cmdict` member
+language can be found in the `cmdict` member
 of this module, which resembles a syntax tree in which
 by traversing down along a command syntax' terms, the
 thereby reached leafe refers to the corresponding
@@ -42,7 +43,7 @@ import commands.handlers as handlers
 
 reg_arg = arguments.register
 
-# command syntax language grammar tree
+# command syntax language tree
 cmdict={}
 
 # define regular expressions for command resolution
@@ -51,12 +52,15 @@ argex=re.compile('<([a-zA-Z_]\w*)>')
 # single term
 trmex=re.compile('(\".+\"|\S+)')
 # file name TODO: besser
-flnex=re.compile('\S+\.rdf')
+flnex=re.compile('\S+\.(rdf|owl|RDF|OWL)')
 # url TODO: verbessern
 urlex=re.compile('(https?|ftp)://\w+\.[a-z]+(/.*)*')
 
+
+
+
 def register(syntax, function):
-	"""
+	"""\
 	Inserts the given command's syntax into a known commands
 	dictionary and registers the given function as
 	its handler.
@@ -106,6 +110,10 @@ def register(syntax, function):
 		down = level.get(term, {})
 		if not term in level:
 			level[term] = down
+		# if term is an argument placeholder, register it
+		if argex.search(term):
+			arg = argex.findall(term)[0]
+			arguments.register(arg)
 		# walk down one level in command dict tree
 		level = down
 	# every command syntax string must end w linebreak
@@ -126,9 +134,9 @@ def register(syntax, function):
 			'command syntax \"{}\" already binds',
 			'function {}'.format(boundf.func_name)])
 		res = False
-	print msg.format(function.func_name, 
-		function.func_code.co_varnames[:2],
-		' '.join(terms))
+	# print msg.format(function.func_name, 
+	# 	function.func_code.co_varnames[:2],
+	# 	' '.join(terms))
 	#TODO: register argument placeholders
 	return res
 
@@ -152,7 +160,7 @@ def parse(input):
 	args = []
 	kwargs = {}
 	# check if terms match known commands:
-	# begin at grammar tree root
+	# begin at language tree root
 	level = cmdict
 	# walk down as long as input seems to be
 	# a valid command language word, i.e. input
@@ -221,8 +229,96 @@ def parse(input):
 			func = level.get('\n')
 			#print 'Calling {}'.format(func.__name__)
 			func(*args, **kwargs)
+			# log argument values
+			for arg,v in kwargs.items():
+				arguments.to_history(arg,v)
 			return True
 
+
+
+
+def choices_left(input):
+	"""Assembles a list of terms that allow a valid input line
+	given the prefix passed as `input` has been typed in so far.
+	Those terms can include command keywords and argument values
+	and depend on the command syntax to which the input line so far 
+	typed in matches, as well as legal argument values for that 
+	incomplete input line. 
+	The resulting list will only contain keywords or argument values
+	that either have been started typing in, or those that may legally
+	extend the current prefix, in case the latter doesn't end with 
+	an incomplete keyword or argument value.
+	"""
+	# begin traversing language tree as long as it matches current input
+	level = cmdict
+	# split input string into single terms
+	terms = trmex.findall(input)
+	# append empty string if line ends on whitespace. thus the next
+	# keyword/value in order can be determined later
+	if re.match('.*\s\Z', input):
+		terms.append('')
+	print 'find choices for:',terms
+	legal = True
+	# #########################3
+	# parse incomplete input
+	# word by word
+	for term in terms:
+		if legal:
+			if term in level:
+				print 'fitting:', term
+				level = level.get(term)
+				term = ''
+			else:
+				# if not a keyword, term might be an attribute value
+				argnames = [t for t in level.keys()
+					if argex.search(t)]
+				resolved = False
+				if len(argnames)>0:
+					# check if term satisfies any attribute value requirements
+					# TODO: auch hier das problem, dasz sich mit dem erstbesten 
+					# TODO zufrieden gegeben wird..?
+					for a in argnames:
+						if not resolved:
+							arg = argex.findall(a)[0]
+							print '(argument to match is {})'.format(a)
+							if arguments.validate(arg, term):
+								# value matches attribute. proceed
+								level = level.get(a)
+								term = ''
+								resolved=True
+				if not resolved:
+					# here is probably where the input breaks up.
+					# also possibly where input goes on invalidly
+					# nevertheless, we have to proceed until there
+					# is no input left at all. otherwise, we might
+					# end up with autocomplete suggestions for terms
+					# in the middle of nowhere. If an input turns out
+					# to be invalid way before it is done parsing, 
+					# then we simply can't provide autocompletion
+					# for that input. 
+					# TODO: or can we? how exactly is cursor position
+					# handled by readline module???
+					legal = False
+	# incomplete input line has been matched against known
+	# commands as far as possible. what do we have here?
+	# possibility 1): input ends w potential or partly typed keyword
+	# possibility 2): input ends where a value should follow
+	# or is partly typed in
+	print 'fragment, keys:', term, level.keys()
+	choices1 = [t for t in level.keys()]
+	choices = []
+	for c in choices1:
+		# resolve argument, if any
+		if argex.search(c):
+			a = argex.findall(c)[0]
+			choices.extend(arguments.get_suggestions(a, term))
+		else:
+			# if not expecting argument: check if keyword can be 
+			# completed
+			if c.startswith(term):
+				choices.append(c)
+	print 'suggestions:',choices, '\n'
+	#TODO: resolve arguments and assemble suggestion lists (srg. module)
 
 
 
@@ -249,15 +345,16 @@ default_cmds = {
 for command, handler in default_cmds.items():
 	register(command, handler)
 
-print 'Number of default commands registered:',
-print len(default_cmds)
+# print 'Number of default commands registered:',
+# print len(default_cmds)
 
 #################################################
 # command argument placeholder handling
 
 # <resources>
-#TODO: proposer ueberschreiben (dateinamen globs!)
-reg_arg("resource", format=[flnex, urlex])
+reg_arg("resource", proposer=arguments.list_files_rdf, 
+	format=[flnex, urlex])
 
 # <attribute>
 reg_arg("attribute", format=[re.compile('(size|source)')])
+

@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*- 
 """\
 Contains implementations of handler functions for 
 standard commands in interactive shell mode.
@@ -87,3 +88,6 @@ def graph_info(*args, **kwargs):
 		info = rdf.graph_info(name, field)
 		print info
 		return info
+
+
+
