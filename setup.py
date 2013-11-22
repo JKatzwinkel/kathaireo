@@ -13,7 +13,7 @@ for field in ['version', 'author']:
 	metex[field] = re.compile('\A\s*__'+field+'__\s?=\s?[\"\'](\S+)[\"\'].*')
 
 meta = {}
-f = open(kathaireo.py)
+f = open('kathaireo/kathaireo.py')
 for line in f:
 	for field, rex in metex.items():
 		if not field in meta:
@@ -26,7 +26,7 @@ setup(
 		name="kathaireo",
 		version=meta.get('version'),
 		description='Interactive tool for managing local and remote RDF resources.',
-		long_description = __doc__.strip(),
+		long_description = open('README.md').read(), #__doc__.strip(),
 		keywords='rdf owl ontology',
 		
 		url = 'https://github.com/JKatzwinkel/kathaireo',
@@ -35,7 +35,7 @@ setup(
 		download_url = 'https://github.com/JKatzwinkel/kathaireo/archive/master.zip',
 		
 		packages=find_packages(),
-		scripts=['kathaireo.py'],
+		scripts=['kathaireo/kathaireo.py'],
 
 		install_requires = [
 			'rdflib>=4.0.1',
@@ -48,6 +48,11 @@ setup(
 				'git+https://github.com/RDFLib/rdflib-sqlalchemy.git', 
 				'@11c2ba6f76399002b68132ed66257a0b61737bd4',
 				])
-			]
+			],
+
+		entry_points = {
+			'console_scripts': [
+				'kathaireo = kathaireo.kathaireo:main']
+			}
 		# closing bracket coming up!
-		)
+	)

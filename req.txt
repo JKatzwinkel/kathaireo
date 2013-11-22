@@ -1,5 +1,0 @@
-#getch
-isodate
-html5lib
-rdflib
-rdflib_sqlalchemy

@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*- 
 """Dokudoku!"""
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.1-dev"
+__version__ = "0.0.2-dev"
 __author__ = "Dariah-DE"
 
 import getopt
 
 import shell
 
-if __name__=='__main__':
+def main():
 	import html5lib
 	import sqlalchemy
 	welcome=[
@@ -35,12 +35,14 @@ if __name__=='__main__':
 	shell.prompt.display(welcome)
 	shell.run()
 
+
+if __name__=='__main__':
+	main()
+
 # https://rdfalchemy.readthedocs.org/en/latest/
 
 #TODO: namespace members autocomplete
 #TODO: implement rdf commands
-#TODO: write setup.py
 #TODO: handle command line parameters in here.
 #TODO: bash autocompletion
 #TODO: default command registration in interactive mode
-#TODO: colored output!
