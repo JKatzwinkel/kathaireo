@@ -14,7 +14,7 @@ from highlights import color, hilite, col_demo, stdcol
 
 # colored prompt
 #ps = "\001\033[32m\002>>>\001\033[0m\002 "
-ps = "\001\033[32m\002>>>{} ".format(color(23))
+ps = "{}\001\033[32m\002>>>{}{} ".format(color(0), color(23), color(1))
 
 # tokenizer regex
 #_tokex = re.compile('(\"[^\"]*?\"|\'[^\']*?\'|[ ,]+|\S*|\w*|<[^>]*?>|.*)')
@@ -35,7 +35,7 @@ _tokex = re.compile('({})'.format('|'.join(_splits)), re.I)
 # wait for input
 def input():
 	line = raw_input(ps)
-	print ''.join([color(stdcol),'\r']),
+	print ''.join([color(0), color(stdcol),'\r']),
 	return line
 
 
