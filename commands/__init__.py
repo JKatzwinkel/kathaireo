@@ -28,7 +28,7 @@ Example:
 	>>>	commands.register("create <graphname>", handler)
 	Registered handling function handler('args', [...]
 	>>> commands.cmdict
-	{'create': {'<graphname>': {'\n': <function handler at 0x86c26f4>}}}
+	{'create': {'<graphname>': {'': <function handler at 0x86c26f4>}}}
 
 """
 __docformat__ = "restructuredtext en"
@@ -122,9 +122,9 @@ def register(syntax, function):
 	# at last, attach leave referring to function(args**,
 	# **kwargs) responsible for handling the new command
 	# unless, of course, command already exists
-	boundf = level.get('\n')
+	boundf = level.get('')
 	if not boundf:
-		level['\n'] = function
+		level[''] = function
 		msg=' '.join([
 			'Registered handling function {}{}',
 			'for command syntax \"{}\".'])
@@ -213,7 +213,7 @@ def parse(input):
 	else:
 		# if EOL code terminates term sequence, we are good.
 		# if not, input is incomplete
-		if level.get('\n') is None:
+		if level.get('') is None:
 			print "Error: command is incomplete."
 			# print simple help
 			print "Previous input should be extended by",
@@ -227,7 +227,7 @@ def parse(input):
 		else:
 			# command is valid! get handler
 			print ' '.join(path)
-			func = level.get('\n')
+			func = level.get('')
 			#print 'Calling {}'.format(func.__name__)
 			func(*args, **kwargs)
 			# log argument values
@@ -252,6 +252,7 @@ def choices_left(input):
 	"""
 	# begin traversing language tree as long as it matches current input
 	level = cmdict
+	level_down = level
 	# split input string into single terms
 	terms = trmex.findall(input)
 	# append empty string if line ends on whitespace. thus the next
@@ -264,42 +265,42 @@ def choices_left(input):
 	# parse incomplete input
 	# word by word
 	for term in terms:
-		if legal:
-			if term in level:
-				# print 'fitting:', term
-				level = level.get(term)
-				term = ''
-			else:
-				# if not a keyword, term might be an attribute value
-				argnames = [t for t in level.keys()
-					if argex.search(t)]
-				resolved = False
-				if len(argnames)>0:
-					# check if term satisfies any attribute value requirements
-					# TODO: auch hier das problem, dasz sich mit dem erstbesten 
-					# TODO zufrieden gegeben wird..?
-					for a in argnames:
-						if not resolved:
-							arg = argex.findall(a)[0]
-							# print '(argument to match is {})'.format(a)
-							if arguments.validate(arg, term):
-								# value matches attribute. proceed
-								level = level.get(a)
-								term = ''
-								resolved=True
-				if not resolved:
-					# here is probably where the input breaks up.
-					# also possibly where input goes on invalidly
-					# nevertheless, we have to proceed until there
-					# is no input left at all. otherwise, we might
-					# end up with autocomplete suggestions for terms
-					# in the middle of nowhere. If an input turns out
-					# to be invalid way before it is done parsing, 
-					# then we simply can't provide autocompletion
-					# for that input. 
-					# TODO: or can we? how exactly is cursor position
-					# handled by readline module???
-					legal = False
+		level = level_down
+		if term in level:
+			# print 'fitting:', term
+			level_down = level.get(term)
+			#term = ''
+		else:
+			# if not a keyword, term might be an attribute value
+			argnames = [t for t in level.keys()
+				if argex.search(t)]
+			resolved = False
+			if len(argnames)>0:
+				# check if term satisfies any attribute value requirements
+				# TODO: auch hier das problem, dasz sich mit dem erstbesten 
+				# TODO zufrieden gegeben wird..?
+				for a in argnames:
+					if not resolved:
+						arg = argex.findall(a)[0]
+						# print '(argument to match is {})'.format(a)
+						if arguments.validate(arg, term):
+							# value matches attribute. proceed
+							level_down = level.get(a)
+							#term = ''
+							resolved=True
+			if not resolved:
+				# here is probably where the input breaks up.
+				# also possibly where input goes on invalidly
+				# nevertheless, we have to proceed until there
+				# is no input left at all. otherwise, we might
+				# end up with autocomplete suggestions for terms
+				# in the middle of nowhere. If an input turns out
+				# to be invalid way before it is done parsing, 
+				# then we simply can't provide autocompletion
+				# for that input. 
+				# TODO: or can we? how exactly is cursor position
+				# handled by readline module???
+				break
 	# incomplete input line has been matched against known
 	# commands as far as possible. what do we have here?
 	# possibility 1): input ends w potential or partly typed keyword
@@ -318,7 +319,7 @@ def choices_left(input):
 			# completed
 			if c.startswith(term):
 				choices.append(c)
-	# print 'suggestions:',choices, '\n'
+	# print 'suggestions:',choices, ''
 	#TODO: resolve arguments and assemble suggestion lists (srg. module)
 	return choices
 
