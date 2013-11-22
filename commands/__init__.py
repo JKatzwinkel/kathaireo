@@ -154,7 +154,7 @@ def msg_incomplete_cmd(keywords):
 			keywords[-1]])
 	else:
 		msg = keywords[0]
-	msg = "Incomplete command: expecting {} instead of EOL.".format(
+	msg = "!Incomplete command!: expecting '{}' instead of EOL.".format(
 		msg)
 	return msg
 
@@ -226,7 +226,7 @@ def execute(input):
 				break
 	# do we have a match? or not?
 	if term is None:
-		return 'Syntax error at term {}.'.format(msg)
+		return '!!Syntax error!!: term "{}" not recognized.'.format(msg)
 	else:
 		# if EOL code terminates term sequence, we are good.
 		# if not, input is incomplete
@@ -353,11 +353,15 @@ default_cmds = {
 	'exit': handlers.quit,
 	':q': handlers.quit,
 	'create <graphname>': handlers.create_graph,
+	'create <graphname> store sqlite <sqlite>': handlers.store_sqlite,
 	'load <resource> <graphname>': handlers.parse_rdf,
 	'show <graphname> <attribute>': handlers.graph_info,
 	'load namespaces <graphname>': handlers.import_namespaces,
-	'store <graphname> sqlite <sqlite>': handlers.store_sqlite,
-	'store <graphname> xml <filename>': handlers.store_xml,
+	'connect <graphname> to sqlite <sqlite>': handlers.store_sqlite,
+	'connect <graphname> to xml <filename>': handlers.store_xml,
+	'copy <graphname> to <graphname>': handlers.cp_graph,
+	#'namespace <namespace> classes': handlers.ns_classes,
+	#'namespace <namespace> properties': handlers.ns_properties,
 	}
 
 for command, handler in default_cmds.items():

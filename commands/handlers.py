@@ -73,8 +73,9 @@ def parse_rdf(*args, **kwargs):
 			location, name = args[:2]
 	if not(None in [location, name]):
 		rdf.load_into(location, name)
-		return 'Succesfully read from {} into graph "{}".'.format(
-			location, name)
+		g = rdf.get_graph(name)
+		return 'Succesfully read {} rdf statements from {} into graph "{}".'.format(
+			len(g), location, name)
 
 
 # show info about given graph
@@ -85,12 +86,25 @@ def graph_info(*args, **kwargs):
 	field = kwargs.get('attribute')
 	name = kwargs.get('graphname')
 	if None in [field, name]:
-		return "Error. Can't find attribute {} for graph {}".format(
+		return "!!Error!!. Can't find attribute {} for graph {}".format(
 			field, name)
 	else:
 		info = rdf.graph_info(name, field)
 		return info
 
+
+# copy graph 
+def cp_graph(*args, **kwargs):
+	name1, name2 = args[:2]
+	g1 = rdf.get_graph(name1)
+	g2 = rdf.create_graph(name2)
+	contents = g1.serialize(format='pretty-xml')
+	g2.parse(data=contents)
+	return ''.join([
+		"Created copy of graph '{}' under the name '{}': ".format(
+			name1, name2),
+		rdf.repr_graph(g2),
+		" with {} triples.".format(len(g2))])
 
 
 # download namespaces for given graph name
@@ -107,7 +121,8 @@ def store_sqlite(*args, **kwargs):
 	name = kwargs.get('graphname')
 	filename = kwargs.get('sqlite')
 	g, store = rdf.store_sqlite(name, filename)
-	return rdf.repr_graph(g)+' at '+ store.configuration
+	msg = rdf.repr_graph(g)+' at '+ store.configuration
+	return msg + ' updated. Size: {}.'.format(len(g))
 
 
 	

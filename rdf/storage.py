@@ -15,8 +15,8 @@ def sqlite(filename):
 	return store
 
 
-def save_xml(g, filename):
-	xmlrdf = g.serialize()
+def save_xml(g, filename, format='pretty-xml'):
+	xmlrdf = g.serialize(format=format)
 	# TODO: test filename, if existing, etc.
 	xmlfile = open(filename, 'w+')
 	xmlfile.write(xmlrdf)

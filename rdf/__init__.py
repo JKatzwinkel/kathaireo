@@ -50,7 +50,7 @@ def suggest_and_load_files():
 # returns a nicer output of this graph than he default
 def repr_graph(g):
 	if g != None:
-		return '<Graph "{}"; stored in "{}">'.format(
+		return '<Graph "{}"; with store "{}">'.format(
 			g.identifier, g.store.__class__.__name__)
 	return '!nullgraph!'
 
@@ -66,7 +66,7 @@ def create_graph(name):
 		_graphs[name] = g
 		#print g
 		return g
-	return "graph {} already exists.".format(name)
+	return "!Warning!: graph '{}' already exists.".format(name)
 
 
 # find graph known by name
@@ -92,7 +92,7 @@ def load_into(location, name):
 	else:
 		g = _graphs.get(name)
 	if g is None:
-		return "graph '{}' is null!".format(name)
+		return "!Oh no!: graph '{}' is null!".format(name)
 	else:
 		g.parse(location)
 		#print "parsed contents at {} into {}.".format(
@@ -102,15 +102,15 @@ def load_into(location, name):
 
 # info output templates
 rdfinfotempl={"size": "Number of statements in graph '{}': {}",
-	"namespaces": "Graph '{}'' binds the following namespaces:\n{}",
-	"n3": "N3 representation of graph '{}'' is {}",
-	"types": "Types used in RDF graph '{}'' are:\n{}"}
+	"namespaces": "Graph '{}' binds the following namespaces:\n{}",
+	"n3": "N3 representation of graph '{}' is {}",
+	"types": "Types used in RDF graph '{}' are:\n{}"}
 # show info
 def graph_info(name, attr):
 	"""Show info about specified graph.
 	Info is available about: size, namespaces, ..."""
 	if not name in _graphs:
-		return "Failed: No graph {} known.".format(name)
+		return "!!Failed!!: No graph {} known.".format(name)
 	else:
 		g = _graphs.get(name)
 	if attr in rdfinfotempl:
@@ -131,7 +131,7 @@ def graph_info(name, attr):
 			return template.format(name, 
 				'\n'.join([t for t in types]))
 	else:
-		return "Failed: Don't know attribute", attr
+		return "!Failed!: Don't know attribute", attr
 
 
 # import namespace definitions for graph
@@ -152,7 +152,7 @@ def store_sqlite(name, filename):
 	#if g:
 	store = storage.sqlite(filename)
 	g = rdflib.Graph(store, name)
-	g.store.open(store.configuration)
+	g.open(store.configuration)
 	_graphs[name] = g
 	return (g, store)
 

@@ -5,10 +5,13 @@
 __docformat__ = "restructuredtext en"
 
 import re
+import os.path
 from random import randrange as rnd
 
 import commands.arguments as argdir
 
+# errors
+errex = re.compile('!![^!]+!!')
 # warnings
 wrnex = re.compile('![^!]+?!')
 # angle brackets
@@ -16,25 +19,39 @@ angex = re.compile('<[^>]*>')
 # single/double quots
 qutex = re.compile('(\'[^\']*\'|\"[^\"]*\")')
 # square brackets
-sqrex = re.compile('\[[^]]*\]')
+sqrex = re.compile('\[[^[]]*\]')
 # uri
-urlex = re.compile('[a-z]{3,6}://[a-z0-9.-]+\.[a-z]{2,4}(/\S+)*')
+urlex = re.compile('[a-z]{3,6}:///?[a-z0-9.-]+\.[a-z]{2,}(:\d+)?(/\S+)*')
 # filenames
-flnex = re.compile('\A.*?\.[a-zA-Z0-9]{2,6}\Z')
+flnex = re.compile('.*?\.[a-z0-9~_]{1,6}', re.I)
 # numbers
-nmrex = re.compile('\A-?[0-9]*\.?[0-9]+\Z')
+nmrex = re.compile('[-]?\d*\.?\d{1,}')
+# keywords
+_kw = ' '.join([
+	'namespaces? triples? graph rdf xml sqlite sql',
+	'commands? attributes? n3'])
+_kw = [k+'$' for k in _kw.split()]
+keyex = re.compile('({})'.format('|'.join(_kw)), re.I)
 
 
 # bind color ids to regexes
 _colscheme = {
+	errex: 14, # white text on red background
 	wrnex: 22, # red
-	angex: 4,  # red
-	qutex: 5,  # green
+	qutex: 4,  # red
+	angex: 7,  # blue
 	urlex: 2,  # underscore
 	sqrex: 23, # bright green
+	nmrex: 6,  # yellow
 	flnex: 9,  # turquois
-	nmrex: 6   # yellow
+	keyex: 27  # bright blue 
 	}
+
+_rexorder = [errex, wrnex, qutex, angex, urlex, 
+			sqrex, nmrex, flnex, keyex]
+
+#print '\n'.join(['{}:{}'.format(k.pattern,v) 
+	#for k,v in _colscheme.items()])
 
 _colors=[
 '\033[0m', # normal      0
@@ -94,7 +111,22 @@ def hilite(token):
 	#cid = rnd(13)
 	#return '{}'.format(color(cid)+token+color(0))
 	#
-	for rex, cid in _colscheme.items():
+	for rex in _rexorder:
 		if rex.match(token):
+			cid = _colscheme.get(rex)
+			# error and warning markups must be removed
+			if rex in [wrnex, errex]:
+				if rex is errex:
+					i = 2
+				else:
+					i = 1
+				token = '{}{}{}'.format(
+					color(cid), token[i:-i], color(0))
+			# if filename matches, check if such file exists
+			elif rex is flnex:
+				if not(os.path.exists(token) 
+					and os.path.isfile(token)):
+					cid = 7
+					continue
 			return '{}'.format(color(cid)+token+color(0))
 	return '{}'.format(token)

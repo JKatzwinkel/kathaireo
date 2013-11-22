@@ -13,11 +13,11 @@ if __name__=='__main__':
 	import html5lib
 	import sqlalchemy
 	welcome=[
-		'This is {}, version {}.'.format(__file__, __version__),
+		'This is {}, version "{}".'.format(__file__, __version__),
 		' rdflib version: {}'.format(shell.rdf.rdflib.__version__),
 		' rdflib_sqlalchemy version: {}'.format(
 		shell.rdf.storage.rdflib_sqlalchemy.__version__),
-		' sqkalchemy version: {}'.format(sqlalchemy.__version__),
+		' sqlalchemy version: {}'.format(sqlalchemy.__version__),
 		' html5lib version: {}'.format(html5lib.__version__),
 		'stats:',
 		' default commands ready: {}'.format(
