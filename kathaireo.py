@@ -10,26 +10,28 @@ import getopt
 import shell
 
 if __name__=='__main__':
-	print 'This is {}, version {}.'.format(__file__, __version__)
-	print ' rdflib version: {}'.format(shell.rdf.rdflib.__version__)
-	print ' rdflib_sqlalchemy version: {}'.format(
-		shell.rdf.storage.rdflib_sqlalchemy.__version__)
-	import sqlalchemy
-	print ' sqkalchemy version: {}'.format(sqlalchemy.__version__)
-	del sqlalchemy
 	import html5lib
-	print ' html5lib version: {}'.format(html5lib.__version__)
-	del html5lib
-	print 'stats:'
-	print ' default commands ready: {}'.format(
-		len(shell.commands.cmdict))
-	print ' number of known command attributes: {}'.format(
-		len(shell.commands.arguments.arghist))
-	print 'root modules and packages'
+	import sqlalchemy
+	welcome=[
+		'This is {}, version {}.'.format(__file__, __version__),
+		' rdflib version: {}'.format(shell.rdf.rdflib.__version__),
+		' rdflib_sqlalchemy version: {}'.format(
+		shell.rdf.storage.rdflib_sqlalchemy.__version__),
+		' sqkalchemy version: {}'.format(sqlalchemy.__version__),
+		' html5lib version: {}'.format(html5lib.__version__),
+		'stats:',
+		' default commands ready: {}'.format(
+		len(shell.commands.cmdict)),
+		' number of known command attributes: {}'.format(
+		len(shell.commands.arguments.arghist)),
+		'root modules and packages']
 	for m in shell.__all__:
 		mod = getattr(shell, m)
-		print ' {} at {}: version={}'.format(
-			mod.__name__, mod.__path__, mod.__version__)
+		welcome.append(' {} at {}: version="{}"'.format(
+			mod.__name__, mod.__path__, mod.__version__))
+	del sqlalchemy
+	del html5lib
+	shell.prompt.display(welcome)
 	shell.run()
 
 # https://rdfalchemy.readthedocs.org/en/latest/

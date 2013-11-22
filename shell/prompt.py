@@ -35,7 +35,7 @@ def display(output):
 	for item in output:
 		line = '{}'.format(item)
 		tokens = tokex.split(line)
-		print ''.join([hilite(t) for t in tokens])
+		print '',''.join([hilite(t) for t in tokens])
 
 
 

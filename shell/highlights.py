@@ -19,20 +19,20 @@ sqrex = re.compile('\[[^]]*\]')
 # uri
 urlex = re.compile('[a-z]{3,6}://[a-z0-9.-]+\.[a-z]{2,4}(/\S+)*')
 # filenames
-flnex = re.compile('\S+?\.[^.]{1,6}\Z')
+flnex = re.compile('\A.*?\.[a-zA-Z0-9]{2,6}\Z')
 # numbers
-nmrex = re.compile('\d\d+')
+nmrex = re.compile('\A-?[0-9]*\.?[0-9]+\Z')
 
 
 # bind color ids to regexes
 _colscheme = {
-	wrnex: 22,
-	angex: 4,
-	qutex: 5, 
-	urlex: 1,
-	sqrex: 23,
-	flnex: 9,
-	nmrex: 6
+	wrnex: 22, # red
+	angex: 4,  # red
+	qutex: 5,  # green
+	urlex: 1,  # bright white
+	sqrex: 23, # bright green
+	flnex: 9,  # turquois
+	nmrex: 6   # yellow
 	}
 
 _colors=[
