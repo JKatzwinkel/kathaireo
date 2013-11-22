@@ -165,6 +165,7 @@ def parse(input):
 	# walk down as long as input seems to be
 	# a valid command language word, i.e. input
 	# term reachable by walking along its predecessors
+	term = ''
 	for term in terms:
 		#print ' '.join(level.keys())
 		# still on track?
@@ -257,7 +258,7 @@ def choices_left(input):
 	# keyword/value in order can be determined later
 	if re.match('.*\s\Z', input):
 		terms.append('')
-	print 'find choices for:',terms
+	# print 'find choices for:',terms
 	legal = True
 	# #########################3
 	# parse incomplete input
@@ -265,7 +266,7 @@ def choices_left(input):
 	for term in terms:
 		if legal:
 			if term in level:
-				print 'fitting:', term
+				# print 'fitting:', term
 				level = level.get(term)
 				term = ''
 			else:
@@ -280,7 +281,7 @@ def choices_left(input):
 					for a in argnames:
 						if not resolved:
 							arg = argex.findall(a)[0]
-							print '(argument to match is {})'.format(a)
+							# print '(argument to match is {})'.format(a)
 							if arguments.validate(arg, term):
 								# value matches attribute. proceed
 								level = level.get(a)
@@ -304,7 +305,7 @@ def choices_left(input):
 	# possibility 1): input ends w potential or partly typed keyword
 	# possibility 2): input ends where a value should follow
 	# or is partly typed in
-	print 'fragment, keys:', term, level.keys()
+	# print 'fragment, keys:', term, level.keys()
 	choices1 = [t for t in level.keys()]
 	choices = []
 	for c in choices1:
@@ -317,9 +318,9 @@ def choices_left(input):
 			# completed
 			if c.startswith(term):
 				choices.append(c)
-	print 'suggestions:',choices, '\n'
+	# print 'suggestions:',choices, '\n'
 	#TODO: resolve arguments and assemble suggestion lists (srg. module)
-
+	return choices
 
 
 

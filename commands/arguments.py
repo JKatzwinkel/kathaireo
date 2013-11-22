@@ -121,7 +121,7 @@ def register(name, proposer=propose_default, format=None):
 	if not name in argvals:
 		validator = ArgValidator(name)
 		argvals[name] = validator
-		print 'Registered argument \"{}\".'.format(name)
+		# print 'Registered argument \"{}\".'.format(name)
 	else:
 		validator = argvals.get(name)
 	# update validator if necessary

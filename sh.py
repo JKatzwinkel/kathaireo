@@ -35,6 +35,9 @@ for k,f in combos:
 		level = down
 	level[k[-1]] = f
 
+commands = ['hallo mein lieber', 'hallo meine liebe', 'na?',
+				'ach Du meine guete!', 'heili!']
+
 #https://pypi.python.org/pypi/getch
 #print("\033[6;3HHello")
 
@@ -64,9 +67,10 @@ class Prompter(object):
 	def complete(self, text, state):
 		if state == 0:
 			#TODO: parsen, aufloesen, richtigen prefix zuordnen
-			self.cmpl=[c for c in rnd.cmd.phrases
-						if c.startswith(text)]
-			self.prefix = text
+			pfx = text.split(' ')[-1]
+			self.cmpl=[c for c in commands
+						if c.startswith(pfx)]
+			self.prefix = pfx
 		return self.cmpl[state]
 
 
@@ -79,8 +83,7 @@ class Prompter(object):
 
 
 
-
-prompt = Prompter(commands)
+prompt = Prompter()
 
 #while True:
 	#inp = prompt.waitForInput()
