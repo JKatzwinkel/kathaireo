@@ -144,7 +144,7 @@ def register(syntax, function):
 
 
 
-def parse(input):
+def execute(input):
 	"""\
 	Tests given input string against currently
 	registered command syntaxes. If input turns out

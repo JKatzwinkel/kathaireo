@@ -1,7 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*- 
+"""\
+Doku doku doku.
+"""
 __docformat__ = "restructuredtext en"
 __version__ = "0.0.1-dev"
+__all__ = ['rdf', 'commands']
 
 import readline
 
@@ -18,17 +22,23 @@ def complete(input, state):
 
 
 def execute(line):
-	return commands.parse(line)
+	return commands.execute(line)
 
 
 def run():
+	print 'ok.\n'
 	# init readline module
 	readline.set_completer_delims(' \t\n;')
 	readline.parse_and_bind("tab: complete")
 	readline.set_completer(complete)
 	#TODO: naja...
+	# go!
 	line=''
+	prompt = "\001\033[32m\002>>>\001\033[0m\002 "
 	while True:
-		line = raw_input('>>> ')
-		commands.parse(line)
+		line = raw_input(prompt)
+		commands.execute(line)
 
+
+if __name__=='__main__':
+	run()

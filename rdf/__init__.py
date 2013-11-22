@@ -1,5 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*- 
+"""\
+Doku doku doku
+"""
+__docformat__ = "restructuredtext en"
+__version__ = "0.0.1-dev"
+
 import os
 import rdflib
 #from rdflib_sqlalchemy.SQLAlchemy import SQLAlchemy

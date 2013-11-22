@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*- 
 import rdflib
+import rdflib_sqlalchemy
 from rdflib_sqlalchemy.SQLAlchemy import SQLAlchemy
 
 
