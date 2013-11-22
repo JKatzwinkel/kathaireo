@@ -1,0 +1,17 @@
+#!/usr/bin/python
+import commands
+
+commands.parse('create g')
+print 'arguments:', commands.arguments.arghist
+print 'suggestions for graphnames:',
+print commands.arguments.get_suggestions('graphname', '')
+print '\n', commands.cmdict, '\n'
+choices = commands.choices_left('loa')
+choices = commands.choices_left('load E')
+choices = commands.choices_left('load E ')
+choices = commands.choices_left('load EDAM.owl')
+choices = commands.choices_left('load EDAM.owl ')
+choices = commands.choices_left('load EDAM.owl g')
+
+commands.parse('load EDAM.owl g')
+commands.parse('show g size')
