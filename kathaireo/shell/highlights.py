@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*- 
 """\
+Syntax highlighting.
 """
 __docformat__ = "restructuredtext en"
 
@@ -95,6 +96,8 @@ _colors=[
 '\033[107m', # white on white
 '\033[108m'	]
 
+
+
 # returns ith color code
 def color(i):
 	return _colors[i]
@@ -105,6 +108,7 @@ def col_demo():
 		print '{}{:2}{}'.format(color(i), i, color(0)),
 		if i % 8 > 6:
 			print
+
 
 # returns a colored representation of a given token
 def hilite(token):
@@ -120,13 +124,18 @@ def hilite(token):
 					i = 2
 				else:
 					i = 1
-				token = '{}{}{}'.format(
-					color(cid), token[i:-i], color(0))
+				token = '{}{}{}{}'.format(
+					color(cid), token[i:-i], color(0), color(stdcol))
 			# if filename matches, check if such file exists
 			elif rex is flnex:
 				if not(os.path.exists(token) 
 					and os.path.isfile(token)):
 					cid = 7
 					continue
-			return '{}'.format(color(cid)+token+color(0))
+			return '{}'.format(color(cid)+token+color(0)+color(stdcol))
 	return '{}'.format(token)
+
+
+########
+stdcol=21
+print '{}\r'.format(color(stdcol)),

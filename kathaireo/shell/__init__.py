@@ -24,14 +24,14 @@ command.
 """
 
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.1-dev"
+__version__ = "0.0.2-dev"
 __all__ = ['rdf', 'commands']
 
 import readline
 
+import prompt
 import rdf
 import commands
-import prompt
 
 
 def complete(input, state):

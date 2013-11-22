@@ -1,12 +1,15 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*- 
 """\
+This module reads user input and responds with pretty and
+colorful output.
 """
 __docformat__ = "restructuredtext en"
+__version__ = "0.0.1-dev"
 
 import re
 
-from highlights import color, hilite, col_demo
+from highlights import color, hilite, col_demo, stdcol
 
 
 # colored prompt
@@ -27,11 +30,12 @@ _splits = [
 	]
 _tokex = re.compile('({})'.format('|'.join(_splits)), re.I)
 
+#print color(stdcol), '\r',
 
 # wait for input
 def input():
 	line = raw_input(ps)
-	print color(0),'\r',
+	print ''.join([color(stdcol),'\r']),
 	return line
 
 
@@ -49,8 +53,6 @@ def display(output):
 	for item in output:
 		line = '{}'.format(item)
 		tokens = tokenize(line)
-		print '',''.join([hilite(t) for t in tokens])
+		print ''.join([hilite(t) for t in tokens])
 
 
-
-	

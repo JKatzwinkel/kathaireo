@@ -42,7 +42,9 @@ def create_graph(*args, **kwargs):
 	elif "graphname" in kwargs:
 		g = rdf.create_graph(kwargs.get("graphname"))
 	else:
-		return "Error: wrong number of arguments."
+		return "!!Error!!: wrong number of arguments."
+	if type(g) is str:
+		return g
 	return rdf.repr_graph(g)
 
 

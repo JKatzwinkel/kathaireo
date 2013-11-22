@@ -35,7 +35,7 @@ setup(
 		download_url = 'https://github.com/JKatzwinkel/kathaireo/archive/master.zip',
 		
 		packages=find_packages(),
-		scripts=['kathaireo/kathaireo.py'],
+		scripts=['kathaireo/kathaireo.py', 'shell.sh'],
 
 		install_requires = [
 			'rdflib>=4.0.1',
@@ -53,6 +53,6 @@ setup(
 		entry_points = {
 			'console_scripts': [
 				'kathaireo = kathaireo.kathaireo:main']
-			}
+			},
 		# closing bracket coming up!
 	)

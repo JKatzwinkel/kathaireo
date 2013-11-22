@@ -158,8 +158,9 @@ rdfglobs = ["*.rdf", "*.RDF", "*.owl", "*.OWL", "*.n3", "*.xml"]
 # list ontology files in current directory (rdf, owl, n3, xml)
 def list_files_rdf(arg, prefix):
 	files = []
+	path = os.sep.join(prefix.split(os.sep)[:-1])
 	for rdfglob in rdfglobs:
-		files.extend(glob(rdfglob))
+		files.extend(glob(os.path.join(path,rdfglob)))
 	suggestions = [fn for fn in files if fn.startswith(prefix)]
 	suggestions.extend(propose_default(arg, prefix))
 	return suggestions # TODO: +[None] ??
@@ -167,8 +168,9 @@ def list_files_rdf(arg, prefix):
 # suggest local sqlite files
 def list_files_sqlite(arg, prefix):
 	files = []
+	path = os.sep.join(prefix.split(os.sep)[:-1])
 	for glb in ['*.sqlite', '*.sqlite3']:
-		files.extend(glob(glb))
+		files.extend(glob(os.path.join(path,glb)))
 	suggestions = [fn for fn in files if fn.startswith(prefix)]
 	suggestions.extend(propose_default(arg, prefix))
 	return suggestions # TODO: +[None] ??

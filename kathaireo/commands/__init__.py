@@ -358,7 +358,7 @@ default_cmds = {
 	'show <graphname> <attribute>': handlers.graph_info,
 	'load namespaces <graphname>': handlers.import_namespaces,
 	'connect <graphname> to sqlite <sqlite>': handlers.store_sqlite,
-	'connect <graphname> to xml <filename>': handlers.store_xml,
+	'save <graphname> to xml <filename>': handlers.store_xml,
 	'copy <graphname> to <graphname>': handlers.cp_graph,
 	#'namespace <namespace> classes': handlers.ns_classes,
 	#'namespace <namespace> properties': handlers.ns_properties,

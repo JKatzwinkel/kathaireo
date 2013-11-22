@@ -56,13 +56,13 @@ def repr_graph(g):
 
 
 # create and return new graph
-def create_graph(name):
+def create_graph(name, store='default'):
 	"""Returns a new `rdflib.Graph` instance with the
 	given identifier, if said identifier has not already
 	been given to an existing graph."""
 	#print "attempting to create new graph with name", name
 	if not name in _graphs:
-		g = rdflib.Graph(identifier=name)
+		g = rdflib.Graph(store=store, identifier=name)
 		_graphs[name] = g
 		#print g
 		return g
