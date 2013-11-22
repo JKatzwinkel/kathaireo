@@ -256,7 +256,7 @@ def choices_left(input):
 	terms = trmex.findall(input)
 	# append empty string if line ends on whitespace. thus the next
 	# keyword/value in order can be determined later
-	if re.match('.*\s\Z', input):
+	if re.match('.*\s+\Z', input):
 		terms.append('')
 	# print 'find choices for:',terms
 	legal = True
@@ -357,5 +357,6 @@ reg_arg("resource", proposer=arguments.list_files_rdf,
 	format=[flnex, urlex])
 
 # <attribute>
-reg_arg("attribute", format=[re.compile('(size|source)')])
+reg_arg("attribute", proposer=arguments.graph_attrs,
+	format=[re.compile('(size|source)')])
 

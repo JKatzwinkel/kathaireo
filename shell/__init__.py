@@ -8,9 +8,12 @@ import readline
 import rdf
 import commands
 
+
 def complete(input, state):
-	if state == 0:
-		sgst = commands.choices_left(input)
+	# http://stackoverflow.com/a/5638688/1933494
+	buf = readline.get_line_buffer()
+	#line = readline.get_line_buffer().split()
+	sgst = [s+' ' for s in commands.choices_left(buf)]+[None]
 	return sgst[state]
 
 

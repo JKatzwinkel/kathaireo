@@ -164,3 +164,10 @@ def list_files_rdf(arg, prefix):
 	suggestions.extend(propose_default(arg, prefix))
 	return suggestions # TODO: +[None] ??
 
+
+# propose rdf graph attribute ids
+def graph_attrs(arg, prefix):
+	attrs = rdf.rdfinfotempl.keys()
+	suggestions = [a for a in attrs if a.startswith(prefix)]
+	suggestions.extend(propose_default(arg, prefix))
+	return suggestions
