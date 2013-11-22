@@ -17,12 +17,18 @@ def complete(input, state):
 	return sgst[state]
 
 
-# init readline module
-readline.set_completer_delims(' \t\n;')
-readline.parse_and_bind("tab: complete")
-readline.set_completer(complete)
+def execute(line):
+	return commands.parse(line)
 
-line=''
-while True:
-	line = raw_input('>>> ')
-	commands.parse(line)
+
+def run():
+	# init readline module
+	readline.set_completer_delims(' \t\n;')
+	readline.parse_and_bind("tab: complete")
+	readline.set_completer(complete)
+	#TODO: naja...
+	line=''
+	while True:
+		line = raw_input('>>> ')
+		commands.parse(line)
+
