@@ -5,6 +5,7 @@
 __docformat__ = "restructuredtext en"
 
 import re
+from random import randrange as rnd
 
 import commands.arguments as argdir
 
@@ -83,6 +84,9 @@ def color(i):
 
 # returns a colored representation of a given token
 def hilite(token):
+	cid = rnd(13)
+	return '{}'.format(color(cid)+token+color(0))
+	#
 	for rex, cid in _colscheme.items():
 		if rex.match(token):
 			return '{}'.format(color(cid)+token+color(0))

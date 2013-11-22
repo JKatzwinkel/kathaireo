@@ -13,7 +13,7 @@ from highlights import color, hilite
 ps = "\001\033[32m\002>>>\001\033[0m\002 "
 
 # tokenizer regex
-tokex = re.compile('(\"[^\"]*?\"|\'[^\']*?\'|\S*|\w*|<[^>]*?>|.*)')
+tokex = re.compile('(\"[^\"]*?\"|\'[^\']*?\'|[ ,]+|\S*|\w*|<[^>]*?>|.*)')
 
 
 
