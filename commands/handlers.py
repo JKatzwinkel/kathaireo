@@ -98,3 +98,17 @@ def import_namespaces(*args, **kwargs):
 	name = kwargs.get('graphname')
 	return rdf.import_ns(name)
 
+
+# set sqlite resource as persistent store
+def store_sqlite(*args, **kwargs):
+	"""Set sqlite as store for graph."""
+	name = kwargs.get('graphname')
+	filename = kwargs.get('sqlite')
+	return rdf.store_sqlite(name, filename)
+	
+
+def store_xml(*args, **kwargs):
+	name = kwargs.get('graphname')
+	filename = kwargs.get('filename')
+	return rdf.save_xml(name, filename)
+

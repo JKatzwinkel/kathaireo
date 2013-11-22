@@ -164,6 +164,16 @@ def list_files_rdf(arg, prefix):
 	suggestions.extend(propose_default(arg, prefix))
 	return suggestions # TODO: +[None] ??
 
+# suggest local sqlite files
+def list_files_sqlite(arg, prefix):
+	files = []
+	for glb in ['*.sqlite', '*.sqlite3']:
+		files.extend(glob(glb))
+	suggestions = [fn for fn in files if fn.startswith(prefix)]
+	suggestions.extend(propose_default(arg, prefix))
+	return suggestions # TODO: +[None] ??
+
+
 
 # propose rdf graph attribute ids
 def graph_attrs(arg, prefix):

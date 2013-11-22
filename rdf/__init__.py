@@ -5,7 +5,7 @@ import rdflib
 #from rdflib_sqlalchemy.SQLAlchemy import SQLAlchemy
 
 import namespaces as ns
-
+import storage
 
 #store = SQLAlchemy(configuration="sqlite:///newspapers.sqlite")
 #g = rdflib.Graph(store, "newspapers")
@@ -41,6 +41,7 @@ def suggest_and_load_files():
 		return g
 
 
+# create and return new graph
 def create_graph(name):
 	"""Returns a new `rdflib.Graph` instance with the
 	given identifier, if said identifier has not already
@@ -54,12 +55,14 @@ def create_graph(name):
 	print "graph {} already existing!".format(name)
 
 
+# find graph known by name
 def get_graph(name):
 	"""Returns the graph identified by the given name, or `None`
 	if no such graph is available."""
 	return _graphs.get(name)
 
 
+# import rdf data from resource into graph
 def load_into(location, name):
 	"""Loads rdf graph at location (file/url) and names it.
 	Reuses (overwrites?) an existing graph if one going by the given name
@@ -68,6 +71,8 @@ def load_into(location, name):
 	is being read into.
 	If parsing fails, exceptions are not being handled here.
 	"""
+	# TODO: also handle sql/sqlite?
+	# TODO: handle n3!
 	if not name in _graphs:
 		g = create_graph(name)
 	else:
@@ -83,7 +88,9 @@ def load_into(location, name):
 
 # info output templates
 rdfinfotempl={"size": "Number of statements in graph {}: {}",
-	"namespaces": "Graph {} binds the following namespaces:\n{}"}
+	"namespaces": "Graph {} binds the following namespaces:\n{}",
+	"n3": "N3 representation of graph {} is {}",
+	"types": "Types mentioned in RDF graph {} are:\n{}"}
 # show info
 def graph_info(name, attr):
 	"""Show info about specified graph.
@@ -100,6 +107,15 @@ def graph_info(name, attr):
 			return template.format(name, 
 				'\n'.join(['{}: {}'.format(ns, ref) 
 				for ns,ref in g.namespaces()]))
+		elif attr == "n3":
+			return template.format(name, g.n3())
+		elif attr == "types":
+			# TODO: maybe keep information like this globally in this module
+			types = set()
+			for s,o in g.subject_objects(rdflib.RDF.type):
+				types.add(o)
+			return template.format(name, 
+				'\n'.join([t for t in types]))
 	else:
 		return "Failed: Don't know attribute", attr
 
@@ -113,3 +129,26 @@ def import_ns(name):
 		return ns.provide_for(g)
 	return False
 
+
+# attach sqlite store
+def store_sqlite(name, filename):
+	"""Store. Sqlite. database.
+	"""
+	g = get_graph(name)
+	if g:
+		store = storage.sqlite(g, filename)
+		g = rdflib.Graph(store, name)
+		_graphs[name]=g
+		g.store.open(store.configuration)
+		print '{} store configuration: {}'.format(g, store.configuration)
+		return g
+
+# save xml dump
+def save_xml(name, filename):
+	"""Dumps rdf/xml to file.
+	"""
+	g = get_graph(name)
+	if g:
+		storage.save_xml(g, filename)
+		return True
+	

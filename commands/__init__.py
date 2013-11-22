@@ -53,7 +53,7 @@ argex=re.compile('<([a-zA-Z_]\w*)>')
 # single term
 trmex=re.compile('(\".+\"|\S+)')
 # file name TODO: besser
-flnex=re.compile('\S+\.(rdf|owl|RDF|OWL)')
+flnex=re.compile('\S+\.(rdf|owl|RDF|OWL|xml|n3)')
 # url TODO: verbessern
 urlex=re.compile('(https?|ftp)://\w+\.[a-z]+(/.*)*')
 
@@ -341,7 +341,9 @@ default_cmds = {
 	'create <graphname>': handlers.create_graph,
 	'load <resource> <graphname>': handlers.parse_rdf,
 	'show <graphname> <attribute>': handlers.graph_info,
-	'load namespaces <graphname>': handlers.import_namespaces
+	'load namespaces <graphname>': handlers.import_namespaces,
+	'store <graphname> sqlite <sqlite>': handlers.store_sqlite,
+	'store <graphname> xml <filename>': handlers.store_xml
 	}
 
 for command, handler in default_cmds.items():
@@ -363,4 +365,10 @@ reg_arg("attribute", proposer=arguments.graph_attrs,
 	format=[re.compile('({})'.format(attrs)) ])
 del attrs
 
+# <sqlite>
+reg_arg("sqlite", arguments.list_files_sqlite,
+	format=[re.compile('.*\.sqlite3?')])
 
+# <filename>
+reg_arg("filename", arguments.list_files_rdf,
+	format=[flnex])
