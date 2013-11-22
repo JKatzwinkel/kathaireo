@@ -82,11 +82,12 @@ def load_into(location, name):
 
 
 # info output templates
-rdfinfotempl={"size": "Number of statements in graph {}: {}"}
+rdfinfotempl={"size": "Number of statements in graph {}: {}",
+	"namespaces": "Graph {} binds the following namespaces:\n{}"}
 # show info
 def graph_info(name, attr):
 	"""Show info about specified graph.
-	Info is available about: size, source, ..."""
+	Info is available about: size, namespaces, ..."""
 	if not name in _graphs:
 		return "Failed: No graph {} known.".format(name)
 	else:
@@ -95,5 +96,20 @@ def graph_info(name, attr):
 		template = rdfinfotempl.get(attr)
 		if attr == "size":
 			return template.format(name, len(g))
+		elif attr == "namespaces":
+			return template.format(name, 
+				'\n'.join(['{}: {}'.format(ns, ref) 
+				for ns,ref in g.namespaces()]))
 	else:
 		return "Failed: Don't know attribute", attr
+
+
+# import namespace definitions for graph
+def import_ns(name):
+	"""Downloads definitions of namespaces used in the rdf
+	graph identified by the given name."""
+	g = get_graph(name)
+	if g:
+		return ns.provide_for(g)
+	return False
+

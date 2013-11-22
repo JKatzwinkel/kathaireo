@@ -33,6 +33,7 @@ Example:
 """
 __docformat__ = "restructuredtext en"
 __version__ = "0.0.1-dev"
+__all__ = ['arguments', 'handlers']
 
 import re
 import os
@@ -340,7 +341,8 @@ default_cmds = {
 	'exit': handlers.quit,
 	'create <graphname>': handlers.create_graph,
 	'load <resource> <graphname>': handlers.parse_rdf,
-	'show <graphname> <attribute>': handlers.graph_info
+	'show <graphname> <attribute>': handlers.graph_info,
+	'load namespaces <graphname>': handlers.import_namespaces
 	}
 
 for command, handler in default_cmds.items():
@@ -357,6 +359,9 @@ reg_arg("resource", proposer=arguments.list_files_rdf,
 	format=[flnex, urlex])
 
 # <attribute>
+attrs='|'.join(rdf.rdfinfotempl.keys())
 reg_arg("attribute", proposer=arguments.graph_attrs,
-	format=[re.compile('(size|source)')])
+	format=[re.compile('({})'.format(attrs)) ])
+del attrs
+
 

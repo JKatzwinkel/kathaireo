@@ -37,6 +37,8 @@ class Namespace:
 
 # parse source of given namespace
 def load(name, url):
+	"""Downloads a namespace resource at given url and
+	embeds its contents into a new `Namespace` instance."""
 	try:
 		ns = _namespaces.get(name)
 		if not ns:
@@ -47,15 +49,17 @@ def load(name, url):
 
 # download namespaces referenced by given rdf ontology
 def provide_for(ontology):
-	# load referenced namespaces
+	"""Imports definitions of namespaces a given graph is using."""
+  #load referenced namespaces
 	rdfns = [n for n in 
 			[load(ns, str(ref)) 
 				for ns, ref in ontology.namespaces()]
 			if n]
 	_namespaces.update({n.name:n for n in rdfns})
 	globals().update(_namespaces)
-	print "Namespaces:\n--------------"
-	print "\n".join(["{}".format(n) for n in _namespaces.values()]) 
+	#print "Namespaces:\n--------------"
+	print "\n".join(["{}".format(n) for n in _namespaces.values()])
+	return rdfns
 
 # list known namespace names
 def get_names():

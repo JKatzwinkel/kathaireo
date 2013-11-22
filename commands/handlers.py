@@ -24,7 +24,7 @@ def quit(*args, **kwargs):
 
 # return rdf graph
 def create_graph(*args, **kwargs):
-	"""
+	"""\
 	Creates a new `rdflib.Graph` instance going by
 	the identifier passed as first argument.
 
@@ -48,7 +48,7 @@ def create_graph(*args, **kwargs):
 
 # load resource content into graph
 def parse_rdf(*args, **kwargs):
-	"""
+	"""\
 	Parses the resource at a given location and reads it into
 	a `rdflib.Graph` identified by its name.
 
@@ -90,4 +90,11 @@ def graph_info(*args, **kwargs):
 		return info
 
 
+
+# download namespaces for given graph name
+def import_namespaces(*args, **kwargs):
+	"""Download namespaces for given graph name.
+	"""
+	name = kwargs.get('graphname')
+	return rdf.import_ns(name)
 
