@@ -250,6 +250,8 @@ def choices_left(input):
 	extend the current prefix, in case the latter doesn't end with 
 	an incomplete keyword or argument value.
 	"""
+	if not input:
+		input = ''
 	# begin traversing language tree as long as it matches current input
 	level = cmdict
 	level_down = level
@@ -257,19 +259,17 @@ def choices_left(input):
 	terms = trmex.findall(input)
 	# append empty string if line ends on whitespace. thus the next
 	# keyword/value in order can be determined later
-	if re.match('.*\s+\Z', input):
+	if re.match('.*\s+\Z', input) or len(input)<1:
 		terms.append('')
-	# print 'find choices for:',terms
-	legal = True
+	#print '\nfind choices for:',terms
 	# #########################3
 	# parse incomplete input
 	# word by word
 	for term in terms:
 		level = level_down
 		if term in level:
-			# print 'fitting:', term
+			#print 'fitting:', term
 			level_down = level.get(term)
-			#term = ''
 		else:
 			# if not a keyword, term might be an attribute value
 			argnames = [t for t in level.keys()
@@ -286,7 +286,6 @@ def choices_left(input):
 						if arguments.validate(arg, term):
 							# value matches attribute. proceed
 							level_down = level.get(a)
-							#term = ''
 							resolved=True
 			if not resolved:
 				# here is probably where the input breaks up.
@@ -306,8 +305,8 @@ def choices_left(input):
 	# possibility 1): input ends w potential or partly typed keyword
 	# possibility 2): input ends where a value should follow
 	# or is partly typed in
-	# print 'fragment, keys:', term, level.keys()
-	choices1 = [t for t in level.keys()]
+	#print 'fragment, keys:', term, level.keys()
+	choices1 = level.keys()
 	choices = []
 	for c in choices1:
 		# resolve argument, if any
@@ -319,8 +318,7 @@ def choices_left(input):
 			# completed
 			if c.startswith(term):
 				choices.append(c)
-	# print 'suggestions:',choices, ''
-	#TODO: resolve arguments and assemble suggestion lists (srg. module)
+	#print 'suggestions:',choices, ''
 	return choices
 
 

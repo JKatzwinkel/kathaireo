@@ -13,7 +13,7 @@ def complete(input, state):
 	# http://stackoverflow.com/a/5638688/1933494
 	buf = readline.get_line_buffer()
 	#line = readline.get_line_buffer().split()
-	sgst = [s+' ' for s in commands.choices_left(buf)]+[None]
+	sgst = [s+' ' for s in commands.choices_left(buf)]
 	return sgst[state]
 
 

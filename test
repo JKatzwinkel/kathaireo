@@ -7,11 +7,12 @@ print 'suggestions for graphnames:',
 print commands.arguments.get_suggestions('graphname', '')
 print '\n', commands.cmdict, '\n'
 choices = commands.choices_left('loa')
-choices = commands.choices_left('load E')
+choices = commands.choices_left('load')
+choices = commands.choices_left('load ')
 choices = commands.choices_left('load E ')
 choices = commands.choices_left('load EDAM.owl')
 choices = commands.choices_left('load EDAM.owl ')
 choices = commands.choices_left('load EDAM.owl g')
 
-commands.parse('load EDAM.owl g')
-commands.parse('show g size')
+#commands.parse('load EDAM.owl g')
+#commands.parse('show g size')
