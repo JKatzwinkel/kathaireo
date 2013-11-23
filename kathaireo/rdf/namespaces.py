@@ -3,6 +3,8 @@
 import os
 import rdflib
 
+import remote
+
 _namespaces={}
 
 class Namespace:
@@ -15,9 +17,11 @@ class Namespace:
 		self.rdf = rdflib.Graph(identifier=name)
 		# try to load namespace source
 		try:
-			self.rdf.parse(self.url)
-		except (rdflib.plugin.PluginException, ImportError):
-			self.rdf.parse(self.url, format="n3")
+			#self.rdf.parse(self.url)
+			remote.parse(self.rdf, self.url)
+		except Exception: #(rdflib.plugin.PluginException, ImportError):
+			#self.rdf.parse(self.url, format="n3")
+			remote.parse(self.rdf, self.url, format='n3')
 		except Exception as e:
 			raise e
 		# Part of speech stuff

@@ -12,6 +12,7 @@ import rdflib
 
 import namespaces as ns
 import storage
+import remote
 
 #store = SQLAlchemy(configuration="sqlite:///newspapers.sqlite")
 #g = rdflib.Graph(store, "newspapers")
@@ -94,7 +95,11 @@ def load_into(location, name):
 	if g is None:
 		return "!Oh no!: graph '{}' is null!".format(name)
 	else:
-		g.parse(location)
+		if os.path.exists(location) and os.path.isfile(location):
+			g.parse(location)
+		else:
+			# try to load from internet
+			remote.parse(g, location)
 		#print "parsed contents at {} into {}.".format(
 			#location, g)
 	return g

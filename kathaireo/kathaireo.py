@@ -47,7 +47,7 @@ if __name__=='__main__':
 #TODO: bash autocompletion
 #TODO: default command registration in interactive mode
 #TODO: parsing of remote resources (https://kask.eti.pg.gda.pl/redmine/projects/sova/repository/revisions/00951bd8e28d7bd58facb5a1da3a17ae9df115d4/raw/portalSubsystem/data/pizza.owl)
-#TODO: somehow wrap line if input gets too long.
+#TODO: somehow wrap line if input gets too long. http://stackoverflow.com/questions/9468435/look-how-to-fix-column-calculation-in-python-readline-if-use-color-prompt
 
 #try to parse these ontologies from the internet:
 # https://owlverbalizer.googlecode.com/hg-history/8da67288d6be51f8d635f3bb347bacb1cf74f811/examples/tests.owl

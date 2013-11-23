@@ -45,6 +45,7 @@ def complete(input, state):
 def execute(line):
 	return commands.execute(line)
 
+# http://stackoverflow.com/questions/9468435/look-how-to-fix-column-calculation-in-python-readline-if-use-color-prompt
 
 def run():
 	print 'ok.\n'
@@ -57,6 +58,7 @@ def run():
 	line=''
 	while True:
 		line = prompt.input()
+		readline.redisplay()
 		output = commands.execute(line)
 		prompt.display(output)
 
