@@ -74,10 +74,12 @@ def parse_rdf(*args, **kwargs):
 		if len(args)>1:
 			location, name = args[:2]
 	if not(None in [location, name]):
-		rdf.load_into(location, name)
-		g = rdf.get_graph(name)
-		return 'Succesfully read {} rdf statements from {} into graph "{}".'.format(
-			len(g), location, name)
+		if rdf.load_into(location, name) != None:
+			g = rdf.get_graph(name)
+			return 'Succesfully read {} rdf statements from {} into graph "{}".'.format(
+				len(g), location, name)
+		else:
+			return '!Error!: Could not import resource at {}.'.format(location)
 
 
 # show info about given graph

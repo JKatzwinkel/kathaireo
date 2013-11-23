@@ -4,7 +4,7 @@
 Doku doku doku
 """
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.1-dev"
+__version__ = "0.0.15-dev"
 
 import os
 import rdflib
@@ -96,10 +96,17 @@ def load_into(location, name):
 		return "!Oh no!: graph '{}' is null!".format(name)
 	else:
 		if os.path.exists(location) and os.path.isfile(location):
-			g.parse(location)
+			for mime in [None]+remote.mimetypes:
+				try:
+					g.parse(location, format=mime)
+					return g
+				except:
+					pass
+			return None
 		else:
 			# try to load from internet
-			remote.parse(g, location)
+			if remote.parse(g, location) is None:
+				return None
 		#print "parsed contents at {} into {}.".format(
 			#location, g)
 	return g
