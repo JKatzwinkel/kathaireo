@@ -53,7 +53,8 @@ setup(
 
 		entry_points = {
 			'console_scripts': [
-				'kathaireo = kathaireo.kathaireo:main']
+				'kathaireo = kathaireo.kathaireo:main', 
+				'shell = kathaireo.shell:run']
 			},
 		# closing bracket coming up!
 	)

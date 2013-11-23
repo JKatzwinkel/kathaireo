@@ -42,8 +42,6 @@ def complete(input, state):
 	return sgst[state]
 
 
-def execute(line):
-	return commands.execute(line)
 
 # http://stackoverflow.com/questions/9468435/look-how-to-fix-column-calculation-in-python-readline-if-use-color-prompt
 

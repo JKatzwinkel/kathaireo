@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*- 
 """Dokudoku!"""
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.2-dev"
+__version__ = "0.0.2b-dev"
 __author__ = "Dariah-DE"
 
 import getopt
@@ -19,6 +19,7 @@ def main():
 		shell.rdf.storage.rdflib_sqlalchemy.__version__),
 		' sqlalchemy version: {}'.format(sqlalchemy.__version__),
 		' html5lib version: {}'.format(html5lib.__version__),
+		' urllib2 version: {}'.format(shell.rdf.remote.urllib2.__version__),
 		'stats:',
 		' default commands ready: {}'.format(
 		len(shell.commands.cmdict)),
