@@ -157,6 +157,8 @@ def to_history(arg, value):
 rdfglobs = ["*.rdf", "*.RDF", "*.owl", "*.OWL", "*.n3", "*.xml"]
 # list ontology files in current directory (rdf, owl, n3, xml)
 def list_files_rdf(arg, prefix):
+	"""Returns a list of local files with extensions .rdf, .owl, .n3 and .xml,
+	matching given prefix."""
 	files = []
 	path = os.sep.join(prefix.split(os.sep)[:-1])
 	for rdfglob in rdfglobs:
@@ -167,6 +169,7 @@ def list_files_rdf(arg, prefix):
 
 # suggest local sqlite files
 def list_files_sqlite(arg, prefix):
+	"""Returns a list of local files with extensions .sqlite and .sqlite3."""
 	files = []
 	path = os.sep.join(prefix.split(os.sep)[:-1])
 	for glb in ['*.sqlite', '*.sqlite3']:
@@ -179,7 +182,11 @@ def list_files_sqlite(arg, prefix):
 
 # propose rdf graph attribute ids
 def graph_attrs(arg, prefix):
+	"""Returns a list of names matching the given prefix and identifying
+	RDF graphs registered by the `rdf` module."""
 	attrs = rdf.rdfinfotempl.keys()
 	suggestions = [a for a in attrs if a.startswith(prefix)]
 	suggestions.extend(propose_default(arg, prefix))
 	return suggestions
+
+
