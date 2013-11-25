@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*- 
 """\
 This package offers a way for convenient registration
-of custom commands. By calling its `register` method,
+of custom commands. By calling its :func:`register` method,
 a formal representation of a command syntax can be
 bound to a handling function desired to be called for
 user input matching said command. 
@@ -12,7 +12,7 @@ their command's arguments marked by surrounding angle
 brackets (<>).
 
 The internal representation of the resulting command
-language can be found in the `cmdict` member
+language can be found in the :data:`cmdict` member
 of this module, which resembles a syntax tree in which
 by traversing down along a command syntax' terms, the
 thereby reached leafe refers to the corresponding
@@ -25,15 +25,15 @@ Example:
 	... 	name = kwargs.get("graphname") # or = args[0]
 	... 	[...]
 	...
-	>>>	commands.register("create <graphname>", handler)
+	>>> commands.register("create <graphname>", handler)
 	Registered handling function handler('args', [...]
 	>>> commands.cmdict
 	{'create': {'<graphname>': {'': <function handler at 0x86c26f4>}}}
 
 """
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.1-dev"
-__all__ = ['arguments', 'handlers']
+__version__ = "0.0.2-dev"
+#__all__ = ['arguments', 'handlers']
 
 import re
 import os
@@ -46,6 +46,8 @@ reg_arg = arguments.register
 
 # command syntax language tree
 cmdict={}
+"""Assembles a tree (more precisely: a forest) of which each path that 
+leads from a root all the way down to a leaf, stands for a legal command."""
 
 # define regular expressions for command resolution
 # argument placeholder
@@ -66,38 +68,34 @@ def register(syntax, function):
 	dictionary and registers the given function as
 	its handler.
 
-	:Parameters:
+	:param syntax: A String containing a formal 
+	representation of a new command's syntax.
+	A command syntax may contain argument identifiers 
+	s.t. the handling function (and shell-features like 
+	autocomplete) has access to argument variables 
+	passed to a command. A command syntax string 
+	indicating a handler's capability of processing 
+	command arguments would look something like this, 
+	for instance:
 
-		- `syntax`: A String containing a formal 
-		  representation of a new command's syntax.
-		  A command syntax may contain argument identifiers 
-		  s.t. the handling function (and shell-features like 
-		  autocomplete) has access to argument variables 
-		  passed to a command. A command syntax string 
-		  indicating a handler's capability of processing 
-		  command arguments would look something like this, 
-		  for instance:
+		'command option <arg1> <arg2> someswitch <arg3>'
 
-			'command option <arg1> <arg2> someswitch <arg3>'
+	:param function: A function intended to be called when
+	said command is to be executed. Should accept 
+	an unlimited number of both positional and keyword 
+	arguments and is hence recommended to look sth like 
+	the following: 
 
-		- `function`: A function intended to be called when
-		  said command is to be executed. Should accept 
-		  an unlimited number of both positional and keyword 
-		  arguments and is hence recommended to look sth like 
-		  the following: 
+		>>> def func(*args, **kwargs):
+		...    [...]
 
-			def func(*args, **kwargs):
-				[...]
+	Note that nonetheless, it is not 
+	tested for fitting this requirement, but one might
+	get in trouble when ignoring it.
 
-		  Note that nonetheless, it is not 
-		  tested for fitting this requirement, but one might
-		  get in trouble when ignoring it.
-
-	:Returns:
-
-		- `True`, if function was successfully bound to
-		  command syntax, `False`, if command syntax
-		  is already in registry.
+	:returns: `True`, if function was successfully bound to
+	command syntax, `False`, if command syntax
+	is already in registry.
 	"""
 	# anchor at top level of command path dict
 	level=cmdict

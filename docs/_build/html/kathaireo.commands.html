@@ -1,0 +1,490 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>commands Package &mdash; kathaireo  documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="kathaireo  documentation" href="index.html" />
+    <link rel="up" title="kathaireo Package" href="kathaireo.html" />
+    <link rel="next" title="rdf Package" href="kathaireo.rdf.html" />
+    <link rel="prev" title="kathaireo Package" href="kathaireo.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="kathaireo.rdf.html" title="rdf Package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="kathaireo.html" title="kathaireo Package"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">kathaireo  documentation</a> &raquo;</li>
+          <li><a href="kathaireo.html" accesskey="U">kathaireo Package</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="commands-package">
+<h1>commands Package<a class="headerlink" href="#commands-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2><tt class="xref py py-mod docutils literal"><span class="pre">commands</span></tt> Package<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-kathaireo.commands"></span><p>This package offers a way for convenient registration
+of custom commands. By calling its <a class="reference internal" href="#kathaireo.commands.register" title="kathaireo.commands.register"><tt class="xref py py-func docutils literal"><span class="pre">register()</span></tt></a> method,
+a formal representation of a command syntax can be
+bound to a handling function desired to be called for
+user input matching said command. 
+Functions intended to serve as handlers, when declared
+like <cite>def func(*args, **kwargs)</cite> have access to 
+their command&#8217;s arguments marked by surrounding angle
+brackets (&lt;&gt;).</p>
+<p>The internal representation of the resulting command
+language can be found in the <a class="reference internal" href="#kathaireo.commands.cmdict" title="kathaireo.commands.cmdict"><tt class="xref py py-data docutils literal"><span class="pre">cmdict</span></tt></a> member
+of this module, which resembles a syntax tree in which
+by traversing down along a command syntax&#8217; terms, the
+thereby reached leafe refers to the corresponding
+handler function.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">commands</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">handler</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;graphname&quot;</span><span class="p">)</span> <span class="c"># or = args[0]</span>
+<span class="gp">... </span>    <span class="p">[</span><span class="o">...</span><span class="p">]</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">commands</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s">&quot;create &lt;graphname&gt;&quot;</span><span class="p">,</span> <span class="n">handler</span><span class="p">)</span>
+<span class="go">Registered handling function handler(&#39;args&#39;, [...]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">commands</span><span class="o">.</span><span class="n">cmdict</span>
+<span class="go">{&#39;create&#39;: {&#39;&lt;graphname&gt;&#39;: {&#39;&#39;: &lt;function handler at 0x86c26f4&gt;}}}</span>
+</pre></div>
+</div>
+<dl class="function">
+<dt id="kathaireo.commands.choices_left">
+<tt class="descclassname">kathaireo.commands.</tt><tt class="descname">choices_left</tt><big>(</big><em>input</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands.html#choices_left"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.choices_left" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assembles a list of terms that allow a valid input line
+given the prefix passed as <cite>input</cite> has been typed in so far.
+Those terms can include command keywords and argument values
+and depend on the command syntax to which the input line so far 
+typed in matches, as well as legal argument values for that 
+incomplete input line. 
+The resulting list will only contain keywords or argument values
+that either have been started typing in, or those that may legally
+extend the current prefix, in case the latter doesn&#8217;t end with 
+an incomplete keyword or argument value.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="kathaireo.commands.cmdict">
+<tt class="descclassname">kathaireo.commands.</tt><tt class="descname">cmdict</tt><em class="property"> = {'load': {'&lt;resource&gt;': {'&lt;graphname&gt;': {'': &lt;function parse_rdf at 0x9cda764&gt;}}, 'namespaces': {'&lt;graphname&gt;': {'': &lt;function import_namespaces at 0x9cda80c&gt;}}}, 'save': {'&lt;graphname&gt;': {'to': {'xml': {'&lt;filename&gt;': {'': &lt;function store_xml at 0x9cda87c&gt;}}}}}, 'show': {'&lt;graphname&gt;': {'&lt;attribute&gt;': {'': &lt;function graph_info at 0x9cda79c&gt;}}}, 'create': {'&lt;graphname&gt;': {'': &lt;function create_graph at 0x9cda72c&gt;, 'store': {'sqlite': {'&lt;sqlite&gt;': {'': &lt;function store_sqlite at 0x9cda844&gt;}}}}}, 'exit': {'': &lt;function quit at 0x9cda6f4&gt;}, 'connect': {'&lt;graphname&gt;': {'to': {'sqlite': {'&lt;sqlite&gt;': {'': &lt;function store_sqlite at 0x9cda844&gt;}}}}}, 'copy': {'&lt;graphname&gt;': {'to': {'&lt;graphname&gt;': {'': &lt;function cp_graph at 0x9cda7d4&gt;}}}}, ':q': {'': &lt;function quit at 0x9cda6f4&gt;}}</em><a class="headerlink" href="#kathaireo.commands.cmdict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assembles a tree (more precisely: a forest) of which each path that
+leads from a root all the way down to a leaf, stands for a legal command.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.commands.execute">
+<tt class="descclassname">kathaireo.commands.</tt><tt class="descname">execute</tt><big>(</big><em>input</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands.html#execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests given input string against currently
+registered command syntaxes. If input turns out
+to be a valid command, a corresponding handler 
+function is called. If matching syntax contains
+argument placeholders (<cite>&#8220;command &lt;arg&gt;&#8221;</cite>), their
+respective values are extracted from the input and
+passed to the handler function.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.commands.msg_incomplete_cmd">
+<tt class="descclassname">kathaireo.commands.</tt><tt class="descname">msg_incomplete_cmd</tt><big>(</big><em>keywords</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands.html#msg_incomplete_cmd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.msg_incomplete_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a helpful error message in case an input string
+didn&#8217;t contain a complete command, and the parser had still been
+expecting upcoming content at the time of termination.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.commands.register">
+<tt class="descclassname">kathaireo.commands.</tt><tt class="descname">register</tt><big>(</big><em>syntax</em>, <em>function</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands.html#register"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.register" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inserts the given command&#8217;s syntax into a known commands
+dictionary and registers the given function as
+its handler.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>syntax</strong> &#8211; A String containing a formal</td>
+</tr>
+</tbody>
+</table>
+<p>representation of a new command&#8217;s syntax.
+A command syntax may contain argument identifiers 
+s.t. the handling function (and shell-features like 
+autocomplete) has access to argument variables 
+passed to a command. A command syntax string 
+indicating a handler&#8217;s capability of processing 
+command arguments would look something like this, 
+for instance:</p>
+<blockquote>
+<div>&#8216;command option &lt;arg1&gt; &lt;arg2&gt; someswitch &lt;arg3&gt;&#8217;</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>function</strong> &#8211; A function intended to be called when</td>
+</tr>
+</tbody>
+</table>
+<p>said command is to be executed. Should accept 
+an unlimited number of both positional and keyword 
+arguments and is hence recommended to look sth like 
+the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="p">[</span><span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Note that nonetheless, it is not 
+tested for fitting this requirement, but one might
+get in trouble when ignoring it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><cite>True</cite>, if function was successfully bound to</td>
+</tr>
+</tbody>
+</table>
+<p>command syntax, <cite>False</cite>, if command syntax
+is already in registry.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-kathaireo.commands.arguments">
+<span id="arguments-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">arguments</span></tt> Module<a class="headerlink" href="#module-kathaireo.commands.arguments" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="#module-kathaireo.commands.arguments" title="kathaireo.commands.arguments"><tt class="xref py py-mod docutils literal"><span class="pre">arguments</span></tt></a> module keeps track of command argument usage.</p>
+<p>On the one hand, it keeps track of proper values from user
+input fitting argument placeholders in typed-in commands.
+Every argument placeholder thus has its own input
+history.</p>
+<p>On the other hand, each argument placeholder gets equipped
+with two properties to impose requirements on its legal 
+values with: the <a class="reference internal" href="#kathaireo.commands.arguments.ArgValidator.propose" title="kathaireo.commands.arguments.ArgValidator.propose"><tt class="xref py py-meth docutils literal"><span class="pre">propose()</span></tt></a> function provides a suggestions 
+list of possible values that may replace the placeholder,
+and can be used for like autocompletion.
+The <tt class="xref py py-attr docutils literal"><span class="pre">format</span></tt> list contains regular expressions determining
+what input values are allowed.</p>
+<dl class="class">
+<dt id="kathaireo.commands.arguments.ArgValidator">
+<em class="property">class </em><tt class="descclassname">kathaireo.commands.arguments.</tt><tt class="descname">ArgValidator</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands/arguments.html#ArgValidator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.arguments.ArgValidator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Container class for the two main validity specifiers an argument
+identifier can be assigned to: an autocompletion candidate proposal
+function (default one is <a class="reference internal" href="#kathaireo.commands.arguments.propose_default" title="kathaireo.commands.arguments.propose_default"><tt class="xref py py-func docutils literal"><span class="pre">propose_default()</span></tt></a>) and a
+<tt class="xref py py-attr docutils literal"><span class="pre">format</span></tt> list of regular expressions for checking
+value validity.</p>
+<dl class="method">
+<dt id="kathaireo.commands.arguments.ArgValidator.propose">
+<tt class="descname">propose</tt><big>(</big><em>prefix</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands/arguments.html#ArgValidator.propose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.arguments.ArgValidator.propose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls this instance&#8217;s value proposal handler
+and returns all suggestions for the given 
+input prefix.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="kathaireo.commands.arguments.ArgValidator.validate">
+<tt class="descname">validate</tt><big>(</big><em>str</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands/arguments.html#ArgValidator.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.arguments.ArgValidator.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests validity of a given string according
+to this argument&#8217;s value restrictions.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="data">
+<dt id="kathaireo.commands.arguments.arghist">
+<tt class="descclassname">kathaireo.commands.arguments.</tt><tt class="descname">arghist</tt><em class="property"> = {'resource': [], 'attribute': [], 'sqlite': [], 'graphname': [], 'filename': []}</em><a class="headerlink" href="#kathaireo.commands.arguments.arghist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary object in which lists of previously submitted values are
+stored under assigned argument identifiers.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="kathaireo.commands.arguments.argvals">
+<tt class="descclassname">kathaireo.commands.arguments.</tt><tt class="descname">argvals</tt><em class="property"> = {'resource': &lt;kathaireo.commands.arguments.ArgValidator instance at 0x93aefcc&gt;, 'attribute': &lt;kathaireo.commands.arguments.ArgValidator instance at 0x93aee2c&gt;, 'sqlite': &lt;kathaireo.commands.arguments.ArgValidator instance at 0x93cea8c&gt;, 'graphname': &lt;kathaireo.commands.arguments.ArgValidator instance at 0x93ce04c&gt;, 'filename': &lt;kathaireo.commands.arguments.ArgValidator instance at 0x93aec2c&gt;}</em><a class="headerlink" href="#kathaireo.commands.arguments.argvals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Directory of registered argument identifiers, each one referencing their
+assigned <a class="reference internal" href="#kathaireo.commands.arguments.ArgValidator" title="kathaireo.commands.arguments.ArgValidator"><tt class="xref py py-class docutils literal"><span class="pre">ArgValidator</span></tt></a> instance.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.commands.arguments.get_suggestions">
+<tt class="descclassname">kathaireo.commands.arguments.</tt><tt class="descname">get_suggestions</tt><big>(</big><em>name</em>, <em>prefix</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands/arguments.html#get_suggestions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.arguments.get_suggestions" title="Permalink to this definition">¶</a></dt>
+<dd><p>calls an argument placeholder&#8217;s <a class="reference internal" href="#kathaireo.commands.arguments.ArgValidator.propose" title="kathaireo.commands.arguments.ArgValidator.propose"><tt class="xref py py-meth docutils literal"><span class="pre">propose()</span></tt></a> handler 
+function and returns resulting suggestions.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.commands.arguments.graph_attrs">
+<tt class="descclassname">kathaireo.commands.arguments.</tt><tt class="descname">graph_attrs</tt><big>(</big><em>arg</em>, <em>prefix</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands/arguments.html#graph_attrs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.arguments.graph_attrs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of names matching the given prefix and identifying
+RDF graphs registered by the <a class="reference internal" href="kathaireo.rdf.html#module-kathaireo.rdf" title="kathaireo.rdf"><tt class="xref py py-mod docutils literal"><span class="pre">rdf</span></tt></a> module.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.commands.arguments.list_files_rdf">
+<tt class="descclassname">kathaireo.commands.arguments.</tt><tt class="descname">list_files_rdf</tt><big>(</big><em>arg</em>, <em>prefix</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands/arguments.html#list_files_rdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.arguments.list_files_rdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of local files with extensions <cite>.rdf, .owl, .n3</cite> and <cite>.xml</cite>,
+matching given prefix.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.commands.arguments.list_files_sqlite">
+<tt class="descclassname">kathaireo.commands.arguments.</tt><tt class="descname">list_files_sqlite</tt><big>(</big><em>arg</em>, <em>prefix</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands/arguments.html#list_files_sqlite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.arguments.list_files_sqlite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of local files with extensions <cite>.sqlite</cite> and <cite>.sqlite3</cite>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.commands.arguments.propose_default">
+<tt class="descclassname">kathaireo.commands.arguments.</tt><tt class="descname">propose_default</tt><big>(</big><em>arg</em>, <em>prefix</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands/arguments.html#propose_default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.arguments.propose_default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default function for argument value proposal.
+Looks up previous values for this argument and
+suggests those that match the given prefix.
+Can be overwritten under this premise.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.commands.arguments.register">
+<tt class="descclassname">kathaireo.commands.arguments.</tt><tt class="descname">register</tt><big>(</big><em>name</em>, <em>proposer=&lt;function propose_default at 0x9cda224&gt;</em>, <em>format=None</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands/arguments.html#register"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.arguments.register" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registers an argument placeholder. This means,
+for an arguments name/identifier, a user input history
+and an <a class="reference internal" href="#kathaireo.commands.arguments.ArgValidator" title="kathaireo.commands.arguments.ArgValidator"><tt class="xref py py-class docutils literal"><span class="pre">ArgValidator</span></tt></a> instance are created.</p>
+<p>The latter is responsible for suggesting appropriate 
+input values for this argument (which might be useful
+in features like autocompletion) and for determining
+wheather a given value is legal for this argument 
+(like variable names are not meant to start with a number,
+urls must satisfy a certain format, and stuff like that.).</p>
+<p>If an argument has been registered before, no changes
+are made unless a custom proposal function or a list
+of regular expressions is being passed in this call.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> &#8211; identifier of argument to register</li>
+<li><strong>proposer</strong> &#8211; <p>input value proposal
+handling function for this argument (optional). This will
+be called when autocompletion recognizes that
+someone is about to input a value for this
+argument and wants assistance. Any function
+meant to serve as a proposal handler must take
+exactly two parameters:</p>
+<blockquote>
+<div><ol class="arabic">
+<li>the argument placeholder identifier,</li>
+<li>the prefix that needs to be autocompleted</li>
+</ol>
+</div></blockquote>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.commands.arguments.to_history">
+<tt class="descclassname">kathaireo.commands.arguments.</tt><tt class="descname">to_history</tt><big>(</big><em>arg</em>, <em>value</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands/arguments.html#to_history"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.arguments.to_history" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a value to an argument&#8217;s input history stored in <a class="reference internal" href="#kathaireo.commands.arguments.arghist" title="kathaireo.commands.arguments.arghist"><tt class="xref py py-obj docutils literal"><span class="pre">arghist</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.commands.arguments.validate">
+<tt class="descclassname">kathaireo.commands.arguments.</tt><tt class="descname">validate</tt><big>(</big><em>arg</em>, <em>input</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands/arguments.html#validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.arguments.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates given input string according to specified
+argument&#8217;s value restrictions.
+Return true if input is ok.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-kathaireo.commands.handlers">
+<span id="handlers-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">handlers</span></tt> Module<a class="headerlink" href="#module-kathaireo.commands.handlers" title="Permalink to this headline">¶</a></h2>
+<p>Contains implementations of handler functions for 
+standard commands in interactive shell mode.</p>
+<p>Functions intended to serve as handlers, when declared
+like <tt class="docutils literal"><span class="pre">def</span> <span class="pre">func(*args,</span> <span class="pre">**kwargs)</span></tt>, can be registered
+using the <a class="reference internal" href="#module-kathaireo.commands" title="kathaireo.commands"><tt class="xref py py-mod docutils literal"><span class="pre">commands</span></tt></a> module:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">commands</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s">&quot;create &lt;graphname&gt;&quot;</span><span class="p">,</span> <span class="n">handler</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="function">
+<dt id="kathaireo.commands.handlers.cp_graph">
+<tt class="descclassname">kathaireo.commands.handlers.</tt><tt class="descname">cp_graph</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands/handlers.html#cp_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.handlers.cp_graph" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.commands.handlers.create_graph">
+<tt class="descclassname">kathaireo.commands.handlers.</tt><tt class="descname">create_graph</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands/handlers.html#create_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.handlers.create_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new <tt class="xref py py-class docutils literal"><span class="pre">rdf.rdflib.Graph</span></tt> instance going by
+the identifier passed as first argument.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>identifier</strong> &#8211; Id for the new Graph</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The resulting <cite>rdflib.Graph</cite> instance when 
+successful, <cite>None</cite> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.commands.handlers.graph_info">
+<tt class="descclassname">kathaireo.commands.handlers.</tt><tt class="descname">graph_info</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands/handlers.html#graph_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.handlers.graph_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display information about certain rdf graph.
+Possible keywords: size, ...</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.commands.handlers.import_namespaces">
+<tt class="descclassname">kathaireo.commands.handlers.</tt><tt class="descname">import_namespaces</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands/handlers.html#import_namespaces"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.handlers.import_namespaces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download namespaces for given graph name.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.commands.handlers.parse_rdf">
+<tt class="descclassname">kathaireo.commands.handlers.</tt><tt class="descname">parse_rdf</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands/handlers.html#parse_rdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.handlers.parse_rdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses the resource at a given location and reads it into
+a <cite>rdflib.Graph</cite> identified by its name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>location</strong> &#8211; A String specifying the location of the 
+resource to be read. Can be a path to a local file or a URL.</li>
+<li><strong>graphname</strong> &#8211; A String identifying an <cite>rdflib.Graph</cite> instance.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><cite>True</cite>, if parsing was successful.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.commands.handlers.quit">
+<tt class="descclassname">kathaireo.commands.handlers.</tt><tt class="descname">quit</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands/handlers.html#quit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.handlers.quit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simply calls <tt class="xref py py-func docutils literal"><span class="pre">exit()</span></tt>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.commands.handlers.store_sqlite">
+<tt class="descclassname">kathaireo.commands.handlers.</tt><tt class="descname">store_sqlite</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands/handlers.html#store_sqlite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.handlers.store_sqlite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set sqlite as store for graph.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.commands.handlers.store_xml">
+<tt class="descclassname">kathaireo.commands.handlers.</tt><tt class="descname">store_xml</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/kathaireo/commands/handlers.html#store_xml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.commands.handlers.store_xml" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save contents of a graph to an <cite>xml</cite> file.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">commands Package</a><ul>
+<li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">commands</span></tt> Package</a></li>
+<li><a class="reference internal" href="#module-kathaireo.commands.arguments"><tt class="docutils literal"><span class="pre">arguments</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-kathaireo.commands.handlers"><tt class="docutils literal"><span class="pre">handlers</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="kathaireo.html"
+                        title="previous chapter">kathaireo Package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="kathaireo.rdf.html"
+                        title="next chapter">rdf Package</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/kathaireo.commands.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="kathaireo.rdf.html" title="rdf Package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="kathaireo.html" title="kathaireo Package"
+             >previous</a> |</li>
+        <li><a href="index.html">kathaireo  documentation</a> &raquo;</li>
+          <li><a href="kathaireo.html" >kathaireo Package</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, J. Katzwinkel.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

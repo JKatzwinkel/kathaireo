@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*- 
 """\
-The `arg` module keeps track of command argument usage.
+The :mod:`.arguments` module keeps track of command argument usage.
 
 On the one hand, it keeps track of proper values from user
 input fitting argument placeholders in typed-in commands.
@@ -10,15 +10,15 @@ history.
 
 On the other hand, each argument placeholder gets equipped
 with two properties to impose requirements on its legal 
-values with: the `propose` function provides a suggestions 
+values with: the :meth:`~.ArgValidator.propose` function provides a suggestions 
 list of possible values that may replace the placeholder,
 and can be used for like autocompletion.
-The `format` list contains regular expressions determining
-what input values are allowed.
+The :attr:`~.ArgValidator.format` list contains regular expressions determining
+what input values are allowed. 
 """
 
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.1-dev"
+__version__ = "0.0.1a-dev"
 
 import re
 import os
@@ -28,14 +28,23 @@ from .. import rdf
 
 # value history for each known argument placeholder
 arghist = {}
+"""Dictionary object in which lists of previously submitted values are
+stored under assigned argument identifiers."""
+
 # directory of known arguments and their ArgValidator instances
 argvals = {}
+"""Directory of registered argument identifiers, each one referencing their
+assigned :class:`.ArgValidator` instance."""
 
 # default regex for e.g identifiers, names
 namex = re.compile('\A[a-zA-Z_]\w*\Z')
 
 class ArgValidator:
-	"""
+	"""Container class for the two main validity specifiers an argument
+	identifier can be assigned to: an autocompletion candidate proposal
+	function (default one is :func:`.propose_default`) and a
+	:attr:`~.ArgValidator.format` list of regular expressions for checking
+	value validity.
 	"""
 	def __init__(self, name):
 		self.name = name
@@ -74,7 +83,7 @@ def propose_default(arg, prefix):
 # calls an argument placeholder's propose handler and
 # returns resulting suggestions
 def get_suggestions(name, prefix):
-	"""calls an argument placeholder's `propose` handler 
+	"""calls an argument placeholder's :meth:`~.ArgValidator.propose` handler 
 	function and returns resulting suggestions.
 	"""
 	# get validator or assign a new default instance
@@ -88,7 +97,7 @@ def get_suggestions(name, prefix):
 def register(name, proposer=propose_default, format=None):
 	"""Registers an argument placeholder. This means,
 	for an arguments name/identifier, a user input history
-	and an `ArgValidator` instance are created.
+	and an :class:`.ArgValidator` instance are created.
 
 	The latter is responsible for suggesting appropriate 
 	input values for this argument (which might be useful
@@ -102,15 +111,16 @@ def register(name, proposer=propose_default, format=None):
 	of regular expressions is being passed in this call.
 
 	:param name: identifier of argument to register
-	:param proposer: (optional) input value proposal
-		  handling function for this argument. This will
-		  be called when autocompletion recognizes that
-		  someone is about to input a value for this
-		  argument and wants assistance. Any function
-		  meant to serve as a proposal handler must take
-		  exactly two parameters: 1. the argument placeholder 
-		  identifier,  2. the prefix that needs to be
-		  autocompleted
+	:param proposer: input value proposal
+		handling function for this argument (optional). This will
+		be called when autocompletion recognizes that
+		someone is about to input a value for this
+		argument and wants assistance. Any function
+		meant to serve as a proposal handler must take
+		exactly two parameters: 
+	
+			1. the argument placeholder identifier,
+			2. the prefix that needs to be autocompleted
 	"""
 	# create value history 
 	if not name in arghist:
@@ -140,7 +150,7 @@ def validate(arg, input):
 
 # add to arg history
 def to_history(arg, value):
-	"""Write a value to an argument's input history."""
+	"""Write a value to an argument's input history stored in :obj:`arghist`."""
 	hist = arghist.get(arg, [])
 	if not arg in arghist:
 		arghist[arg] = hist
@@ -155,7 +165,7 @@ def to_history(arg, value):
 rdfglobs = ["*.rdf", "*.RDF", "*.owl", "*.OWL", "*.n3", "*.xml"]
 # list ontology files in current directory (rdf, owl, n3, xml)
 def list_files_rdf(arg, prefix):
-	"""Returns a list of local files with extensions .rdf, .owl, .n3 and .xml,
+	"""Returns a list of local files with extensions `.rdf, .owl, .n3` and `.xml`,
 	matching given prefix."""
 	files = []
 	path = os.sep.join(prefix.split(os.sep)[:-1])
@@ -167,7 +177,7 @@ def list_files_rdf(arg, prefix):
 
 # suggest local sqlite files
 def list_files_sqlite(arg, prefix):
-	"""Returns a list of local files with extensions .sqlite and .sqlite3."""
+	"""Returns a list of local files with extensions `.sqlite` and `.sqlite3`."""
 	files = []
 	path = os.sep.join(prefix.split(os.sep)[:-1])
 	for glb in ['*.sqlite', '*.sqlite3']:
@@ -181,7 +191,7 @@ def list_files_sqlite(arg, prefix):
 # propose rdf graph attribute ids
 def graph_attrs(arg, prefix):
 	"""Returns a list of names matching the given prefix and identifying
-	RDF graphs registered by the `rdf` module."""
+	RDF graphs registered by the :mod:`.rdf` module."""
 	attrs = rdf.rdfinfotempl.keys()
 	suggestions = [a for a in attrs if a.startswith(prefix)]
 	suggestions.extend(propose_default(arg, prefix))

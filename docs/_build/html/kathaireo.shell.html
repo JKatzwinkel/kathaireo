@@ -1,0 +1,203 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>shell Package &mdash; kathaireo  documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="kathaireo  documentation" href="index.html" />
+    <link rel="up" title="kathaireo Package" href="kathaireo.html" />
+    <link rel="prev" title="rdf Package" href="kathaireo.rdf.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="kathaireo.rdf.html" title="rdf Package"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">kathaireo  documentation</a> &raquo;</li>
+          <li><a href="kathaireo.html" accesskey="U">kathaireo Package</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="shell-package">
+<h1>shell Package<a class="headerlink" href="#shell-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2><tt class="xref py py-mod docutils literal"><span class="pre">shell</span></tt> Package<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-kathaireo.shell"></span><p>The contents of the <a class="reference internal" href="#module-kathaireo.shell" title="kathaireo.shell"><tt class="xref py py-mod docutils literal"><span class="pre">shell</span></tt></a> package implement a simple
+interactive command-line shell for operating on RDF resources.</p>
+<p>Main concern of this package is assisting the user&#8217;s input, e.g.
+by providing autocompletion and feedback like error messages.
+Nonetheless, the <a class="reference internal" href="#module-kathaireo.shell" title="kathaireo.shell"><tt class="xref py py-mod docutils literal"><span class="pre">shell</span></tt></a> package serves merely as an interface 
+between user and the actual <cite>kathaireo</cite> functionality, which is
+realized in the <a class="reference internal" href="kathaireo.rdf.html#module-kathaireo.rdf" title="kathaireo.rdf"><tt class="xref py py-mod docutils literal"><span class="pre">rdf</span></tt></a> and <a class="reference internal" href="kathaireo.commands.html#module-kathaireo.commands" title="kathaireo.commands"><tt class="xref py py-mod docutils literal"><span class="pre">commands</span></tt></a> packages. In fact, the 
+interactive shell is mainly intended to just take care of useful
+input/output features. Everything beyond that is delegated 
+elsewhere.</p>
+<p>The more interesting functions of the package&#8217;s root 
+module is <a class="reference internal" href="#kathaireo.shell.run" title="kathaireo.shell.run"><tt class="xref py py-func docutils literal"><span class="pre">run()</span></tt></a>. 
+By calling <a class="reference internal" href="#kathaireo.shell.run" title="kathaireo.shell.run"><tt class="xref py py-func docutils literal"><span class="pre">run()</span></tt></a>, an 
+interactive shell is started which passes user input to the
+<a class="reference internal" href="kathaireo.commands.html#module-kathaireo.commands" title="kathaireo.commands"><tt class="xref py py-mod docutils literal"><span class="pre">commands</span></tt></a> package for execution. When called as a script, 
+this module will automatically start a shell.</p>
+<dl class="function">
+<dt id="kathaireo.shell.complete">
+<tt class="descclassname">kathaireo.shell.</tt><tt class="descname">complete</tt><big>(</big><em>input</em>, <em>state</em><big>)</big><a class="reference internal" href="_modules/kathaireo/shell.html#complete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.shell.complete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs generic autocompletion action for whatever incomplete
+input string has been typed into the shell so far. Will be 
+automatically called from somewhere in the <cite>readline</cite> module.</p>
+<p>Depending on the current content of <cite>readline.get_line_buffer()</cite>,
+this function retrieves a list of input terms which are
+considered likely to be in mind of the typing user, for instance
+because they begin with what the user has typed in so far.
+This list of candidate terms is put together by the <a class="reference internal" href="kathaireo.commands.html#kathaireo.commands.choices_left" title="kathaireo.commands.choices_left"><tt class="xref py py-func docutils literal"><span class="pre">choices_left()</span></tt></a>
+function in the <a class="reference internal" href="kathaireo.commands.html#module-kathaireo.commands" title="kathaireo.commands"><tt class="xref py py-mod docutils literal"><span class="pre">commands</span></tt></a> module. Read its documentation for
+more information.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.shell.run">
+<tt class="descclassname">kathaireo.shell.</tt><tt class="descname">run</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/kathaireo/shell.html#run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.shell.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Once entered, this function won&#8217;t necessarily return within
+foreseeable future. It is where the main loop of <cite>kathaireo&#8217;s</cite> shell
+runs. In every repetition, an input line is retrieved from the
+<a class="reference internal" href="#module-kathaireo.shell.prompt" title="kathaireo.shell.prompt"><tt class="xref py py-mod docutils literal"><span class="pre">prompt</span></tt></a> module, and passed over to the <a class="reference internal" href="kathaireo.commands.html#kathaireo.commands.execute" title="kathaireo.commands.execute"><tt class="xref py py-func docutils literal"><span class="pre">execute()</span></tt></a> function of
+module <a class="reference internal" href="kathaireo.commands.html#module-kathaireo.commands" title="kathaireo.commands"><tt class="xref py py-mod docutils literal"><span class="pre">commands</span></tt></a>, whose returning status message or command response
+is again given to the <a class="reference internal" href="#module-kathaireo.shell.prompt" title="kathaireo.shell.prompt"><tt class="xref py py-mod docutils literal"><span class="pre">prompt</span></tt></a> module for printing.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-kathaireo.shell.highlights">
+<span id="highlights-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">highlights</span></tt> Module<a class="headerlink" href="#module-kathaireo.shell.highlights" title="Permalink to this headline">¶</a></h2>
+<p>Syntax highlighting.</p>
+<dl class="function">
+<dt id="kathaireo.shell.highlights.col_demo">
+<tt class="descclassname">kathaireo.shell.highlights.</tt><tt class="descname">col_demo</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/kathaireo/shell/highlights.html#col_demo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.shell.highlights.col_demo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.shell.highlights.color">
+<tt class="descclassname">kathaireo.shell.highlights.</tt><tt class="descname">color</tt><big>(</big><em>i</em><big>)</big><a class="reference internal" href="_modules/kathaireo/shell/highlights.html#color"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.shell.highlights.color" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.shell.highlights.hilite">
+<tt class="descclassname">kathaireo.shell.highlights.</tt><tt class="descname">hilite</tt><big>(</big><em>token</em><big>)</big><a class="reference internal" href="_modules/kathaireo/shell/highlights.html#hilite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.shell.highlights.hilite" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-kathaireo.shell.prompt">
+<span id="prompt-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">prompt</span></tt> Module<a class="headerlink" href="#module-kathaireo.shell.prompt" title="Permalink to this headline">¶</a></h2>
+<p>This module reads user input and responds with pretty and
+colorful output.</p>
+<dl class="function">
+<dt id="kathaireo.shell.prompt.display">
+<tt class="descclassname">kathaireo.shell.prompt.</tt><tt class="descname">display</tt><big>(</big><em>output</em><big>)</big><a class="reference internal" href="_modules/kathaireo/shell/prompt.html#display"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.shell.prompt.display" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.shell.prompt.input">
+<tt class="descclassname">kathaireo.shell.prompt.</tt><tt class="descname">input</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/kathaireo/shell/prompt.html#input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.shell.prompt.input" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="kathaireo.shell.prompt.tokenize">
+<tt class="descclassname">kathaireo.shell.prompt.</tt><tt class="descname">tokenize</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/kathaireo/shell/prompt.html#tokenize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kathaireo.shell.prompt.tokenize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">shell Package</a><ul>
+<li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">shell</span></tt> Package</a></li>
+<li><a class="reference internal" href="#module-kathaireo.shell.highlights"><tt class="docutils literal"><span class="pre">highlights</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-kathaireo.shell.prompt"><tt class="docutils literal"><span class="pre">prompt</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="kathaireo.rdf.html"
+                        title="previous chapter">rdf Package</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/kathaireo.shell.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="kathaireo.rdf.html" title="rdf Package"
+             >previous</a> |</li>
+        <li><a href="index.html">kathaireo  documentation</a> &raquo;</li>
+          <li><a href="kathaireo.html" >kathaireo Package</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, J. Katzwinkel.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

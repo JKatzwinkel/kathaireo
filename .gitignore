@@ -3,6 +3,5 @@
 *.rdf
 *.owl
 *.xml
-*.html
 *.sqlite
 lib/

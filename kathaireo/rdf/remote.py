@@ -9,13 +9,17 @@ __version__ = "0.0.1-dev"
 
 import urllib2
 
-mimetypes=['application/rdf+xml', 'text/n3', 'application/n-triples',
+mimetypes = ['application/rdf+xml', 'text/n3', 'application/n-triples',
 	'text/turtle', 'application/x-trig', 'text/owl-functional']
+"""List of mimetypes used for parsing of resources whose rdf format can't
+be detected automatically."""
 # oha: http://www.w3.org/TR/owl2-syntax/
 
 # attempts to parse rdf resource at a certain location
 # by first downloading and then parsing it offline
 def parse(g, location, format=None):
+	"""attempts to parse rdf resource at a certain location
+	by first downloading and then parsing it offline."""
 	conne = urllib2.urlopen(location)
 	print conne.headers.dict
 	content = conne.read()

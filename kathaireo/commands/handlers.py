@@ -5,29 +5,29 @@ Contains implementations of handler functions for
 standard commands in interactive shell mode.
 
 Functions intended to serve as handlers, when declared
-like `def func(*args, **kwargs)`, can be registered
-using the `commands` module:
+like ``def func(*args, **kwargs)``, can be registered
+using the :mod:`.commands` module:
 ::
 
 	>>> commands.register("create <graphname>", handler)
 
 """
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.1-dev"
+__version__ = "0.0.1a-dev"
 
 
 from .. import rdf
 
 # quit
 def quit(*args, **kwargs):
-	"""Simply calls `exit()`."""
+	"""Simply calls :func:`exit`."""
 	exit()
 
 
 # return rdf graph
 def create_graph(*args, **kwargs):
 	"""\
-	Creates a new `rdflib.Graph` instance going by
+	Creates a new :class:`.rdf.rdflib.Graph` instance going by
 	the identifier passed as first argument.
 	
 	:param identifier: Id for the new Graph
@@ -122,6 +122,7 @@ def store_sqlite(*args, **kwargs):
 	
 
 def store_xml(*args, **kwargs):
+	"""Save contents of a graph to an `xml` file."""
 	name = kwargs.get('graphname')
 	filename = kwargs.get('filename')
 	return rdf.save_xml(name, filename)

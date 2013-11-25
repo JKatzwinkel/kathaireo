@@ -1,7 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*- 
 """\
-Doku doku doku
+Serves as some kind of a facade for the 'rdflib' library. In addition to
+just forwarding rdf operations to the library, the :mod:`.rdf` module also
+maintains some useful directories and registers; this allows to, say, have
+rdf graphs looked up by their identifier, using the function :func:`.get_graph`
+or have the :mod:`.namespaces` module download all namespaces for a certain graph by
+calling :func:`.import_ns`.
 """
 __docformat__ = "restructuredtext en"
 __version__ = "0.0.15-dev"
@@ -58,7 +63,7 @@ def repr_graph(g):
 
 # create and return new graph
 def create_graph(name, store='default'):
-	"""Returns a new `rdflib.Graph` instance with the
+	"""Returns a new `.rdflib.Graph` instance with the
 	given identifier, if said identifier has not already
 	been given to an existing graph."""
 	#print "attempting to create new graph with name", name
@@ -84,7 +89,11 @@ def load_into(location, name):
 	is known, creates a new instance if not.
 	Returns whatever graph instance the resource in question
 	is being read into.
-	If parsing fails, exceptions are not being handled here.
+	If parsing fails, a new attempt is made using another mimetype 
+	(:data:`.remote.mimetypes`). If `location` does not seem to
+	point to a local file, an attempt is made to start a download from that
+	location via :func:`.remote.parse`.
+	If everything fails, `None` is returned.
 	"""
 	# TODO: also handle sql/sqlite?
 	# TODO: handle n3!
@@ -148,8 +157,9 @@ def graph_info(name, attr):
 
 # import namespace definitions for graph
 def import_ns(name):
-	"""Downloads definitions of namespaces used in the rdf
-	graph identified by the given name."""
+	"""Downloads definitions of :mod:`.namespaces` used in the rdf
+	graph identified by the given name. This is done by function
+	:func:`.namespaces.provide_for`."""
 	g = get_graph(name)
 	if g:
 		return ns.provide_for(g)
@@ -158,7 +168,7 @@ def import_ns(name):
 
 # attach sqlite store
 def store_sqlite(name, filename):
-	"""Store. Sqlite. database.
+	"""Store. Sqlite. database. Uses the :mod:`.storage` module.
 	"""
 	#g = get_graph(name)
 	#if g:
