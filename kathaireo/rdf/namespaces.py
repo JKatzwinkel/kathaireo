@@ -3,7 +3,7 @@
 import os
 import rdflib
 
-import remote
+from . import remote
 
 _namespaces={}
 

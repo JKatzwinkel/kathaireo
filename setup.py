@@ -13,7 +13,7 @@ for field in ['version', 'author']:
 	metex[field] = re.compile('\A\s*__'+field+'__\s?=\s?[\"\'](\S+)[\"\'].*')
 
 meta = {}
-f = open('kathaireo/kathaireo.py')
+f = open('kathaireo.py')
 for line in f:
 	for field, rex in metex.items():
 		if not field in meta:
@@ -35,7 +35,7 @@ setup(
 		download_url = 'https://github.com/JKatzwinkel/kathaireo/archive/master.zip',
 		
 		packages=find_packages(),
-		scripts=['kathaireo/kathaireo.py', 'shell.sh'],
+		scripts=['kathaireo.py', 'shell.sh'],
 
 		install_requires = [
 			'rdflib>=4.0.1',
@@ -53,7 +53,7 @@ setup(
 
 		entry_points = {
 			'console_scripts': [
-				'kathaireo = kathaireo.kathaireo:main', 
+				'kathaireo = kathaireo:main', 
 				'shell = kathaireo.shell:run']
 			},
 		# closing bracket coming up!

@@ -9,7 +9,7 @@ __version__ = "0.0.1-dev"
 
 import re
 
-from highlights import color, hilite, col_demo, stdcol
+from .highlights import color, hilite, col_demo, stdcol
 
 
 # colored prompt

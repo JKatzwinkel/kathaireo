@@ -9,14 +9,6 @@ kathaireo Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`kathaireo` Module
------------------------
-
-.. automodule:: kathaireo.kathaireo
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 Subpackages
 -----------
 

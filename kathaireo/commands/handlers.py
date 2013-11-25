@@ -7,14 +7,16 @@ standard commands in interactive shell mode.
 Functions intended to serve as handlers, when declared
 like `def func(*args, **kwargs)`, can be registered
 using the `commands` module:
+::
 
->>>	commands.register("create <graphname>", handler)
+	>>> commands.register("create <graphname>", handler)
+
 """
 __docformat__ = "restructuredtext en"
 __version__ = "0.0.1-dev"
 
 
-import rdf
+from .. import rdf
 
 # quit
 def quit(*args, **kwargs):
@@ -27,15 +29,11 @@ def create_graph(*args, **kwargs):
 	"""\
 	Creates a new `rdflib.Graph` instance going by
 	the identifier passed as first argument.
-
-	:Parameters:
-
-		- `identifier`: Id for the new Graph
-
-	:Returns:
-
-		- The resulting `rdflib.Graph` instance when
-		  successful, `None` otherwise.
+	
+	:param identifier: Id for the new Graph
+	:returns: The resulting `rdflib.Graph` instance when 
+		successful, `None` otherwise.
+	
 	"""
 	if len(args)>0 and type(args[0]) is str:
 		g = rdf.create_graph(args[0])
@@ -55,18 +53,10 @@ def parse_rdf(*args, **kwargs):
 	Parses the resource at a given location and reads it into
 	a `rdflib.Graph` identified by its name.
 
-	:Parameters:
-
-		- `location`: A String specifying the location of 
-		  the resource to be read. Can be a path to a local
-		  file or a URL.
-
-		- `graphname`: A String identifying an `rdflib.Graph`
-		  instance.
-
-	:Returns:
-
-		- `True`, if parsing was successful.
+	:param location: A String specifying the location of the 
+		resource to be read. Can be a path to a local file or a URL.
+	:param graphname: A String identifying an `rdflib.Graph` instance.
+	:returns: `True`, if parsing was successful.
 	"""
 	location = kwargs.get('resource')
 	name = kwargs.get('graphname')

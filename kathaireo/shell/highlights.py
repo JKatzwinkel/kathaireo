@@ -9,7 +9,7 @@ import re
 import os.path
 from random import randrange as rnd
 
-import commands.arguments as argdir
+from ..commands import arguments as argdir
 
 # errors
 errex = re.compile('!![^!]+!!')

@@ -24,7 +24,7 @@ import re
 import os
 from glob import glob
 
-import rdf
+from .. import rdf
 
 # value history for each known argument placeholder
 arghist = {}
@@ -101,10 +101,8 @@ def register(name, proposer=propose_default, format=None):
 	are made unless a custom proposal function or a list
 	of regular expressions is being passed in this call.
 
-	:Parameters:
-
-		- `name`: identifier of argument to register
-		- `proposer` (optional): input value proposal
+	:param name: identifier of argument to register
+	:param proposer: (optional) input value proposal
 		  handling function for this argument. This will
 		  be called when autocompletion recognizes that
 		  someone is about to input a value for this

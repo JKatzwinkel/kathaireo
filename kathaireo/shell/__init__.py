@@ -29,9 +29,8 @@ __all__ = ['rdf', 'commands']
 
 import readline
 
-import prompt
-import rdf
-import commands
+from . import prompt
+from .. import rdf, commands
 
 
 def complete(input, state):

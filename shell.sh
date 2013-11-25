@@ -17,5 +17,5 @@ else
 fi
 
 echo "starting kathaireo shell..."
-$py kathaireo/kathaireo.py
+$py kathaireo.py
 

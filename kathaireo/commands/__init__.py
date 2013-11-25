@@ -38,9 +38,9 @@ __all__ = ['arguments', 'handlers']
 import re
 import os
 
-import rdf
-import commands.arguments as arguments
-import commands.handlers as handlers
+from .. import rdf
+from . import arguments
+from . import handlers
 
 reg_arg = arguments.register
 

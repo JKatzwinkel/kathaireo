@@ -1,8 +1,9 @@
-# kathaireo #
+## kathaireo ##
 
 Kathaireo is intended to become an interactive shell 
-for operating on RDF and stuff. Its makes use of `rdflib` and
-`rdflib_sqlalchemy`. 
+for operating on RDF and stuff. Its makes use of 
+[`rdflib`][rdflib] and
+[`rdflib-sqlalchemy`][rdflib-sqlalchemy]. 
 
 Main goal is to provide a fast and slim tool
 for easier work on RDF, OWL, etc. ontologies, including imports local 
@@ -10,7 +11,9 @@ and remote sources, persistent storage with Sqlite etc.,
 namespace support and convenience features like context-aware 
 autocompletion and reference resolution.
 
-## command declaration ##
+
+### command declaration ###
+
 Custom commands can easily be added to extend the list of predefined ones.
 This might make it easier to hack specialized plugins at some point.
 
@@ -33,7 +36,9 @@ Registration of a new command works like this:
     commands.parse("load file.rdf g") # import contents of local RDF file
     commands.parse("triples g object http://www.w3.org/2000/01/rdf-schema#Class")
 
-### command parameter configuration ###
+
+#### parameter configuration ####
+
 Whenever a new command argument type is introduced by submitting an 
 `<argument>` placeholder, it may also be desirable to configure its possible 
 values. This is what the `kathaireo.commands.arguments` module is for. Its
@@ -64,7 +69,7 @@ a value of `filename` arguments:
 
 	import os
 	import re
-	from import glob
+	from glob import glob
 
 	def list_files(arg, prefix):
 		path = prefix.split(os.sep)[:-1]
@@ -78,3 +83,5 @@ a value of `filename` arguments:
 		format=[re.compile(''(/?[^/\s]+/)*\w*\.\w+')])
 
 
+[rdflib]: https://github.com/RDFLib/rdflib
+[rdflib-sqlalchemy]: https://github.com/RDFLib/rdflib-sqlalchemy
