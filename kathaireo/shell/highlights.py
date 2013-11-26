@@ -15,6 +15,8 @@ from ..commands import arguments as argdir
 errex = re.compile('!![^!]+!!')
 # warnings
 wrnex = re.compile('![^!]+?!')
+# emphasized
+bldex = re.compile('\*[^*]+?\*')
 # angle brackets
 angex = re.compile('<[^>]*>')
 # single/double quots
@@ -39,6 +41,7 @@ keyex = re.compile('({})'.format('|'.join(_kw)), re.I)
 _colscheme = {
 	errex: 14, # white text on red background
 	wrnex: 22, # red
+	bldex: 1,  # bold
 	qutex: 4,  # red
 	angex: 7,  # blue
 	urlex: 2,  # underscore
@@ -48,7 +51,7 @@ _colscheme = {
 	keyex: 27  # bright blue 
 	}
 
-_rexorder = [errex, wrnex, qutex, angex, urlex, 
+_rexorder = [errex, wrnex, bldex, qutex, angex, urlex, 
 			sqrex, nmrex, flnex, keyex]
 
 #print '\n'.join(['{}:{}'.format(k.pattern,v) 
@@ -119,7 +122,7 @@ def hilite(token):
 		if rex.match(token):
 			cid = _colscheme.get(rex)
 			# error and warning markups must be removed
-			if rex in [wrnex, errex]:
+			if rex in [wrnex, errex, bldex]:
 				if rex is errex:
 					i = 2
 				else:
@@ -137,5 +140,5 @@ def hilite(token):
 
 
 ########
-stdcol=21
+stdcol=0
 print '{}\r'.format(color(stdcol)),

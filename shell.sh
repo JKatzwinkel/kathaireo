@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # check python version
-pyver=$(python -c "import sys;print '.'.join([str(d) for d in sys.version_info[:3]])")
-if [[ "$pyver" < "2.7.0" ]]; then
+pyver=$(python -c "import sys;sys.stdout.write('.'.join([str(d) for d in sys.version_info[:3]]))")
+if [[ "$pyver" < "2.7.0" ]] || [[ "$pyver" > "3.0.0" ]]; then
 	echo "Version of standard python interpreter is $pyver, but"
 	echo "2.7.0 is required..."
 	py=$(which python2.7)

@@ -64,7 +64,7 @@ def run():
 	module :mod:`.commands`, whose returning status message or command response
 	is again given to the :mod:`.prompt` module for printing.
 	"""
-	print 'ok.\n'
+	prompt.display('*ok*.\n')
 	# init readline module
 	readline.set_completer_delims(' \t\n;')
 	readline.parse_and_bind("tab: complete")
