@@ -345,7 +345,7 @@ def choices_left(input):
 	# possibility 2): input ends where a value should follow
 	# or is partly typed in
 	#print 'fragment, keys:', term, level.keys()
-	choices1 = level.keys()
+	choices1 = [k for k in level.keys()]
 	choices = []
 	for c in choices1:
 		# resolve argument, if any
@@ -357,6 +357,14 @@ def choices_left(input):
 			# completed
 			if c.startswith(term):
 				choices.append(c)
+	# by default, append whitespace behind completion choice 
+	# if completion is ultimate (e.g. command names). 
+	# If choice ends on ;, this means it can possibly be
+	# extended further, but is not meant to stay like it is
+	# (e.g. directory names: even if completed, you can still
+	# go deeper in file structure)
+	choices = [''.join(c[:-1])+[c[-1]+' ',''][int(c[-1]==';')] 
+							for c in choices]
 	#print 'suggestions:',choices, ''
 	return choices
 

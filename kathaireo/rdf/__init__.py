@@ -134,27 +134,27 @@ def load_resource(location, name=None):
 	# if graph is ready,
 	# begin attempts to retrieve resource
 	if g != None and isinstance(g, rdflib.Graph):
-		print 'importing into graph {}'.format(repr_graph(g))
+		#print 'importing into graph {}'.format(repr_graph(g))
 		if os.path.exists(location) and os.path.isfile(location):
-			print 'resource appears to be a local file.'
+			#print 'resource appears to be a local file.'
 			# if source is local file, try to autodetect format,
 			# then suggest default mimetypes if that fails.
 			for mime in [None]+remote.mimetypes[:3]:
 				try:
 					# call rdflib graph parse method
-					print 'apply format {} to file {}.'.format(mime, location)
+					#print 'apply format {} to file {}.'.format(mime, location)
 					g = g.parse(location, format=mime)
 					return g
 				except:
-					print 'source apparently no {}.'.format(mime)
-					#pass
+					#print 'source apparently no {}.'.format(mime)
+					pass
 			# if none of the default formats could be recognized in
 			# source, return None
 			return None
 		# if source is not a file on disk:
 		else:
 			# try to load from internet
-			print 'resource is no local file! download from {}.'.format(location)
+			#print 'resource is no local file! download from {}.'.format(location)
 			return remote.parse(g, location)
 		#print "parsed contents at {} into {}.".format(
 			#location, g)

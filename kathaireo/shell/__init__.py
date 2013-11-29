@@ -49,7 +49,8 @@ def complete(input, state):
 	# http://doughellmann.com/2008/11/pymotw-readline.html
 	# begin = readline.get_begidx()
 	# end = readline.get_endidx()
-	sgst = [s+' ' for s in commands.choices_left(buf)]
+	#sgst = [s+' ' for s in commands.choices_left(buf)]
+	sgst = [s for s in commands.choices_left(buf)]
 	return sgst[state]
 
 

@@ -98,6 +98,27 @@ def get_suggestions(name, prefix):
 	return suggestions
 
 
+
+# validate argument value
+def validate(arg, input):
+	"""Validates given input string according to specified
+	argument's value restrictions.
+	Return true if input is ok."""
+	validator = argvals.get(arg, ArgValidator(arg))
+	return validator.validate(input)
+
+
+# add to arg history
+def to_history(arg, value):
+	"""Write a value to an argument's input history stored in :obj:`arghist`."""
+	hist = arghist.get(arg, [])
+	if not arg in arghist:
+		arghist[arg] = hist
+	hist.append(value)
+
+
+
+
 # register
 def register(name, proposer=propose_default, format=None):
 	"""Registers an argument placeholder. This means,
@@ -144,24 +165,6 @@ def register(name, proposer=propose_default, format=None):
 		validator.format = format
 
 
-# validate argument value
-def validate(arg, input):
-	"""Validates given input string according to specified
-	argument's value restrictions.
-	Return true if input is ok."""
-	validator = argvals.get(arg, ArgValidator(arg))
-	return validator.validate(input)
-
-
-# add to arg history
-def to_history(arg, value):
-	"""Write a value to an argument's input history stored in :obj:`arghist`."""
-	hist = arghist.get(arg, [])
-	if not arg in arghist:
-		arghist[arg] = hist
-	hist.append(value)
-
-
 ########################################################
 ########################################################
 ########################################################
@@ -177,14 +180,22 @@ def lsdir(prefix, filetypes):
 	names match the prefix. filetypes are passed
 	as a list of globs (``['*.rdf', '*.owl', ...]``).
 	"""
+	# extract path locator (relative)
 	if os.sep in prefix:
 		path = os.sep.join(prefix.split(os.sep)[:-1])
 	else:
 		path = '.'
-	files = ['{}{}'.format(fn, os.sep) for fn in os.listdir(path) 
+	# initialize sugg list with subdirs
+	# terminate string w no space char ; to let commands
+	# module know that this would be still to be
+	# extended, and hence not decorated by a trailing
+	# space, like completions normally do
+	files = ['{}{};'.format(fn, os.sep) for fn in os.listdir(path) 
 						if os.path.isdir(fn)]
+	# extend by files matching extensions
 	for ext in filetypes:
 		files.extend(glob(os.path.join(path,ext)))
+	# make sure files match prefix
 	files = [fn for fn in files if fn.startswith(prefix)]
 	return files
 
