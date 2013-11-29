@@ -66,7 +66,7 @@ def set_graph(*args, **kwargs):
                         return '!Fail:! No graph "{}"!'.format(name)
         else:
                 return '!!Error!!: No graph specified.'
-        
+
 
 # return list of graph registry entry str reprs.
 def show_graphs(*args, **kwargs):
@@ -103,6 +103,8 @@ def parse_rdf(*args, **kwargs):
 			location, name = args[:2]
 		else:
 			name = rdf.graph_name(rdf.current_graph)
+	# FIXME: why does this lead to an additional graph instance with a 
+	# rdflib.RDFUriRef identifier????
 	if not(None in [location, name]):
 		if rdf.load_into(location, name) != None:
 			g = rdf.get_graph(name)
