@@ -10,11 +10,11 @@ __version__ = "0.0.1-dev"
 import re
 
 from .highlights import color, hilite, col_demo, stdcol
-
+from kathaireo import rdf
 
 # colored prompt
 #ps = "\001\033[32m\002>>>\001\033[0m\002 "
-ps = "{}\001\033[32m\002>>>{}{} ".format(color(0), color(23), color(1))
+ps = "{}\001\033[32m\002[{{}}] >>>{}{} ".format(color(0), color(23), color(1))
 
 # tokenizer regex
 #_tokex = re.compile('(\"[^\"]*?\"|\'[^\']*?\'|[ ,]+|\S*|\w*|<[^>]*?>|.*)')
@@ -31,11 +31,15 @@ _splits = [
 	]
 _tokex = re.compile('({})'.format('|'.join(_splits)), re.I)
 
-#print color(stdcol), '\r',
+# if no working graph is selected for rdf module, select None
+# until further notice
+if not hasattr(rdf, 'current_graph'):
+	rdf.set_graph(None)
 
 # wait for input
 def input():
-	line = raw_input(ps)
+	gname = rdf.graph_name(rdf.current_graph)
+	line = raw_input(ps.format(gname))
 	print ''.join([color(0), color(stdcol),'\r']),
 	return line
 

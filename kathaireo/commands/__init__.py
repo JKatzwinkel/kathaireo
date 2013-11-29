@@ -38,16 +38,19 @@ __version__ = "0.0.2-dev"
 import re
 import os
 
+import arguments
+import handlers
 from .. import rdf
-from . import arguments
-from . import handlers
 
+
+# argument registry
 reg_arg = arguments.register
 
 # command syntax language tree
 cmdict={}
 """Assembles a tree (more precisely: a forest) of which each path that 
 leads from a root all the way down to a leaf, stands for a legal command."""
+
 
 # define regular expressions for command resolution
 # argument placeholder
@@ -61,7 +64,33 @@ urlex=re.compile('(https?|ftp)://\w+\.[a-z]+(/.*)*')
 
 
 
+# implementation of decorator @cmd_handler
+def register_handler(func):
+        """\
+        Decorator for command handler functions.
+        Function will be copied into :mod:`.commands.handlers`
+        and, if their docstring contains a command syntax,
+        registered as a handler for matching input.
+        """
+        hnd_ns = handlers.__dict__
+        fname = func.func_name
+        if fname in hnd_ns:
+        	print 'Overwrite handler module pointer {} with'.format(fname),
+        	print 'new command handler function at {}.'.format(func.func_code.co_filename)
+        hnd_ns[fname] = func
+       	# if `command ...` is defined in doc line, register
+       	sntxs = handlers.extract_cmd_syntax(fname)
+       	if sntxs:
+        	for syntax in sntxs:
+        		register(syntax, func)
+        else:
+        	print "Couldn't find handler function {}!".format(fname)
+        return func
+        
 
+
+
+# register a handler function for a command syntax 
 def register(syntax, function):
 	"""\
 	Inserts the given command's syntax into a known commands
@@ -157,6 +186,7 @@ def msg_incomplete_cmd(keywords):
 	return msg
 
 
+# execute input string, if command matches
 def execute(input):
 	"""\
 	Tests given input string against currently
@@ -246,7 +276,7 @@ def execute(input):
 
 
 
-
+# what can possibly be typed in given certain prefix?
 def choices_left(input):
 	"""Assembles a list of terms that allow a valid input line
 	given the prefix passed as `input` has been typed in so far.
@@ -357,13 +387,48 @@ default_cmds = {
 	'load namespaces <graphname>': handlers.import_namespaces,
 	'connect <graphname> to sqlite <sqlite>': handlers.store_sqlite,
 	'save <graphname> to xml <filename>': handlers.store_xml,
-	'copy <graphname> to <graphname>': handlers.cp_graph,
+	'save xml <filename>': handlers.store_xml,
+	'copy <graphname> <graphname>': handlers.cp_graph,
+	'merge <graphname>': handlers.merge_graph,
+	'use <graphname>': handlers.set_graph,
+	'<namespace>:<subject> <namespace>:<predicate> <namespace>:<object>':None
 	#'namespace <namespace> classes': handlers.ns_classes,
 	#'namespace <namespace> properties': handlers.ns_properties,
 	}
 
-for command, handler in default_cmds.items():
-	register(command, handler)
+# read, compile, register command syntaxes
+def init():
+	"""Read, compile and register default commands.
+	These are those contained by :data:`default_cmds`
+	plus those defined by the :mod:`.commands.stdcmd` module,
+	parse docstrings of all functions in :mod:`.handlers` namespace
+	for `command ...` syntax specifications and :func:`.register`
+	those that have some.
+	"""
+	# default_cmds dictionarty
+	for command, handler in default_cmds.items():
+		register(command, handler)
+	# functions in handlers-namespace
+	# for all functions within this namespace, parse
+	# docstrings for `command` specification and register
+	# functions as handlers in case of matches.
+	funcs = [(n,f) for n,f in handlers.__dict__.items() 
+		if hasattr(f, '__call__')]
+	for fname, func in funcs:
+		sntxs = handlers.extract_cmd_syntax(fname)
+		if sntxs != None:
+			for syntax in sntxs:
+				register(syntax, func)
+		else:
+			print "Not found!"
+	#TODO: read, compile, register stdcmd.py
+
+# read, compile, register command syntaxes
+init() #TODO: sure this shouldnt be called by application modules
+# like the shell instead of here? 
+# registering bindings in stdcmds.py might fail if 
+# handler functions with @cmd_handler decorator are in
+# modules that haven't been imported yet
 
 # print 'Number of default commands registered:',
 # print len(default_cmds)

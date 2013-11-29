@@ -13,10 +13,15 @@ using the :mod:`.commands` module:
 
 """
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.1a-dev"
+__version__ = "0.0.1b-dev"
 
+
+import re
 
 from .. import rdf
+
+
+
 
 # quit
 def quit(*args, **kwargs):
@@ -34,16 +39,46 @@ def create_graph(*args, **kwargs):
 	:returns: The resulting `rdflib.Graph` instance when 
 		successful, `None` otherwise.
 	
+	handles:
+	`create <graphname>`
 	"""
-	if len(args)>0 and type(args[0]) is str:
-		g = rdf.create_graph(args[0])
-	elif "graphname" in kwargs:
+	if "graphname" in kwargs:
 		g = rdf.create_graph(kwargs.get("graphname"))
 	else:
-		return "!!Error!!: wrong number of arguments."
+		return "!!Error!!: Wrong number of arguments: {}.".format(
+			len(args))
 	if type(g) is str:
 		return g
 	return rdf.repr_graph(g)
+
+
+# select graph to work on
+def set_graph(*args, **kwargs):
+        """Select default graph for rdf operations.
+        handles:
+        `use <graphname>`"""
+        name = kwargs.get('graphname')
+        if name:
+                g = rdf.get_graph(name)
+                if g != None:
+                        return rdf.set_graph(g)
+                else:
+                        return '!Fail:! No graph "{}"!'.format(name)
+        else:
+                return '!!Error!!: No graph specified.'
+        
+
+# return list of graph registry entry str reprs.
+def show_graphs(*args, **kwargs):
+	"""Returns a list of strings representing all 
+	graph instances currently registered.
+	handles:
+	`show graphs`
+	`list`"""
+	reg = rdf._graphs.items()
+	print rdf._graphs
+	return ['{}: {}'.format(name, rdf.repr_graph(g)) for
+		name, g in sorted(reg, key=lambda t:t[0])]
 
 
 
@@ -57,12 +92,17 @@ def parse_rdf(*args, **kwargs):
 		resource to be read. Can be a path to a local file or a URL.
 	:param graphname: A String identifying an `rdflib.Graph` instance.
 	:returns: `True`, if parsing was successful.
+
+	handles:
+	`load <resource>`
 	"""
 	location = kwargs.get('resource')
 	name = kwargs.get('graphname')
 	if None in [location, name]:
 		if len(args)>1:
 			location, name = args[:2]
+		else:
+			name = rdf.graph_name(rdf.current_graph)
 	if not(None in [location, name]):
 		if rdf.load_into(location, name) != None:
 			g = rdf.get_graph(name)
@@ -89,16 +129,73 @@ def graph_info(*args, **kwargs):
 
 # copy graph 
 def cp_graph(*args, **kwargs):
-	name1, name2 = args[:2]
-	g1 = rdf.get_graph(name1)
-	g2 = rdf.create_graph(name2)
-	contents = g1.serialize(format='pretty-xml')
-	g2.parse(data=contents)
-	return ''.join([
-		"Created copy of graph '{}' under the name '{}': ".format(
-			name1, name2),
-		rdf.repr_graph(g2),
-		" with {} triples.".format(len(g2))])
+	"""Create new graph by given name and clone contents
+	of another graph into it.
+	handles:
+	`cp <graphname> <graphname>`
+	`cp <graphname>`"""
+	# use parameters
+	if len(args) == 2:
+		name1, name2 = args[:2]
+		g1 = rdf.get_graph(name1)
+		g1, g2 = [rdf.get_graph(n) for n in args[:2]]
+	elif len(args) == 1:
+		g1 = rdf.current_graph
+		name2 = kwargs.get('graphname')
+		g2 = rdf.get_graph(name2)
+	else:
+		return '!!Error!!: Parameter count mismatch ({}).'.format(
+			len(args))
+	# do copying
+	if not g2:
+		g2 = rdf.create_graph(name2)
+	else:
+		return "!Didn't copy!: Graph {} exists. Delete it first.".format(name2)
+	if not None in [g1, g2]:
+		contents = g1.serialize(format='pretty-xml')
+		g2.parse(data=contents)
+		return ''.join([
+			"Created copy of graph '{}' under name '{}' ".format(
+				rdf.graph_name(g1), name2),
+			" with {} triples.".format(len(g2)),
+			'\n{}'.format(rdf.repr_graph(g2))])
+	else:
+		return "!!Error!!: Couldn't copy graph '{}' to name '{}'!".format(
+			rdf.graph_name(g1), name2)
+
+# insert one graph into another
+def merge_graph(*args, **kwargs):
+	"""merge graph into :data:`.rdf.current_graph`.
+	handles:
+	`merge <graphname>`
+	`insert <graphname> into <graphname>`"""
+	if len(args) > 0:
+		# currently selected graph, command probably was merge
+		if len(args) < 2:
+			g = rdf.current_graph
+			name = kwargs.get('graphname')
+			if name:
+				# graph specified by parameter
+				g2 = rdf.get_graph(name)
+		# two specified graphs, command probably was insert
+		else: 
+			g2, g = [rdf.get_graph(n) for n in args[:2]]
+		# in case of wrong graphname(s), print warning.
+		if None in [g,g2]:
+			for g in [g for g in [g, g2] if g is None]:
+				msg = 'Could not find graph "{}"'.format(name)
+		else:
+			# actual merge:
+			# copy triples from g2 into currently active graph
+			for triple in g2:
+				g.add(triple)
+			return 'Merged {} triples from {} into {}, resulting in {} tripples in {}.'.format(
+				len(g2), g2.identifier, len(g), g.identifier)
+	# not enough parameters?
+	else:
+		msg = 'Parameter count mismatch ({}).'.format(len(args))
+	return "!Couldn't merge graphs!: {}".format(msg)
+
 
 
 # download namespaces for given graph name
@@ -126,4 +223,27 @@ def store_xml(*args, **kwargs):
 	name = kwargs.get('graphname')
 	filename = kwargs.get('filename')
 	return rdf.save_xml(name, filename)
+
+
+# Returns a list of `command` syntax specifications
+# in docstring of a function identified by their name.
+def extract_cmd_syntax(fname):
+	"""Extract command syntax definition from handler function
+	docstring.
+	:param fname: the function's name. Expected to be known by
+	this (:mod:`.`) module, either because the function's 
+	implementation in the module source code anyway, or due
+	to previous calls of :func:`.commands.register_handler`
+	invoked by the ``@cmd_handler`` decorator."""
+	func = globals().get(fname)
+	if func != None:
+		res = []
+        # command syntax extraction from __doc__
+        fdoc = func.func_doc
+        if fdoc:
+	        for line in fdoc.split('\n'):
+	        	sntxs = re.findall('^\s*`([^`]+)`', line)
+	        	res.extend(sntxs)
+        return res
+
 

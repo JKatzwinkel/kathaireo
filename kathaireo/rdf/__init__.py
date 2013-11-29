@@ -55,10 +55,19 @@ def suggest_and_load_files():
 
 # returns a nicer output of this graph than he default
 def repr_graph(g):
+        """Returns a string representation of given graph
+        indicating name and storage mode."""
 	if g != None:
-		return '<Graph "{}"; with store "{}">'.format(
-			g.identifier, g.store.__class__.__name__)
-	return '!nullgraph!'
+		return '<Graph "{}" with {} triples in store "{}">'.format(
+			g.identifier, len(g), g.store.__class__.__name__)
+	return '-'
+
+# return graph identifier or null
+def graph_name(g):
+        """Return graph identifier or `'-'`."""
+        if g != None:
+                return g.identifier
+        return '-'
 
 
 # create and return new graph
@@ -82,8 +91,21 @@ def get_graph(name):
 	return _graphs.get(name)
 
 
+def set_graph(g):
+	"""Sets the given rdf graph as the current default.
+	When set, that graph will be the one operated on in interactive
+	mode. This should cause input in which a ``<graphname>``
+	value is omitted to work on said current default.
+	:param g: new default graph. May be ``None``.
+	:returns: status message."""
+	globals()['current_graph'] = g
+	if g is None:
+		return 'Unset current graph'
+	return 'Select graph: {}'.format(repr_graph(g))
+
+
 # import rdf data from resource into graph
-def load_into(location, name):
+def load_into(location, name=None):
 	"""Loads rdf graph at location (file/url) and names it.
 	Reuses (overwrites?) an existing graph if one going by the given name
 	is known, creates a new instance if not.
@@ -97,12 +119,15 @@ def load_into(location, name):
 	"""
 	# TODO: also handle sql/sqlite?
 	# TODO: handle n3!
-	if not name in _graphs:
-		g = create_graph(name)
+	if name != None:
+		if not name in _graphs:
+			g = create_graph(name)
+		else:
+			g = _graphs.get(name)
 	else:
-		g = _graphs.get(name)
+		g = globals().get('current_graph')
 	if g is None:
-		return "!Oh no!: graph '{}' is null!".format(name)
+		return "!Oh no!: graph '{}' is null!".format(graph_name(g))
 	else:
 		if os.path.exists(location) and os.path.isfile(location):
 			for mime in [None]+remote.mimetypes:
@@ -169,6 +194,7 @@ def import_ns(name):
 # attach sqlite store
 def store_sqlite(name, filename):
 	"""Store. Sqlite. database. Uses the :mod:`.storage` module.
+	Overwites graph referenced by `name`.
 	"""
 	#g = get_graph(name)
 	#if g:
@@ -182,8 +208,13 @@ def store_sqlite(name, filename):
 # save xml dump
 def save_xml(name, filename):
 	"""Dumps rdf/xml to file.
+	If no `graphname` parameter is passed, try to use
+	:data:`current_graph` instead.
 	"""
-	g = get_graph(name)
+	if name:
+		g = get_graph(name)
+	else:
+		g = __dict__.get(name)
 	if g:
 		return storage.save_xml(g, filename)
 	return None
