@@ -5,31 +5,72 @@ This module tries to download rdf contents from places remote
 from the hard disk of the machine we're running on.
 """
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.1-dev"
+__version__ = "0.0.1b-dev"
 
 import urllib2
 
-mimetypes = ['application/rdf+xml', 'text/n3', 'application/n-triples',
-	'text/turtle', 'application/x-trig', 'text/owl-functional']
+mimetypes = ['application/rdf+xml', 'text/n3', 'text/turtle',
+	'application/n-triples','application/x-trig', 'text/owl-functional']
 """List of mimetypes used for parsing of resources whose rdf format can't
 be detected automatically."""
 # oha: http://www.w3.org/TR/owl2-syntax/
 
 # attempts to parse rdf resource at a certain location
 # by first downloading and then parsing it offline
-def parse(g, location, format=None):
-	"""attempts to parse rdf resource at a certain location
-	by first downloading and then parsing it offline."""
+def parse(g, location, format=None, guesses=mimetypes[:3]):
+	"""\
+	Attempts to parse an RDF resource at a certain location
+	by first downloading and then parsing it offline.
+	Choice of parsing implementation depends on `format` 
+	parameter; By default, source format autodetection is
+	applied, followed by a few attempts on forcing
+	specific format parsers to process the source, determined
+	by frequent mimetypes listed in :data:`.mimetypes`. 
+
+	Whilst this behaviour will handle RDF sources reliably
+	in most cases, the episode of wild guessing beginning
+	whenever autodetection fails can cause a serious delay.
+	Passing `guesses=None` mitigates this inefficiency,
+	but possibly with the downside of parsing failure at
+	common RDF expression formats.
+
+	:param g: Graph to write content to
+	:param location: URL of remote RDF source.
+	:param format: string identifying a specific format which
+		the resource is expected to express its RDF contents in.
+		Default is `None`, getting the parser to autodetect
+		the source's format, which goes well in most cases.
+		If autodetection is likely to err, one can pass
+		a mimetype like those in :data:`.mimetypes`, but no
+		promise can be made that a correct format parameter
+		will lead to parsing success.
+	:param guesses: List of mimetypes used for wild guessing
+		of the input format in case autodetection fails. Set to
+		`None` in order to trade time for chance.
+	"""
+	# connect to URL
 	conne = urllib2.urlopen(location)
 	print conne.headers.dict
+	# download content
 	content = conne.read()
 	try:
-		g.parse(data=content)
+		# try to parse source as specified format
+		# or more likely autodetecting format
+		g = g.parse(data=content, format=format)
+		return g
 	except:
-		for mime in mimetypes:
+		# if (autodetect) parsing fails, 
+		# try again a few times, guessing the right format
+		if format in guesses:
+			guesses.remove(format)
+		for mime in guesses:
 			try:
-				g.parse(data=content, format=mime)
+				# try to parse for specified format and return
+				# graph on success
+				g = g.parse(data=content, format=mime)
 				return g
 			except:
+				# output debug msg
 				print 'mimetype {} failed.'.format(mime)
+		# if nothing worked at all, return None
 		return None

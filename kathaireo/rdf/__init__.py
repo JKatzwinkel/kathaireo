@@ -9,7 +9,7 @@ or have the :mod:`.namespaces` module download all namespaces for a certain grap
 calling :func:`.import_ns`.
 """
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.15-dev"
+__version__ = "0.0.16-dev"
 
 import os
 import rdflib
@@ -59,14 +59,14 @@ def repr_graph(g):
         indicating name and storage mode."""
 	if g != None:
 		return '<Graph "{}" with {} triples in store "{}">'.format(
-			g.identifier, len(g), g.store.__class__.__name__)
+			str(g.identifier), len(g), g.store.__class__.__name__)
 	return '-'
 
 # return graph identifier or null
 def graph_name(g):
         """Return graph identifier or `'-'`."""
         if g != None:
-                return g.identifier
+                return str(g.identifier)
         return '-'
 
 
@@ -105,7 +105,7 @@ def set_graph(g):
 
 
 # import rdf data from resource into graph
-def load_into(location, name=None):
+def load_resource(location, name=None):
 	"""Loads rdf graph at location (file/url) and names it.
 	Reuses (overwrites?) an existing graph if one going by the given name
 	is known, creates a new instance if not.
@@ -119,30 +119,41 @@ def load_into(location, name=None):
 	"""
 	# TODO: also handle sql/sqlite?
 	# TODO: handle n3!
-	if name != None:
-		if not name in _graphs:
+	# if a graphname is given, retrieve corresponding graph
+	if name:
+		g = get_graph(name)
+		# if name is wrong/no graph is found, create one.
+		if not g:
 			g = create_graph(name)
-		else:
-			g = _graphs.get(name)
+	# if no name is given, operate on active graph selected by set_graph
 	else:
 		g = globals().get('current_graph')
+	# if no graph could be found to load into, abort
 	if g is None:
-		return "!Oh no!: graph '{}' is null!".format(graph_name(g))
+		return None
+		#return "!Oh no!: graph '{}' is null!".format(graph_name(g))
+	# if graph is ready,
+	# begin attempts to retrieve resource
+	if os.path.exists(location) and os.path.isfile(location):
+		# if source is local file, try to autodetect format,
+		# then suggest default mimetypes if that fails.
+		for mime in [None]+remote.mimetypes[:3]:
+			try:
+				# call rdflib graph parse method
+				g = g.parse(location, format=mime)
+				return g
+			except:
+				pass
+		# if none of the default formats could be recognized in
+		# source, return None
+		return None
+	# if source is not a file on disk:
 	else:
-		if os.path.exists(location) and os.path.isfile(location):
-			for mime in [None]+remote.mimetypes:
-				try:
-					g.parse(location, format=mime)
-					return g
-				except:
-					pass
-			return None
-		else:
-			# try to load from internet
-			if remote.parse(g, location) is None:
-				return None
-		#print "parsed contents at {} into {}.".format(
-			#location, g)
+		# try to load from internet
+		return remote.parse(g, location)
+	#print "parsed contents at {} into {}.".format(
+		#location, g)
+	# return graph resource content went in
 	return g
 
 

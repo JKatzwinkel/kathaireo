@@ -13,7 +13,7 @@ using the :mod:`.commands` module:
 
 """
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.1b-dev"
+__version__ = "0.0.9-dev"
 
 
 import re
@@ -74,7 +74,8 @@ def show_graphs(*args, **kwargs):
 	graph instances currently registered.
 	handles:
 	`show graphs`
-	`list`"""
+	`list`
+	`ls`"""
 	reg = rdf._graphs.items()
 	print rdf._graphs
 	return ['{}: {}'.format(name, rdf.repr_graph(g)) for
@@ -101,17 +102,27 @@ def parse_rdf(*args, **kwargs):
 	if None in [location, name]:
 		if len(args)>1:
 			location, name = args[:2]
-		else:
-			name = rdf.graph_name(rdf.current_graph)
+		#else:
+			#name = rdf.graph_name(rdf.current_graph)
 	# FIXME: why does this lead to an additional graph instance with a 
 	# rdflib.RDFUriRef identifier????
-	if not(None in [location, name]):
-		if rdf.load_into(location, name) != None:
-			g = rdf.get_graph(name)
+	#if not(None in [location, name]):
+	if location:
+		# try to parse local file first,
+		# then remote source on failure.
+		# try for multiple rdf formats in both
+		g = rdf.load_resource(location, name=name)
+		if g:
+			# return success indicator msg
 			return 'Succesfully read {} rdf statements from {} into graph "{}".'.format(
 				len(g), location, name)
 		else:
+			# if parse attempt failed,
+			# return failure msg
 			return '!Error!: Could not import resource at {}.'.format(location)
+	# if no location was given
+	# return failure msg
+	return "!Didn't read source:! No location specified."
 
 
 # show info about given graph
@@ -191,8 +202,9 @@ def merge_graph(*args, **kwargs):
 			# copy triples from g2 into currently active graph
 			for triple in g2:
 				g.add(triple)
-			return 'Merged {} triples from {} into {}, resulting in {} tripples in {}.'.format(
-				len(g2), g2.identifier, len(g), g.identifier)
+			# TODO: merge namespaces as well!
+			return 'Merged {} triples from {} into {}, resulting in {}.'.format(
+				len(g2), g2.identifier, g.identifier, len(g))
 	# not enough parameters?
 	else:
 		msg = 'Parameter count mismatch ({}).'.format(len(args))
