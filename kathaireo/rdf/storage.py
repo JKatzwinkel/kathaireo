@@ -16,6 +16,7 @@ def sqlite(filename):
 
 
 def save_xml(g, filename, format='pretty-xml'):
+	"""Note: format must be `pretty-xml`, because xml omits triples!"""
 	xmlrdf = g.serialize(format=format)
 	# TODO: test filename, if existing, etc.
 	xmlfile = open(filename, 'w+')

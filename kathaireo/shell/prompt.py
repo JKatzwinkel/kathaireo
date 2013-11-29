@@ -14,7 +14,7 @@ from kathaireo import rdf
 
 # colored prompt
 #ps = "\001\033[32m\002>>>\001\033[0m\002 "
-ps = "{}\001\033[32m\002[{{}}] >>>{}{} ".format(color(0), color(23), color(1))
+ps = "{}\001\033[32m\002[{{}}]>{}{} ".format(color(0), color(23), color(1))
 
 # tokenizer regex
 #_tokex = re.compile('(\"[^\"]*?\"|\'[^\']*?\'|[ ,]+|\S*|\w*|<[^>]*?>|.*)')

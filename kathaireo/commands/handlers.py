@@ -13,7 +13,7 @@ using the :mod:`.commands` module:
 
 """
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.9-dev"
+__version__ = "0.0.91-dev"
 
 
 import re
@@ -21,7 +21,36 @@ import re
 from .. import rdf
 
 
+# Returns a list of `command` syntax specifications
+# in docstring of a function identified by their name.
+def extract_cmd_syntax(fname):
+	"""Extract command syntax definition from handler function
+	docstring.
+	:param fname: the function's name. Expected to be known by
+	this (:mod:`.`) module, either because the function's 
+	implementation in the module source code anyway, or due
+	to previous calls of :func:`.commands.register_handler`
+	invoked by the ``@cmd_handler`` decorator."""
+	func = globals().get(fname)
+	if func != None:
+		res = []
+        # command syntax extraction from __doc__
+        fdoc = func.func_doc
+        if fdoc:
+	        for line in fdoc.split('\n'):
+	        	sntxs = re.findall('^\s*`([^`]+)`', line)
+	        	res.extend(sntxs)
+        return res
 
+
+
+###############################################################
+###############################################################
+###############################################################
+###################       handlers           ##################
+###############################################################
+###############################################################
+###############################################################
 
 # quit
 def quit(*args, **kwargs):
@@ -165,6 +194,7 @@ def cp_graph(*args, **kwargs):
 	else:
 		return "!Didn't copy!: Graph {} exists. Delete it first.".format(name2)
 	if not None in [g1, g2]:
+		# format MUST be pretty-xml, since xml ignores triples
 		contents = g1.serialize(format='pretty-xml')
 		g2.parse(data=contents)
 		return ''.join([
@@ -175,6 +205,7 @@ def cp_graph(*args, **kwargs):
 	else:
 		return "!!Error!!: Couldn't copy graph '{}' to name '{}'!".format(
 			rdf.graph_name(g1), name2)
+
 
 # insert one graph into another
 def merge_graph(*args, **kwargs):
@@ -199,10 +230,11 @@ def merge_graph(*args, **kwargs):
 				msg = 'Could not find graph "{}"'.format(name)
 		else:
 			# actual merge:
+			for ns,url in g2.namespaces:
+				g.bind(ns, str(url))
 			# copy triples from g2 into currently active graph
 			for triple in g2:
 				g.add(triple)
-			# TODO: merge namespaces as well!
 			return 'Merged {} triples from {} into {}, resulting in {}.'.format(
 				len(g2), g2.identifier, g.identifier, len(g))
 	# not enough parameters?
@@ -230,7 +262,6 @@ def store_sqlite(*args, **kwargs):
 	return msg + ' updated. Size: {}.'.format(len(g))
 
 
-	
 
 def store_xml(*args, **kwargs):
 	"""Save contents of a graph to an `xml` file."""
@@ -239,25 +270,6 @@ def store_xml(*args, **kwargs):
 	return rdf.save_xml(name, filename)
 
 
-# Returns a list of `command` syntax specifications
-# in docstring of a function identified by their name.
-def extract_cmd_syntax(fname):
-	"""Extract command syntax definition from handler function
-	docstring.
-	:param fname: the function's name. Expected to be known by
-	this (:mod:`.`) module, either because the function's 
-	implementation in the module source code anyway, or due
-	to previous calls of :func:`.commands.register_handler`
-	invoked by the ``@cmd_handler`` decorator."""
-	func = globals().get(fname)
-	if func != None:
-		res = []
-        # command syntax extraction from __doc__
-        fdoc = func.func_doc
-        if fdoc:
-	        for line in fdoc.split('\n'):
-	        	sntxs = re.findall('^\s*`([^`]+)`', line)
-	        	res.extend(sntxs)
-        return res
+
 
 

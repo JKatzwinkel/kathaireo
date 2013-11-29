@@ -18,7 +18,7 @@ what input values are allowed.
 """
 
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.1a-dev"
+__version__ = "0.0.18-dev"
 
 import re
 import os
@@ -39,6 +39,9 @@ assigned :class:`.ArgValidator` instance."""
 # default regex for e.g identifiers, names
 namex = re.compile('\A[a-zA-Z_]\w*\Z')
 
+###############################################################
+####################   arg handling class  ####################
+###############################################################
 class ArgValidator:
 	"""Container class for the two main validity specifiers an argument
 	identifier can be assigned to: an autocompletion candidate proposal
@@ -66,7 +69,9 @@ class ArgValidator:
 		
 
 
-
+###############################################################
+####################    module functions   ####################
+###############################################################
 
 # default function for value proposal
 def propose_default(arg, prefix):
@@ -158,31 +163,49 @@ def to_history(arg, value):
 
 
 ########################################################
-# argument handler functions
 ########################################################
+########################################################
+############ argument handler functions
+########################################################
+########################################################
+########################################################
+
+def lsdir(prefix, filetypes):
+	"""List contents of whatever directory can be
+	dereived from given prefix. Result contains
+	subdirectories and files whose extensions and
+	names match the prefix. filetypes are passed
+	as a list of globs (``['*.rdf', '*.owl', ...]``).
+	"""
+	if os.sep in prefix:
+		path = os.sep.join(prefix.split(os.sep)[:-1])
+	else:
+		path = '.'
+	files = ['{}{}'.format(fn, os.sep) for fn in os.listdir(path) 
+						if os.path.isdir(fn)]
+	for ext in filetypes:
+		files.extend(glob(os.path.join(path,ext)))
+	files = [fn for fn in files if fn.startswith(prefix)]
+	return files
+
 
 # list of globs matching potential ontology files
 rdfglobs = ["*.rdf", "*.RDF", "*.owl", "*.OWL", "*.n3", "*.xml"]
 # list ontology files in current directory (rdf, owl, n3, xml)
 def list_files_rdf(arg, prefix):
 	"""Returns a list of local files with extensions `.rdf, .owl, .n3` and `.xml`,
-	matching given prefix."""
-	files = []
-	path = os.sep.join(prefix.split(os.sep)[:-1])
-	for rdfglob in rdfglobs:
-		files.extend(glob(os.path.join(path,rdfglob)))
-	suggestions = [fn for fn in files if fn.startswith(prefix)]
+	matching given prefix.
+	"""
+	suggestions = lsdir(prefix, rdfglobs)
 	suggestions.extend(propose_default(arg, prefix))
 	return suggestions # TODO: +[None] ??
 
 # suggest local sqlite files
 def list_files_sqlite(arg, prefix):
-	"""Returns a list of local files with extensions `.sqlite` and `.sqlite3`."""
-	files = []
-	path = os.sep.join(prefix.split(os.sep)[:-1])
-	for glb in ['*.sqlite', '*.sqlite3']:
-		files.extend(glob(os.path.join(path,glb)))
-	suggestions = [fn for fn in files if fn.startswith(prefix)]
+	"""Returns a list of local files with extensions `.sqlite` and 
+	`.sqlite3`.
+	"""
+	suggestions = lsdir(prefix, ['*.sqlite', '*.sqlite3'])
 	suggestions.extend(propose_default(arg, prefix))
 	return suggestions # TODO: +[None] ??
 

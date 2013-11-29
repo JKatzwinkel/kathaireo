@@ -9,7 +9,7 @@ or have the :mod:`.namespaces` module download all namespaces for a certain grap
 calling :func:`.import_ns`.
 """
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.16-dev"
+__version__ = "0.0.16b-dev"
 
 import os
 import rdflib
@@ -62,7 +62,8 @@ def repr_graph(g):
 			str(g.identifier), len(g), g.store.__class__.__name__)
 	return '-'
 
-# return graph identifier or null
+
+# return graph identifier as str or null
 def graph_name(g):
         """Return graph identifier or `'-'`."""
         if g != None:
@@ -129,30 +130,34 @@ def load_resource(location, name=None):
 	else:
 		g = globals().get('current_graph')
 	# if no graph could be found to load into, abort
-	if g is None:
-		return None
 		#return "!Oh no!: graph '{}' is null!".format(graph_name(g))
 	# if graph is ready,
 	# begin attempts to retrieve resource
-	if os.path.exists(location) and os.path.isfile(location):
-		# if source is local file, try to autodetect format,
-		# then suggest default mimetypes if that fails.
-		for mime in [None]+remote.mimetypes[:3]:
-			try:
-				# call rdflib graph parse method
-				g = g.parse(location, format=mime)
-				return g
-			except:
-				pass
-		# if none of the default formats could be recognized in
-		# source, return None
-		return None
-	# if source is not a file on disk:
-	else:
-		# try to load from internet
-		return remote.parse(g, location)
-	#print "parsed contents at {} into {}.".format(
-		#location, g)
+	if g != None and isinstance(g, rdflib.Graph):
+		print 'importing into graph {}'.format(repr_graph(g))
+		if os.path.exists(location) and os.path.isfile(location):
+			print 'resource appears to be a local file.'
+			# if source is local file, try to autodetect format,
+			# then suggest default mimetypes if that fails.
+			for mime in [None]+remote.mimetypes[:3]:
+				try:
+					# call rdflib graph parse method
+					print 'apply format {} to file {}.'.format(mime, location)
+					g = g.parse(location, format=mime)
+					return g
+				except:
+					print 'source apparently no {}.'.format(mime)
+					#pass
+			# if none of the default formats could be recognized in
+			# source, return None
+			return None
+		# if source is not a file on disk:
+		else:
+			# try to load from internet
+			print 'resource is no local file! download from {}.'.format(location)
+			return remote.parse(g, location)
+		#print "parsed contents at {} into {}.".format(
+			#location, g)
 	# return graph resource content went in
 	return g
 
