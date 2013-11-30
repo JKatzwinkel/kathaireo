@@ -229,7 +229,7 @@ def merge_graph(*args, **kwargs):
 				msg = 'Could not find graph "{}"'.format(name)
 		else:
 			# actual merge:
-			for ns,url in g2.namespaces:
+			for ns,url in g2.namespaces():
 				g.bind(ns, str(url))
 			# copy triples from g2 into currently active graph
 			for triple in g2:

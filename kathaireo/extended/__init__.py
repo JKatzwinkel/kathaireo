@@ -15,7 +15,7 @@ def ls_cmd(*args, **kwargs):
 	`commands`
 	`show commands`"""
 	cmds = []
-	heads = {k:v for k,v in commands.cmdict.items()}
+	heads = {'!{}!'.format(k):v for k,v in commands.cmdict.items()}
 	going = True
 	while going:
 		deeper = {}
