@@ -125,9 +125,9 @@ def load_resource(location, name=None):
 					# call rdflib graph parse method
 					#print 'apply format {} to file {}.'.format(mime, location)
 					print 'parsing attempt using mimetype:', mime
-					f = codecs.open(location, encoding='utf-8', mode='rb')
-					g = g.parse(file=f, format=mime)
-					f.close()
+					#f = codecs.open(location, encoding='utf-8', mode='rb')
+					g = g.parse(location, format=mime)
+					#f.close()
 				except:
 					pass
 				if g:
@@ -226,11 +226,11 @@ def bind_ns(g, name, url):
 # TODO: lieber regexe?
 def struct_uri(u):
 	if '#' in u:
-		url, term = str(u).rsplit('#',1)
+		url, term = unicode(u).rsplit('#',1)
 	elif '/' in u:
-		url, term = str(u).rsplit('/',1)
+		url, term = unicode(u).rsplit('/',1)
 	else:
-		url, term = str(u), None	
+		url, term = unicode(u), None	
 	return (url, term)
 
 

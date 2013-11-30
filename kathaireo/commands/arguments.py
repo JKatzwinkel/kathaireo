@@ -185,7 +185,7 @@ def lsdir(prefix, filetypes):
 	"""
 	# extract path locator (relative)
 	if os.sep in prefix:
-		if prefix.count(os.sep)>1:
+		if prefix.count(os.sep)>1 or prefix[0] != os.sep:
 			path = os.sep.join(prefix.split(os.sep)[:-1])
 		else:
 			path = os.sep.join(['']+prefix.split(os.sep)[:-1])

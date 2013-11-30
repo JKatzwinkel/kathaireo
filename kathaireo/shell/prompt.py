@@ -5,7 +5,7 @@ This module reads user input and responds with pretty and
 colorful output.
 """
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.1-dev"
+__version__ = "0.0.18-dev"
 
 import re
 
@@ -68,10 +68,10 @@ def tokenize(line):
 
 def display(output):
 	# prefer list of strings, so try to force content into one
-	if type(output) != str:
+	if type(output) != unicode:
 		if type(output) is not list:
-			output = '{}'.format(output)
-	if type(output) is str:
+			output = u'{}'.format(output)
+	if type(output) is unicode:
 		output = output.split('\n')
 	# colorize single tokens
 	for item in output:

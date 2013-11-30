@@ -234,7 +234,7 @@ def bind_ns(*args, **kwargs):
 	`bind <namespace> <nsurl>`
 	`bind <namespace> <nsurl> <graphname>`"""
 	nsn = kwargs.get('namespace')
-	url = kwargs.get('resource')
+	url = kwargs.get('nsurl')
 	g = rdf.get_graph(kwargs.get('graphname'))
 	if not g:
 		g = rdf.__dict__.get('current_graph')

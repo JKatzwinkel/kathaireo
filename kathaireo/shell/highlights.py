@@ -11,6 +11,7 @@ from random import randrange as rnd
 
 from ..commands import arguments as argdir
 from ..rdf import namespaces
+from .. import util
 
 # errors
 errex = re.compile('!![^!]+!!')
@@ -27,13 +28,14 @@ sqrex = re.compile('\[[^[]]*\]')
 # uri
 #urlex = re.compile('[a-z]{3,6}:///?[a-z0-9.-]+\.[a-z]{2,}(:\d+)?(/\S+)*')
 #urlex = re.compile('([a-z]{3,6}:///?[a-z0-9.-]+\.[a-z]{2,})(:\d+)?(/\S+?)*(\?[a-z0-9]+=[a-z_0-9-]*&)*(#\w*)?\s')
-urlex = re.compile(''.join([
-	'([a-z]{3,6}:///?)',
-	'([a-z0-9.-]+(?:\.[a-z]{2,})?)',
-	'(:\d+)?',
-	'((?:/[^/ #]+)*)',
-	'(\?[a-z0-9]+=[a-z_0-9-]*&)*',
-	'(#\w*|/\S*)?']))
+# urlex = re.compile(''.join([
+# 	'([a-z]{3,6}:///?)',
+# 	'([a-z0-9.-]+(?:\.[a-z]{2,})?)',
+# 	'(:\d+)?',
+# 	'((?:/[^/ #]+)*)',
+# 	'(\?[a-z0-9]+=[a-z_0-9-]*&)*',
+# 	'(#\w*|/\S*)?']))
+urlex = util.urlex
 # filenames
 flnex = re.compile('.*?\.[a-z0-9~_]{1,6}', re.I)
 # numbers
