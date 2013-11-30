@@ -243,6 +243,8 @@ def bind_ns(*args, **kwargs):
 		if type(nns) != str:
 			nns = 'Bound namespace {}:{} to graph {}.'.format(nns.name,
 				nns.url, rdf.graph_name(g))
+		rdf.ns.reg_graph(g)
+		rdf.extract_ns_terms(g)
 		return nns
 
 

@@ -234,6 +234,15 @@ def struct_uri(u):
 	return (url, term)
 
 
+def shorten_url(url):
+	"""Shortens a given url by collapsing it to a pair
+	of identifiers denoting namespace and term, like
+	``rdfs:label``."""
+	#TODO: impl
+	base, term = struct_uri(url)
+	return '{}:{}'.format(ns.get_ns(base), term)
+
+
 #harvest namespace terms from graph
 def extract_ns_terms(g):
 	"""Collects terms from graph rdf and assigns them

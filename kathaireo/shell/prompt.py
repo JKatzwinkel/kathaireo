@@ -52,6 +52,8 @@ def tokenize(line):
 	for uri in uris:
 		#print '\ntry to format:', ''.join(uri)
 		#print '\t', ''.join(['<{}>'.format(u) for u in uri])
+		#if uri[0].startswith('file://'):
+			#uri = uri[1:]
 		uri = ''.join(uri)
 		url, term = rdf.struct_uri(uri)
 		#print u'\tfiltererd output: {} ending on "{}"'.format(url, term)

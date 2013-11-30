@@ -279,6 +279,12 @@ def ls_rdf_ent(arg, prefix):
 	return suggestions
 
 
+def resolve_local_url(url):
+	"""Converts from `file:///` URL to absolute path."""
+	#TODO: implement
+	return url.split('/',1)[1]
+
+
 # propose namespace locations
 def ls_ns_urls(arg, prefix):
 	"""Namespace locators."""
