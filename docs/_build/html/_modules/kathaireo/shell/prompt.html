@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -60,17 +62,18 @@
 <span class="kn">import</span> <span class="nn">re</span>
 
 <span class="kn">from</span> <span class="nn">.highlights</span> <span class="kn">import</span> <span class="n">color</span><span class="p">,</span> <span class="n">hilite</span><span class="p">,</span> <span class="n">col_demo</span><span class="p">,</span> <span class="n">stdcol</span>
-
+<span class="kn">from</span> <span class="nn">kathaireo</span> <span class="kn">import</span> <span class="n">rdf</span>
 
 <span class="c"># colored prompt</span>
 <span class="c">#ps = &quot;\001\033[32m\002&gt;&gt;&gt;\001\033[0m\002 &quot;</span>
-<span class="n">ps</span> <span class="o">=</span> <span class="s">&quot;{}</span><span class="se">\001\033</span><span class="s">[32m</span><span class="se">\002</span><span class="s">&gt;&gt;&gt;{}{} &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">color</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">23</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">ps</span> <span class="o">=</span> <span class="s">&quot;{}</span><span class="se">\001\033</span><span class="s">[32m</span><span class="se">\002</span><span class="s">-[{{}}]#{}{} &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">color</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">23</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
 
 <span class="c"># tokenizer regex</span>
 <span class="c">#_tokex = re.compile(&#39;(\&quot;[^\&quot;]*?\&quot;|\&#39;[^\&#39;]*?\&#39;|[ ,]+|\S*|\w*|&lt;[^&gt;]*?&gt;|.*)&#39;)</span>
 <span class="n">_splits</span> <span class="o">=</span> <span class="p">[</span>
 	<span class="s">r&#39;[ ,;]+&#39;</span><span class="p">,</span>
 	<span class="s">r&#39;!{1,2}[^!]+!{1,2}&#39;</span><span class="p">,</span>
+	<span class="s">r&#39;\*[^*]+\*&#39;</span><span class="p">,</span>
 	<span class="s">r&#39;&quot;[^&quot;]*?&quot;&#39;</span><span class="p">,</span>
 	<span class="s">r&#39;</span><span class="se">\&#39;</span><span class="s">[^</span><span class="se">\&#39;</span><span class="s">]*?</span><span class="se">\&#39;</span><span class="s">&#39;</span><span class="p">,</span>
 	<span class="s">r&#39;&lt;[^&lt;&gt;</span><span class="se">\&#39;</span><span class="s">&quot;]*?&gt;&#39;</span><span class="p">,</span>
@@ -80,11 +83,15 @@
 	<span class="p">]</span>
 <span class="n">_tokex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;({})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_splits</span><span class="p">)),</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">)</span>
 
-<span class="c">#print color(stdcol), &#39;\r&#39;,</span>
+<span class="c"># if no working graph is selected for rdf module, select None</span>
+<span class="c"># until further notice</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">rdf</span><span class="p">,</span> <span class="s">&#39;current_graph&#39;</span><span class="p">):</span>
+	<span class="n">rdf</span><span class="o">.</span><span class="n">set_graph</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
 
 <span class="c"># wait for input</span>
 <div class="viewcode-block" id="input"><a class="viewcode-back" href="../../../kathaireo.shell.html#kathaireo.shell.prompt.input">[docs]</a><span class="k">def</span> <span class="nf">input</span><span class="p">():</span>
-	<span class="n">line</span> <span class="o">=</span> <span class="nb">raw_input</span><span class="p">(</span><span class="n">ps</span><span class="p">)</span>
+	<span class="n">gname</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">graph_name</span><span class="p">(</span><span class="n">rdf</span><span class="o">.</span><span class="n">current_graph</span><span class="p">)</span>
+	<span class="n">line</span> <span class="o">=</span> <span class="nb">raw_input</span><span class="p">(</span><span class="n">ps</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gname</span><span class="p">))</span>
 	<span class="k">print</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">color</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">color</span><span class="p">(</span><span class="n">stdcol</span><span class="p">),</span><span class="s">&#39;</span><span class="se">\r</span><span class="s">&#39;</span><span class="p">]),</span>
 	<span class="k">return</span> <span class="n">line</span>
 
@@ -144,7 +151,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2013, J. Katzwinkel.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

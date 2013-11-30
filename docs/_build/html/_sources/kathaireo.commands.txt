@@ -25,3 +25,11 @@ commands Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`stdcmd` Module
+----------------------
+
+.. automodule:: kathaireo.commands.stdcmd
+    :members:
+    :undoc-members:
+    :show-inheritance:
+

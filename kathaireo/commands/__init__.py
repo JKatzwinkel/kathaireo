@@ -7,7 +7,7 @@ a formal representation of a command syntax can be
 bound to a handling function desired to be called for
 user input matching said command. 
 Functions intended to serve as handlers, when declared
-like `def func(*args, **kwargs)` have access to 
+like ``def func(*args, **kwargs)`` have access to 
 their command's arguments marked by surrounding angle
 brackets (<>).
 
@@ -30,9 +30,23 @@ Example:
 	>>> commands.cmdict
 	{'create': {'<graphname>': {'': <function handler at 0x86c26f4>}}}
 
+Alternativley, one can also use the ``@cmd_handler`` decorator
+provided by the :mod:`..kathaireo` package itself and implemented at 
+:func:`register_handler`:
+::
+
+	from kathaireo import cmd_handler
+	@cmd_handler
+	def handler(*args, **kwargs):
+		\"\"\"`create <graphname>`\"\"\"
+		[...]
+
+...does the same as the snippet above.
+
+
 """
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.22-dev"
+__version__ = "0.0.23-dev"
 #__all__ = ['arguments', 'handlers']
 
 import re
@@ -98,33 +112,34 @@ def register(syntax, function):
 	its handler.
 
 	:param syntax: A String containing a formal 
-	representation of a new command's syntax.
-	A command syntax may contain argument identifiers 
-	s.t. the handling function (and shell-features like 
-	autocomplete) has access to argument variables 
-	passed to a command. A command syntax string 
-	indicating a handler's capability of processing 
-	command arguments would look something like this, 
-	for instance:
+		representation of a new command's syntax.
+		A command syntax may contain argument identifiers 
+		s.t. the handling function (and shell-features like 
+		autocomplete) has access to argument variables 
+		passed to a command. A command syntax string 
+		indicating a handler's capability of processing 
+		command arguments would look something like this, 
+		for instance:
+		::
 
-		'command option <arg1> <arg2> someswitch <arg3>'
+			'command option <arg1> <arg2> someswitch <arg3>'
 
 	:param function: A function intended to be called when
-	said command is to be executed. Should accept 
-	an unlimited number of both positional and keyword 
-	arguments and is hence recommended to look sth like 
-	the following: 
+		said command is to be executed. Should accept 
+		an unlimited number of both positional and keyword 
+		arguments and is hence recommended to look sth like 
+		the following: 
 
-		>>> def func(*args, **kwargs):
-		...    [...]
+			>>> def func(*args, **kwargs):
+			...    [...]
 
-	Note that nonetheless, it is not 
-	tested for fitting this requirement, but one might
-	get in trouble when ignoring it.
+		Note that nonetheless, it is not 
+		tested for fitting this requirement, but one might
+		get in trouble when ignoring it.
 
 	:returns: `True`, if function was successfully bound to
-	command syntax, `False`, if command syntax
-	is already in registry.
+		command syntax, `False`, if command syntax
+		is already in registry.
 	"""
 	# anchor at top level of command path dict
 	level=cmdict
@@ -416,7 +431,7 @@ default_cmds = {
 # read, compile, register command syntaxes
 def init():
 	"""Read, compile and register default commands.
-	These are those contained by :data:`default_cmds`
+	These are those contained by :data:`.default_cmds`
 	plus those defined by the :mod:`.commands.stdcmd` module,
 	parse docstrings of all functions in :mod:`.handlers` namespace
 	for `command ...` syntax specifications and :func:`.register`
