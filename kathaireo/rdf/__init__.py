@@ -94,6 +94,7 @@ def load_resource(location, name=None):
 	location via :func:`.remote.parse`.
 	If everything fails, `None` is returned.
 	"""
+	# TODO: write smarter global namespace registry!
 	# TODO: also handle sql/sqlite?
 	# TODO: handle n3!
 	# if a graphname is given, retrieve corresponding graph
@@ -173,13 +174,16 @@ def graph_info(name, attr):
 
 
 # import namespace definitions for graph
-def import_ns(name):
+def import_ns(g):
 	"""Downloads definitions of :mod:`.namespaces` used in the rdf
-	graph identified by the given name. This is done by function
+	specified graph. This is done by function
 	:func:`.namespaces.provide_for`."""
-	g = get_graph(name)
 	if g:
-		return ns.provide_for(g)
+		res = ns.provide_for(g)
+		if res:
+			return res
+		else:
+			return '!!ERROR!! while downloading namespaces.'
 	return False
 
 

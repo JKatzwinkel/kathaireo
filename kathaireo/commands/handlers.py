@@ -173,7 +173,13 @@ def show_ns(*args, **kwargs):
 	handles:
 	`ls ns`
 	`list namespaces`"""
-	return '\n'.join(rdf.namespaces.get_names())
+	# TODO: write smarter global namespace registry!
+	res = rdf.namespaces.get_names()
+	g = rdf.__dict__.get('current_graph')
+	if g:
+		res.extend(['{}: {}'.format(ns, ref) for 
+			ns,url in g.namespaces()])
+	return '\n'.join(res)
 
 
 
@@ -257,7 +263,18 @@ def import_namespaces(*args, **kwargs):
 	"""Download namespaces for given graph name.
 	"""
 	name = kwargs.get('graphname')
-	return rdf.import_ns(name)
+	if name:
+		g = rdf.get_graph(name)
+	else:
+		g = rdf.__dict__.get('current_graph')
+	if g:
+		res = rdf.import_ns(g)
+	else:
+		return '!Abort!: no graph specified.'
+	if res:
+		return res
+	return '!!Error!!: could not import namespaces bound by graph {}.'.format(
+		rdf.graph_name(g))
 
 
 # set sqlite resource as persistent store

@@ -9,6 +9,10 @@ __version__ = "0.0.1a-dev"
 # bind handler functions to command syntax specifications
 # c
 create_graph=['create <graphname>']
+# i
+import_namespaces=['load namespaces <graphname>',
+	'load namespaces',
+	'import ns']
 # m
 merge_graph=['merge <graphname>']
 # s
