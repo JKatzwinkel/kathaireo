@@ -48,9 +48,10 @@ def parse(g, location, format=None, guesses=mimetypes[:3]):
 		of the input format in case autodetection fails. Set to
 		`None` in order to trade time for chance.
 	"""
+	#print 'parse remote resource {} into graph {}.'.format(location, g)
 	# connect to URL
 	conne = urllib2.urlopen(location)
-	print conne.headers.dict
+	# print conne.headers.dict
 	# download content
 	content = conne.read()
 	try:
@@ -61,16 +62,17 @@ def parse(g, location, format=None, guesses=mimetypes[:3]):
 	except:
 		# if (autodetect) parsing fails, 
 		# try again a few times, guessing the right format
-		if format in guesses:
-			guesses.remove(format)
-		for mime in guesses:
-			try:
-				# try to parse for specified format and return
-				# graph on success
-				g = g.parse(data=content, format=mime)
-				return g
-			except:
-				# output debug msg
-				print 'mimetype {} failed.'.format(mime)
+		if len(guesses)>0:
+			if format in guesses:
+				guesses.remove(format)
+			for mime in guesses:
+				try:
+					# try to parse for specified format and return
+					# graph on success
+					g = g.parse(data=content, format=mime)
+					return g
+				except:
+					# output debug msg
+					print 'mimetype {} failed.'.format(mime)
 		# if nothing worked at all, return None
 		return None

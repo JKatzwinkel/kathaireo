@@ -401,7 +401,7 @@ default_cmds = {
 	'create <graphname> store sqlite <sqlite>': handlers.store_sqlite,
 	'load <resource> <graphname>': handlers.parse_rdf,
 	'show <graphname> <attribute>': handlers.graph_info,
-	'load namespaces <graphname>': handlers.import_namespaces,
+	#'load namespaces <graphname>': handlers.import_namespaces,
 	'connect <graphname> to sqlite <sqlite>': handlers.store_sqlite,
 	#'save <graphname> to xml <filename>': handlers.store_xml,
 	#'save xml <filename>': handlers.store_xml,

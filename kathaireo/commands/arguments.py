@@ -213,6 +213,7 @@ def list_files_rdf(arg, prefix):
 	suggestions.extend(propose_default(arg, prefix))
 	return suggestions # TODO: +[None] ??
 
+
 # suggest local sqlite files
 def list_files_sqlite(arg, prefix):
 	"""Returns a list of local files with extensions `.sqlite` and 
@@ -239,5 +240,9 @@ def ls_ns(arg, prefix):
 	"""Returns currently loaded namespaces."""
 	suggestions = [s for s in rdf.namespaces.get_names()
 		if s.startswith(prefix)]
+	g = rdf.__dict__.get('current_graph')
+	if g:
+		suggestions.extend([ns for ns,_ in g.namespaces()
+			if ns.startswith(prefix)])
 	suggestions.extend(propose_default(arg, prefix))
 	return [s+';' for s in suggestions]
