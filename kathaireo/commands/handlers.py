@@ -140,7 +140,10 @@ def parse_rdf(*args, **kwargs):
 		# try to parse local file first,
 		# then remote source on failure.
 		# try for multiple rdf formats in both
-		g = rdf.get_graph(name)
+		if name:
+			g = rdf.get_graph(name)
+		else:
+			g = rdf.__dict__.get('current_graph')
 		if g:
 			before = len(g)
 		# do the stuff!
@@ -150,15 +153,15 @@ def parse_rdf(*args, **kwargs):
 			# if no graph is selected, use this one
 			if rdf.__dict__.get('current_graph') is None:
 				rdf.set_graph(g)
-			return 'Succesfully read {} rdf statements from {} into graph "{}".'.format(
+			return u'Succesfully read {} rdf statements from {} into graph "{}".'.format(
 				len(g)-before, location, name)
 		else:
 			# if parse attempt failed,
 			# return failure msg
-			return '!Error!: Could not import resource at {}.'.format(location)
+			return u'!Error!: Could not import resource at {}; operation returned "None"!'.format(location)
 	# if no location was given
 	# return failure msg
-	return "!Didn't read source:! No location specified."
+	return u"!Didn't read source:! No location specified."
 
 
 # show info about given graph
@@ -200,6 +203,48 @@ def show_ns(*args, **kwargs):
 		else:
 			res = ['!Error!.']
 	return '\n'.join(res)
+
+
+# find triples containing specific term
+def find_term_ls(*args, **kwargs):
+	"""Find triples with the given term.
+	handles:
+	`find <rdfentity>`
+	`find <rdfentity> <graphname>`
+	`ls <graphname>`"""
+	rdfentity = kwargs.get('rdfentity')
+	g = rdf.get_graph(kwargs.get('graphname'))
+	# `find` command
+	if rdfentity:
+		if ':' in rdfentity:
+			ns, term = rdfentity.split(':')
+		else:
+			ns, term = None, rdfentity
+		return '\n'.join(rdf.find_term(term, nsp=ns, g=g))
+	else:
+		# `ls` command
+		res = rdf.ls_rdf(g=g)
+	return '\n'.join([u'({} {} {})'.format(*t) for t in res])
+
+
+# bind a new namespace
+def bind_ns(*args, **kwargs):
+	"""Creates a new namespace binding in the current graph.
+	handles:
+	`bind <namespace> <nsurl>`
+	`bind <namespace> <nsurl> <graphname>`"""
+	nsn = kwargs.get('namespace')
+	url = kwargs.get('resource')
+	g = rdf.get_graph(kwargs.get('graphname'))
+	if not g:
+		g = rdf.__dict__.get('current_graph')
+	if g:
+		nns = rdf.bind_ns(g, nsn, url)
+		if type(nns) != str:
+			nns = 'Bound namespace {}:{} to graph {}.'.format(nns.name,
+				nns.url, rdf.graph_name(g))
+		return nns
+
 
 
 

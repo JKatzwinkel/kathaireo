@@ -10,6 +10,7 @@ import os.path
 from random import randrange as rnd
 
 from ..commands import arguments as argdir
+from ..rdf import namespaces
 
 # errors
 errex = re.compile('!![^!]+!!')
@@ -24,7 +25,15 @@ qutex = re.compile('(\'[^\']*\'|\"[^\"]*\")')
 # square brackets
 sqrex = re.compile('\[[^[]]*\]')
 # uri
-urlex = re.compile('[a-z]{3,6}:///?[a-z0-9.-]+\.[a-z]{2,}(:\d+)?(/\S+)*')
+#urlex = re.compile('[a-z]{3,6}:///?[a-z0-9.-]+\.[a-z]{2,}(:\d+)?(/\S+)*')
+#urlex = re.compile('([a-z]{3,6}:///?[a-z0-9.-]+\.[a-z]{2,})(:\d+)?(/\S+?)*(\?[a-z0-9]+=[a-z_0-9-]*&)*(#\w*)?\s')
+urlex = re.compile(''.join([
+	'([a-z]{3,6}:///?)',
+	'([a-z0-9.-]+(?:\.[a-z]{2,})?)',
+	'(:\d+)?',
+	'((?:/[^/ #]+)*)',
+	'(\?[a-z0-9]+=[a-z_0-9-]*&)*',
+	'(#\w*|/\S*)?']))
 # filenames
 flnex = re.compile('.*?\.[a-z0-9~_]{1,6}', re.I)
 # numbers
@@ -44,7 +53,7 @@ _colscheme = {
 	bldex: 1,  # bold
 	qutex: 4,  # red
 	angex: 7,  # blue
-	urlex: 2,  # underscore
+	urlex: (1,2,8),  # underscore
 	sqrex: 23, # bright green
 	nmrex: 6,  # yellow
 	flnex: 9,  # turquois
@@ -118,27 +127,44 @@ def hilite(token):
 	#cid = rnd(13)
 	#return '{}'.format(color(cid)+token+color(0))
 	#
+	#rexorder = _rexorder[:]
+	#rexorder.insert(5,re.compile('({})'.format(
+		#'|'.join(namespaces.get_names()))))
 	for rex in _rexorder:
 		if rex.match(token):
 			cid = _colscheme.get(rex)
+			if hasattr(cid, '__len__'):
+				cid = u''.join([color(i) for i in cid])
+			else:
+				cid = color(cid)
 			# error and warning markups must be removed
 			if rex in [wrnex, errex, bldex]:
 				if rex is errex:
 					i = 2
 				else:
 					i = 1
-				token = '{}{}{}{}'.format(
-					color(cid), token[i:-i], color(0), color(stdcol))
+				token = u'{}{}{}{}'.format(
+					cid, token[i:-i], color(0), color(stdcol))
 			# if filename matches, check if such file exists
 			elif rex is flnex:
 				if not(os.path.exists(token) 
 					and os.path.isfile(token)):
-					cid = 7
+					cid = color(7)
 					continue
-			return '{}'.format(color(cid)+token+color(0)+color(stdcol))
-	return '{}'.format(token)
+			return u'{}'.format(cid+token+color(0)+color(stdcol))
+		else:
+			# hilight ns:term clauses
+			fields = token.split(':',1)
+			if len(fields)<2:
+				fields.append(None)
+			nsn, term = fields
+			if nsn in namespaces._namespaces:
+				if term == None or re.match('[a-z][a-z0-9_-]*', term, re.I):
+					token = u'{}{}{}'.format(color(8), token, color(0))
+					continue
+	return u'{}'.format(token)
 
 
 ########
 stdcol=0
-print '{}\r'.format(color(stdcol)),
+print u'{}\r'.format(color(stdcol)),

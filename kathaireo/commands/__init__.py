@@ -46,7 +46,7 @@ provided by the :mod:`..kathaireo` package itself and implemented at
 
 """
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.23-dev"
+__version__ = "0.0.24-dev"
 #__all__ = ['arguments', 'handlers']
 
 import re
@@ -55,6 +55,7 @@ import os
 import arguments
 import handlers
 from .. import rdf
+from .. import util
 
 
 # argument registry
@@ -73,9 +74,8 @@ argex=re.compile('<([a-zA-Z_]\w*)>')
 trmex=re.compile('(\".+\"|\S+)')
 # file name TODO: besser
 flnex=re.compile('\S+\.(rdf|owl|RDF|OWL|xml|n3)')
-# url TODO: verbessern
-urlex=re.compile('(https?|ftp)://\w+\.[a-z]+(/.*)*')
-
+# url
+urlex = util.urlex
 
 
 # implementation of decorator @cmd_handler
@@ -509,7 +509,13 @@ reg_arg('namespace', proposer=arguments.ls_ns)
 # TODO: !!!
 reg_arg('rdfentity', proposer=arguments.ls_rdf_ent,
 	format=[urlex, flnex, re.compile('\w+:\S+'),
-	re.compile('\w+:')]) #TODO: format definieren
+	re.compile('\w+:(\"[^"]+\")?'),
+	re.compile('\"[^"]+\"'),
+	re.compile('\w+')]) #TODO: format definieren
 reg_arg('rdfrelation', proposer=arguments.ls_rdf_ent,
 	format=[urlex, re.compile('\w+:\S+'),
 	re.compile('\w+:')]) #TODO: format definieren
+
+# <nsurl> (namespace locator)
+reg_arg('nsurl', proposer=arguments.ls_ns_urls,
+	format=[urlex, flnex])

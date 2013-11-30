@@ -13,6 +13,8 @@ __version__ = "0.0.16c-dev"
 
 import os
 import rdflib
+import re
+import codecs
 #from rdflib_sqlalchemy.SQLAlchemy import SQLAlchemy
 
 import namespaces as ns
@@ -78,7 +80,7 @@ def set_graph(g):
 	globals()['current_graph'] = g
 	if g is None:
 		return 'Unset current graph'
-	return 'Select graph: {}'.format(repr_graph(g))
+	return u'Select graph: {}'.format(repr_graph(g))
 
 
 # import rdf data from resource into graph
@@ -110,8 +112,10 @@ def load_resource(location, name=None):
 		#return "!Oh no!: graph '{}' is null!".format(graph_name(g))
 	# if graph is ready,
 	# begin attempts to retrieve resource
+	#TODO: we need better indication of function call results
 	if g != None and isinstance(g, rdflib.Graph):
 		#print 'importing into graph {}'.format(repr_graph(g))
+		#TODO: make use of `publicID`: the logical URI to use as the document base.
 		if os.path.exists(location) and os.path.isfile(location):
 			#print 'resource appears to be a local file.'
 			# if source is local file, try to autodetect format,
@@ -120,14 +124,29 @@ def load_resource(location, name=None):
 				try:
 					# call rdflib graph parse method
 					#print 'apply format {} to file {}.'.format(mime, location)
-					g = g.parse(location, format=mime)
-					# register namespaces
-					ns.reg_graph(g)
-					extract_ns_terms(g)
-					return g
+					print 'parsing attempt using mimetype:', mime
+					f = codecs.open(location, encoding='utf-8', mode='rb')
+					g = g.parse(file=f, format=mime)
+					f.close()
 				except:
-					#print 'source apparently no {}.'.format(mime)
 					pass
+				if g:
+					try:
+						# register namespaces
+						print 'register namespaces bound by graph'
+						ns.reg_graph(g)
+					except Exception as e:
+						print e.message
+						print e
+					try:
+						print 'populate namespace container with terms discovered in graph.'
+						extract_ns_terms(g)
+						return g
+					except Exception as e:
+						#print 'source apparently no {}.'.format(mime)
+						print e.message
+						print e
+						pass
 			# if none of the default formats could be recognized in
 			# source, return None
 			return None
@@ -137,6 +156,7 @@ def load_resource(location, name=None):
 			#print 'resource is no local file! download from {}.'.format(location)
 			g = remote.parse(g, location)
 			ns.reg_graph(g)
+			extract_ns_terms(g)
 		#print "parsed contents at {} into {}.".format(
 			#location, g)
 	# return graph resource content went in
@@ -191,27 +211,106 @@ def import_ns(g):
 	return False
 
 
+def bind_ns(g, name, url):
+	"""Create new namespace binding."""
+	if g is None:
+		g = globals().get('current_graph')
+	if not None in [g, name, url]:
+		nns = ns.create(name, url)
+		g.bind(name, url)
+		return nns
+	return '!Error!: could not bind new namespace.'
+
+
+
+# TODO: lieber regexe?
+def struct_uri(u):
+	if '#' in u:
+		url, term = str(u).rsplit('#',1)
+	elif '/' in u:
+		url, term = str(u).rsplit('/',1)
+	else:
+		url, term = str(u), None	
+	return (url, term)
+
+
 #harvest namespace terms from graph
 def extract_ns_terms(g):
 	"""Collects terms from graph rdf and assigns them
 	to the namespaces they come from."""
+	# TODO: filtern, so dasz einzelne namespaces bearbeitet weden
+	# koennen; self.rdf in namespace klasse damit befuellen.
 	for t in g:
 		for u in t:
 			if u:
-				if '#' in u:
-					url, term = str(u).rsplit('#',1)
-				elif '/' in u:
-					url, term = str(u).rsplit('/',1)
-				else:
-					term = None
+				url, term = struct_uri(u)
 				if term:
 					nsp = ns.get_ns(url)
 					if nsp:
-						print url, nsp.name, term
+						#print '\n\nextract namespace term from rdf data:', 
+						#print '{}..{}'.format(url[:10],url[-10:]), nsp.name, term
 						dest = [nsp.classes, nsp.properties][int(term.islower())]
 						if not term in dest:
 							dest.append(term)
 
+
+def ls_rdf(g=None):
+	"""Returns rdf content of graph line by line as tuples."""
+	if not g:
+		g = globals().get('current_graph')
+	if g:
+		stms = []
+		for trp in g:
+			stm = ()
+			for t in trp:
+				if re.match('^((?:\S*\"[^"]+\")+|\S+)$', t):
+					stm += (t,)
+				else:
+					stm += (u'"{}"'.format(t),)
+			stms.append(stm)
+		return stms
+
+
+
+
+
+def find_term(term, nsp=None, g=None):
+	"""Shows triple containing given term."""
+	if not g:
+		g = globals().get('current_graph')
+	if g:
+		res = []
+		if nsp != None and nsp in ns.get_names():
+			res.extend(['Search for occurences of resouce id {}:{} in {}'.format(
+				ns.get(nsp).name, term, graph_name(g))])
+			prefix = ns.get(nsp).url
+			nsp = None
+		else:
+			prefix = '\S*'
+		pttn = '{}[#/]?{}'.format(prefix, term)
+		query = re.compile(pttn)
+		#print query.pattern
+		# substitution string for query matches
+		if nsp:
+			if term:
+				subst = u'*{}:{}*'.format(nsp,term)
+			else:
+				subst = u'*{}*'.format(nsp)
+		else:
+			subst = u'*:{}*'.format(term)
+		# serach through triple list
+		for trp in ls_rdf(g=g):
+			stm = u'{} {} {}'.format(*trp)
+			#if stm.find('Glenys Stacey') > 0:
+				#print stm
+				#res.append(stm)
+			# occurence of desired ref entity?
+			occ = query.findall(stm)
+			if len(occ)>0:
+				for o in occ:
+					stm = re.sub(pttn, subst, stm)
+				res.append(stm)
+		return res
 
 
 

@@ -25,6 +25,7 @@ import os
 from glob import glob
 
 from .. import rdf
+from .. import util
 
 # value history for each known argument placeholder
 arghist = {}
@@ -38,6 +39,8 @@ assigned :class:`.ArgValidator` instance."""
 
 # default regex for e.g identifiers, names
 namex = re.compile('\A[a-zA-Z_]\w*\Z')
+# for urls
+urlex = util.urlex
 
 ###############################################################
 ####################   arg handling class  ####################
@@ -182,7 +185,10 @@ def lsdir(prefix, filetypes):
 	"""
 	# extract path locator (relative)
 	if os.sep in prefix:
-		path = os.sep.join(prefix.split(os.sep)[:-1])
+		if prefix.count(os.sep)>1:
+			path = os.sep.join(prefix.split(os.sep)[:-1])
+		else:
+			path = os.sep.join(['']+prefix.split(os.sep)[:-1])
 		rpth = path
 	else:
 		path = '.'
@@ -272,3 +278,18 @@ def ls_rdf_ent(arg, prefix):
 	suggestions.extend(propose_default(arg, prefix))
 	return suggestions
 
+
+# propose namespace locations
+def ls_ns_urls(arg, prefix):
+	"""Namespace locators."""
+	suggestions = lsdir(prefix, rdfglobs)
+	# try to extract URIs from rdf data
+	for trp in rdf.ls_rdf():
+		uris = urlex.findall('{} {} {}'.format(*trp))
+		uris = [uri[int(uri[0].startswith('file:/')):] for
+					uri in uris]
+		suggestions.extend([rdf.struct_uri(''.join(uri))[0] 
+			for uri in uris
+			if any([field.startswith(prefix) for field in uri[:2]])])
+	suggestions.extend(propose_default(arg, prefix))
+	return suggestions

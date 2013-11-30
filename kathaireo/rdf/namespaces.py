@@ -16,7 +16,7 @@ class Namespace:
 	"""Dokudoku"""
 	def __init__(self, name, url):
 		self.name = name
-		self.url = '{}'.format(url)
+		self.url = u'{}'.format(url)
 		self.classes = []
 		self.properties = []
 		#print 'instantiate namespace {} at {}!'.format(name, url)
@@ -40,7 +40,7 @@ class Namespace:
 		#_namespaces[name] = self
 
 	def __repr__(self):
-		return "<namespace '{}' at {}>: {} triples".format(
+		return u"<namespace '{}' at {}>: {} triples".format(
 			self.name, self.url, len(self.rdf))
 
 
@@ -62,9 +62,34 @@ def load(name, url):
 		return None
 
 
+def create(name, url):
+	"""Creates and registers new namespace."""
+	ns = load(name, str(url))
+	if ns:
+		_namespaces[name] = ns
+		_prefixes[str(url).rstrip('/#')] = ns
+		return ns
+	return None
+
+
+
 def get_ns(url):
 	"""Looks up ns name for given url."""
-	return _prefixes.get(url)
+	#print '\n'.join(_prefixes.keys())
+	res = None
+	i = 0
+	while res is None and i < 5:
+		res = _prefixes.get(url)
+		if res:
+			#print '\tfound namespace!', '{}..{}'.format(url[:20],url[-10:]), res.name
+			break
+		if i < 3:
+			url = url[:-1]
+		else:
+			url = url.rsplit('/',1)[0]
+		i += 1
+	return res
+
 
 # register namespaces bound by graph
 def reg_graph(g):
@@ -78,7 +103,8 @@ def reg_graph(g):
 		# insert namespace directory into global registry
 		_namespaces.update(rdfns)
 		# cross file names under urls
-		prfxs = {n.url.rstrip('/#'):n for ns,n in rdfns.items()}
+		prfxs = {str(url).rstrip('/#'):get(n) 
+						for n, url in g.namespaces()}
 		_prefixes.update(prfxs)
 		# copy namespace references to module variable namespace
 		#globals().update(rdfns)
