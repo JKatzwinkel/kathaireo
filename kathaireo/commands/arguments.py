@@ -18,7 +18,7 @@ what input values are allowed.
 """
 
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.18-dev"
+__version__ = "0.0.18a-dev"
 
 import re
 import os
@@ -183,8 +183,10 @@ def lsdir(prefix, filetypes):
 	# extract path locator (relative)
 	if os.sep in prefix:
 		path = os.sep.join(prefix.split(os.sep)[:-1])
+		rpth = path
 	else:
 		path = '.'
+		rpth = ''
 	# initialize sugg list with subdirs
 	# terminate string w no space char ; to let commands
 	# module know that this would be still to be
@@ -194,7 +196,7 @@ def lsdir(prefix, filetypes):
 						if os.path.isdir(fn)]
 	# extend by files matching extensions
 	for ext in filetypes:
-		files.extend(glob(os.path.join(path,ext)))
+		files.extend(glob(os.path.join(rpth,ext)))
 	# make sure files match prefix
 	files = [fn for fn in files if fn.startswith(prefix)]
 	return files

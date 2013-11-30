@@ -58,3 +58,5 @@ to the global namespace of the
 :mod:`commands.handlers` module and optionally
 be registered for any command syntax declared
 within their docstring."""
+
+import extended

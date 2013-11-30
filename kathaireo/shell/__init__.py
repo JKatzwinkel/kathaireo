@@ -50,7 +50,10 @@ def complete(input, state):
 	# begin = readline.get_begidx()
 	# end = readline.get_endidx()
 	#sgst = [s+' ' for s in commands.choices_left(buf)]
-	sgst = [s for s in commands.choices_left(buf)]
+	# range from position of currently handled term to that of cursor
+	csrng = (readline.get_begidx(), readline.get_endidx())
+	#print '{}-{}'.format(*csrng)
+	sgst = [s for s in commands.choices_left(buf, csrng)]
 	return sgst[state]
 
 

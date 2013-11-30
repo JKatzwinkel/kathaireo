@@ -277,7 +277,7 @@ def execute(input):
 
 
 # what can possibly be typed in given certain prefix?
-def choices_left(input):
+def choices_left(input, csrange):
 	"""Assembles a list of terms that allow a valid input line
 	given the prefix passed as `input` has been typed in so far.
 	Those terms can include command keywords and argument values
@@ -289,13 +289,20 @@ def choices_left(input):
 	extend the current prefix, in case the latter doesn't end with 
 	an incomplete keyword or argument value.
 	"""
+	# TODO: read carefully for potential logical flaws!
+	# TODO: read carefully for potential logical flaws!
+	# TODO: read carefully for potential logical flaws!
 	if not input:
 		input = ''
+	# range of relevant input (beginning of incomplete word 
+	#	and cursor position)
+	beg, end = csrange
 	# begin traversing language tree as long as it matches current input
 	level = cmdict
 	level_down = level
 	# split input string into single terms
-	terms = trmex.findall(input)
+	# BUT only up to cursor position!
+	terms = trmex.findall(input[:end])
 	# append empty string if line ends on whitespace. thus the next
 	# keyword/value in order can be determined later
 	if re.match('.*\s+\Z', input) or len(input)<1:

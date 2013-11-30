@@ -106,7 +106,6 @@ def show_graphs(*args, **kwargs):
 	`list`
 	`ls`"""
 	reg = rdf._graphs.items()
-	print rdf._graphs
 	return ['{}: {}'.format(name, rdf.repr_graph(g)) for
 		name, g in sorted(reg, key=lambda t:t[0])]
 
@@ -268,8 +267,6 @@ def store_xml(*args, **kwargs):
 	name = kwargs.get('graphname')
 	filename = kwargs.get('filename')
 	return rdf.save_xml(name, filename)
-
-
 
 
 
