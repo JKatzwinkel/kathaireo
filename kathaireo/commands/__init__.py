@@ -352,7 +352,7 @@ def choices_left(input, csrange):
 	# possibility 2): input ends where a value should follow
 	# or is partly typed in
 	#print 'fragment, keys:', term, level.keys()
-	choices1 = [k for k in level.keys()]
+	choices1 = level.keys()[:]
 	choices = []
 	for c in choices1:
 		# resolve argument, if any
@@ -436,7 +436,7 @@ def init():
 				register(syntax, func)
 		else:
 			print "Not found!"
-	#TODO: read, compile, register stdcmd.py
+	# read, compile, register stdcmd.py
 	# ok. read commands from stdcmd.py
 	import stdcmd
 	print 'parse', stdcmd.__file__
@@ -459,12 +459,12 @@ init() #TODO: sure this shouldnt be called by application modules
 # handler functions with @cmd_handler decorator are in
 # modules that haven't been imported yet
 
-# print 'Number of default commands registered:',
-# print len(default_cmds)
+
 
 #################################################
 # command argument placeholder handling
 
+# TODO: write decorator to handle arguments like commands
 # <resources>
 reg_arg("resource", proposer=arguments.list_files_rdf, 
 	format=[flnex, urlex])
@@ -482,3 +482,6 @@ reg_arg("sqlite", arguments.list_files_sqlite,
 # <filename>
 reg_arg("filename", arguments.list_files_rdf,
 	format=[flnex])
+
+# <namespace>
+reg_arg('namespace', arguments.ls_ns)

@@ -13,7 +13,7 @@ using the :mod:`.commands` module:
 
 """
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.91-dev"
+__version__ = "0.0.92-dev"
 
 
 import re
@@ -83,18 +83,18 @@ def create_graph(*args, **kwargs):
 
 # select graph to work on
 def set_graph(*args, **kwargs):
-        """Select default graph for rdf operations.
-        handles:
-        `use <graphname>`"""
-        name = kwargs.get('graphname')
-        if name:
-                g = rdf.get_graph(name)
-                if g != None:
-                        return rdf.set_graph(g)
-                else:
-                        return '!Fail:! No graph "{}"!'.format(name)
-        else:
-                return '!!Error!!: No graph specified.'
+	"""Select default graph for rdf operations.
+	handles:
+	`use <graphname>`"""
+	name = kwargs.get('graphname')
+	if name:
+		g = rdf.get_graph(name)
+		if g != None:
+			return rdf.set_graph(g)
+		else:
+			return '!Fail:! No graph "{}"!'.format(name)
+	else:
+		return '!!Error!!: No graph specified.'
 
 
 # return list of graph registry entry str reprs.
@@ -166,6 +166,15 @@ def graph_info(*args, **kwargs):
 	else:
 		info = rdf.graph_info(name, field)
 		return info
+
+
+def show_ns(*args, **kwargs):
+	"""List loaded namespaces.
+	handles:
+	`ls ns`
+	`list namespaces`"""
+	return '\n'.join(rdf.namespaces.get_names())
+
 
 
 # copy graph 
