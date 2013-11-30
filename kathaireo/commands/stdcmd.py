@@ -4,9 +4,11 @@
 Bindings between command handler functions and command syntaxes.
 """
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.1a-dev"
+__version__ = "0.0.1b-dev"
 
 # bind handler functions to command syntax specifications
+# a
+add_stm=['add <rdfentity> <rdfrelation> <rdfentity>']
 # c
 create_graph=['create <graphname>']
 # i

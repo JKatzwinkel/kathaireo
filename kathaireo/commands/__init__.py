@@ -191,12 +191,13 @@ def msg_incomplete_cmd(keywords):
 	didn't contain a complete command, and the parser had still been
 	expecting upcoming content at the time of termination.
 	"""
+	keywords = ['*{}*'.format(k) for k in keywords]
 	if len(keywords)>1:
 		msg = ' or '.join([', '.join(keywords[:-1]), 
 			keywords[-1]])
 	else:
 		msg = keywords[0]
-	msg = "!Incomplete command!: expecting '{}' instead of EOL.".format(
+	msg = "!Incomplete command!: expecting {} instead of EOL.".format(
 		msg)
 	return msg
 
@@ -320,7 +321,7 @@ def choices_left(input, csrange):
 	terms = trmex.findall(input[:end])
 	# append empty string if line ends on whitespace. thus the next
 	# keyword/value in order can be determined later
-	if re.match('.*\s+\Z', input[:end]) or end<1:
+	if re.match('.*\s+\Z', input[:end]) or end-beg<1:
 		terms.append('')
 	#print '\nfind choices for:',terms
 	# #########################3
@@ -423,7 +424,7 @@ default_cmds = {
 	'copy <graphname> <graphname>': handlers.cp_graph,
 	#'merge <graphname>': handlers.merge_graph,
 	#'use <graphname>': handlers.set_graph,
-	'<namespace>:<subject> <namespace>:<predicate> <namespace>:<object>':None
+	#'add <namespace>:<rdfentity> <namespace>:<rdfproperty> <namespace>:<rdfentity>':None
 	#'namespace <namespace> classes': handlers.ns_classes,
 	#'namespace <namespace> properties': handlers.ns_properties,
 	}
@@ -462,10 +463,11 @@ def init():
 			f = handlers.__dict__.get(fn)
 			if hasattr(f, '__call__'):
 				for c in cc:
-					print fn, 'invoked by:', c
+					#print fn, 'invoked by:', c
 					register(c, f)
 	# TODO: arguments!
 	del stdcmd
+	print 'done.'
 
 
 
@@ -493,12 +495,21 @@ reg_arg("attribute", proposer=arguments.graph_attrs,
 del attrs
 
 # <sqlite>
-reg_arg("sqlite", arguments.list_files_sqlite,
+reg_arg("sqlite", proposer=arguments.list_files_sqlite,
 	format=[re.compile('.*\.sqlite3?')])
 
 # <filename>
-reg_arg("filename", arguments.list_files_rdf,
+reg_arg("filename", proposer=arguments.list_files_rdf,
 	format=[flnex])
 
 # <namespace>
-reg_arg('namespace', arguments.ls_ns)
+reg_arg('namespace', proposer=arguments.ls_ns)
+
+# <rdfentity>
+# TODO: !!!
+reg_arg('rdfentity', proposer=arguments.ls_rdf_ent,
+	format=[urlex, flnex, re.compile('\w+:\S+'),
+	re.compile('\w+:')]) #TODO: format definieren
+reg_arg('rdfrelation', proposer=arguments.ls_rdf_ent,
+	format=[urlex, re.compile('\w+:\S+'),
+	re.compile('\w+:')]) #TODO: format definieren

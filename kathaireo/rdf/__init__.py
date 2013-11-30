@@ -121,6 +121,9 @@ def load_resource(location, name=None):
 					# call rdflib graph parse method
 					#print 'apply format {} to file {}.'.format(mime, location)
 					g = g.parse(location, format=mime)
+					# register namespaces
+					ns.reg_graph(g)
+					extract_ns_terms(g)
 					return g
 				except:
 					#print 'source apparently no {}.'.format(mime)
@@ -132,7 +135,8 @@ def load_resource(location, name=None):
 		else:
 			# try to load from internet
 			#print 'resource is no local file! download from {}.'.format(location)
-			return remote.parse(g, location)
+			g = remote.parse(g, location)
+			ns.reg_graph(g)
 		#print "parsed contents at {} into {}.".format(
 			#location, g)
 	# return graph resource content went in
@@ -187,6 +191,31 @@ def import_ns(g):
 	return False
 
 
+#harvest namespace terms from graph
+def extract_ns_terms(g):
+	"""Collects terms from graph rdf and assigns them
+	to the namespaces they come from."""
+	for t in g:
+		for u in t:
+			if u:
+				if '#' in u:
+					url, term = str(u).rsplit('#',1)
+				elif '/' in u:
+					url, term = str(u).rsplit('/',1)
+				else:
+					term = None
+				if term:
+					nsp = ns.get_ns(url)
+					if nsp:
+						print url, nsp.name, term
+						dest = [nsp.classes, nsp.properties][int(term.islower())]
+						if not term in dest:
+							dest.append(term)
+
+
+
+
+
 # attach sqlite store
 def store_sqlite(name, filename):
 	"""Store. Sqlite. database. Uses the :mod:`.storage` module.
@@ -202,15 +231,11 @@ def store_sqlite(name, filename):
 
 
 # save xml dump
-def save_xml(name, filename):
+def save_xml(g, filename):
 	"""Dumps rdf/xml to file.
 	If no `graphname` parameter is passed, try to use
 	:data:`current_graph` instead.
 	"""
-	if name:
-		g = get_graph(name)
-	else:
-		g = __dict__.get(name)
 	if g:
 		return storage.save_xml(g, filename)
 	return None

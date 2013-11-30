@@ -241,8 +241,34 @@ def ls_ns(arg, prefix):
 	suggestions = [s for s in rdf.namespaces.get_names()
 		if s.startswith(prefix)]
 	g = rdf.__dict__.get('current_graph')
-	if g:
-		suggestions.extend([ns for ns,_ in g.namespaces()
-			if ns.startswith(prefix)])
+	#if g:
+		#suggestions.extend([ns for ns,_ in g.namespaces()
+			#if ns.startswith(prefix)])
 	suggestions.extend(propose_default(arg, prefix))
-	return [s+';' for s in suggestions]
+	return suggestions
+
+
+def ls_rdf_ent(arg, prefix):
+	"""Returns rdf entities (classes, properties)."""
+	suggestions = []
+	#print '\b\b{}>{}>\b'.format('\b'*len(prefix), prefix),
+	if ':' in prefix:
+		#print 'YEAH\b\b\b\b\b',
+		nn, ent = prefix.split(':', 1)
+		#print nn,'-',ent
+		ns = rdf.namespaces.get(nn)
+		if ns:
+			#print 'found ns:', nn,
+			terms = ns.properties[:] #make deep copy or cry.
+			if arg == 'rdfentity':
+				terms.extend(ns.classes)
+			suggestions.extend(['{}:{}'.format(nn,t) for 
+				t in  terms if t.startswith(ent)])
+			#print suggestions
+	else:
+		suggestions.extend([s+':;' for s in rdf.namespaces.get_names()
+			if s.startswith(prefix)])
+	#suggestions = [s for s in suggestions if s.startswith(prefix)]
+	suggestions.extend(propose_default(arg, prefix))
+	return suggestions
+
