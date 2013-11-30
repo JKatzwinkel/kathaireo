@@ -234,3 +234,10 @@ def graph_attrs(arg, prefix):
 	return suggestions
 
 
+# autocomplete namespaces
+def ls_ns(arg, prefix):
+	"""Returns currently loaded namespaces."""
+	suggestions = [s for s in rdf.namespaces.get_names()
+		if s.startswith(prefix)]
+	suggestions.extend(propose_default(arg, prefix))
+	return [s+';' for s in suggestions]

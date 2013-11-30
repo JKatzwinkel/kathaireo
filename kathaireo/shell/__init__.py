@@ -22,7 +22,7 @@ this module will automatically start a shell.
 """
 
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.2a-dev"
+__version__ = "0.0.2c-dev"
 __all__ = ['prompt', 'highlights', 'complete', 'run']
 
 import readline

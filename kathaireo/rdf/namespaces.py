@@ -52,6 +52,7 @@ def load(name, url):
 	except:
 		return None
 
+
 # download namespaces referenced by given rdf ontology
 def provide_for(ontology):
 	"""Imports definitions of namespaces a given graph is using."""
@@ -66,9 +67,11 @@ def provide_for(ontology):
 	#print "\n".join(["{}".format(n) for n in _namespaces.values()])
 	return rdfns
 
+
 # list known namespace names
 def get_names():
 	return sorted(_namespaces.keys())
+
 
 # list known namespaces
 def spaces():

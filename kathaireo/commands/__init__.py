@@ -32,7 +32,7 @@ Example:
 
 """
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.21-dev"
+__version__ = "0.0.22-dev"
 #__all__ = ['arguments', 'handlers']
 
 import re
@@ -305,13 +305,14 @@ def choices_left(input, csrange):
 	terms = trmex.findall(input[:end])
 	# append empty string if line ends on whitespace. thus the next
 	# keyword/value in order can be determined later
-	if re.match('.*\s+\Z', input) or len(input)<1:
+	if re.match('.*\s+\Z', input[:end]) or end<1:
 		terms.append('')
 	#print '\nfind choices for:',terms
 	# #########################3
 	# parse incomplete input
 	# word by word
 	for term in terms:
+		# walk downwards
 		level = level_down
 		if term in level:
 			#print 'fitting:', term
@@ -352,7 +353,8 @@ def choices_left(input, csrange):
 	# possibility 2): input ends where a value should follow
 	# or is partly typed in
 	#print 'fragment, keys:', term, level.keys()
-	choices1 = [k for k in level.keys()]
+	choices1 = level.keys()[:]
+	#print term, ':', choices1
 	choices = []
 	for c in choices1:
 		# resolve argument, if any
@@ -371,7 +373,7 @@ def choices_left(input, csrange):
 	# (e.g. directory names: even if completed, you can still
 	# go deeper in file structure)
 	choices = [''.join(c[:-1])+[c[-1]+' ',''][int(c[-1]==';')] 
-							for c in choices]
+							for c in choices if len(c) > 0]
 	#print 'suggestions:',choices, ''
 	return choices
 
@@ -436,7 +438,7 @@ def init():
 				register(syntax, func)
 		else:
 			print "Not found!"
-	#TODO: read, compile, register stdcmd.py
+	# read, compile, register stdcmd.py
 	# ok. read commands from stdcmd.py
 	import stdcmd
 	print 'parse', stdcmd.__file__
@@ -459,12 +461,12 @@ init() #TODO: sure this shouldnt be called by application modules
 # handler functions with @cmd_handler decorator are in
 # modules that haven't been imported yet
 
-# print 'Number of default commands registered:',
-# print len(default_cmds)
+
 
 #################################################
 # command argument placeholder handling
 
+# TODO: write decorator to handle arguments like commands
 # <resources>
 reg_arg("resource", proposer=arguments.list_files_rdf, 
 	format=[flnex, urlex])
@@ -482,3 +484,6 @@ reg_arg("sqlite", arguments.list_files_sqlite,
 # <filename>
 reg_arg("filename", arguments.list_files_rdf,
 	format=[flnex])
+
+# <namespace>
+reg_arg('namespace', arguments.ls_ns)

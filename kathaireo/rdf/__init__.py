@@ -9,7 +9,7 @@ or have the :mod:`.namespaces` module download all namespaces for a certain grap
 calling :func:`.import_ns`.
 """
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.16b-dev"
+__version__ = "0.0.16c-dev"
 
 import os
 import rdflib
@@ -28,35 +28,11 @@ import remote
 # by name
 _graphs={}
 
-def suggest_and_load_files():
-	"""Displays a list of *.rdf files in the current
-	directory and lets choose one of those to be
-	loaded into an rdf graph, which is then returned.
-
-	Namespaces referenced in the chosen file are also
-	loaded, parsed and put in separate graph instances.
-	"""
-	rdfFiles=[fn for fn in os.listdir('.') if fn.endswith(".rdf")]
-	if len(rdfFiles)>0:
-		print '\n'.join(["{}: {}".format(i,fn) 
-			for i,fn in enumerate(rdfFiles)])
-		c=int(raw_input(
-			"Which one of these ontologies would"+
-			" you like to be loaded? "))
-		fn=rdfFiles[c]
-		name = ''.join(fn.split(".rdf")[:-1])
-		# create or retrieve graph id'd by filename 
-		g = create_graph(name)
-		load_into(rdfFiles[c], name)
-		# download missing namespace sources
-		ns.provide_for(g)
-		return g
-
 
 # returns a nicer output of this graph than he default
 def repr_graph(g):
-        """Returns a string representation of given graph
-        indicating name and storage mode."""
+	"""Returns a string representation of given graph
+	indicating name and storage mode."""
 	if g != None:
 		return '<Graph "{}" with {} triples in store "{}">'.format(
 			str(g.identifier), len(g), g.store.__class__.__name__)
@@ -65,10 +41,10 @@ def repr_graph(g):
 
 # return graph identifier as str or null
 def graph_name(g):
-        """Return graph identifier or `'-'`."""
-        if g != None:
-                return str(g.identifier)
-        return '-'
+	"""Return graph identifier or `'-'`."""
+	if g != None:
+		return str(g.identifier)
+	return '-'
 
 
 # create and return new graph
