@@ -39,7 +39,6 @@ decorator, one might as well use:
 Like this, the kathaireo shell can easily be extended. Arguments can
 be configured in a similar manner thanks to the :mod:`.commands.arguments`
 module.
-
 """
 
 __docformat__ = "restructuredtext en"

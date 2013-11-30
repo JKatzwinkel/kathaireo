@@ -32,7 +32,7 @@ Example:
 
 """
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.2-dev"
+__version__ = "0.0.21-dev"
 #__all__ = ['arguments', 'handlers']
 
 import re
@@ -378,19 +378,19 @@ def choices_left(input):
 ###############################################
 
 default_cmds = {
-	'exit': handlers.quit,
-	':q': handlers.quit,
-	'create <graphname>': handlers.create_graph,
+	#'exit': handlers.quit,
+	#':q': handlers.quit,
+	#'create <graphname>': handlers.create_graph,
 	'create <graphname> store sqlite <sqlite>': handlers.store_sqlite,
 	'load <resource> <graphname>': handlers.parse_rdf,
 	'show <graphname> <attribute>': handlers.graph_info,
 	'load namespaces <graphname>': handlers.import_namespaces,
 	'connect <graphname> to sqlite <sqlite>': handlers.store_sqlite,
-	'save <graphname> to xml <filename>': handlers.store_xml,
-	'save xml <filename>': handlers.store_xml,
+	#'save <graphname> to xml <filename>': handlers.store_xml,
+	#'save xml <filename>': handlers.store_xml,
 	'copy <graphname> <graphname>': handlers.cp_graph,
-	'merge <graphname>': handlers.merge_graph,
-	'use <graphname>': handlers.set_graph,
+	#'merge <graphname>': handlers.merge_graph,
+	#'use <graphname>': handlers.set_graph,
 	'<namespace>:<subject> <namespace>:<predicate> <namespace>:<object>':None
 	#'namespace <namespace> classes': handlers.ns_classes,
 	#'namespace <namespace> properties': handlers.ns_properties,
@@ -422,6 +422,20 @@ def init():
 		else:
 			print "Not found!"
 	#TODO: read, compile, register stdcmd.py
+	# ok. read commands from stdcmd.py
+	import stdcmd
+	print 'parse', stdcmd.__file__
+	for fn, cc in stdcmd.__dict__.items():
+		if hasattr(handlers, fn):
+			f = handlers.__dict__.get(fn)
+			if hasattr(f, '__call__'):
+				for c in cc:
+					print fn, 'invoked by:', c
+					register(c, f)
+	# TODO: arguments!
+	del stdcmd
+
+
 
 # read, compile, register command syntaxes
 init() #TODO: sure this shouldnt be called by application modules

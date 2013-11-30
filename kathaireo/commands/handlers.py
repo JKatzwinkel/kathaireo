@@ -165,6 +165,7 @@ def cp_graph(*args, **kwargs):
 		return "!!Error!!: Couldn't copy graph '{}' to name '{}'!".format(
 			rdf.graph_name(g1), name2)
 
+
 # insert one graph into another
 def merge_graph(*args, **kwargs):
 	"""merge graph into :data:`.rdf.current_graph`.
