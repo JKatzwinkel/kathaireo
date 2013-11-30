@@ -25,6 +25,7 @@ import os
 from glob import glob
 
 from .. import rdf
+from .. import util
 
 # value history for each known argument placeholder
 arghist = {}
@@ -38,6 +39,8 @@ assigned :class:`.ArgValidator` instance."""
 
 # default regex for e.g identifiers, names
 namex = re.compile('\A[a-zA-Z_]\w*\Z')
+# for urls
+urlex = util.urlex
 
 ###############################################################
 ####################   arg handling class  ####################
@@ -182,7 +185,10 @@ def lsdir(prefix, filetypes):
 	"""
 	# extract path locator (relative)
 	if os.sep in prefix:
-		path = os.sep.join(prefix.split(os.sep)[:-1])
+		if prefix.count(os.sep)>1 or prefix[0] != os.sep:
+			path = os.sep.join(prefix.split(os.sep)[:-1])
+		else:
+			path = os.sep.join(['']+prefix.split(os.sep)[:-1])
 		rpth = path
 	else:
 		path = '.'
@@ -241,8 +247,55 @@ def ls_ns(arg, prefix):
 	suggestions = [s for s in rdf.namespaces.get_names()
 		if s.startswith(prefix)]
 	g = rdf.__dict__.get('current_graph')
-	if g:
-		suggestions.extend([ns for ns,_ in g.namespaces()
-			if ns.startswith(prefix)])
+	#if g:
+		#suggestions.extend([ns for ns,_ in g.namespaces()
+			#if ns.startswith(prefix)])
 	suggestions.extend(propose_default(arg, prefix))
-	return [s+';' for s in suggestions]
+	return suggestions
+
+
+def ls_rdf_ent(arg, prefix):
+	"""Returns rdf entities (classes, properties)."""
+	suggestions = []
+	#print '\b\b{}>{}>\b'.format('\b'*len(prefix), prefix),
+	if ':' in prefix:
+		#print 'YEAH\b\b\b\b\b',
+		nn, ent = prefix.split(':', 1)
+		#print nn,'-',ent
+		ns = rdf.namespaces.get(nn)
+		if ns:
+			#print 'found ns:', nn,
+			terms = ns.properties[:] #make deep copy or cry.
+			if arg == 'rdfentity':
+				terms.extend(ns.classes)
+			suggestions.extend(['{}:{}'.format(nn,t) for 
+				t in  terms if t.startswith(ent)])
+			#print suggestions
+	else:
+		suggestions.extend([s+':;' for s in rdf.namespaces.get_names()
+			if s.startswith(prefix)])
+	#suggestions = [s for s in suggestions if s.startswith(prefix)]
+	suggestions.extend(propose_default(arg, prefix))
+	return suggestions
+
+
+def resolve_local_url(url):
+	"""Converts from `file:///` URL to absolute path."""
+	#TODO: implement
+	return url.split('/',1)[1]
+
+
+# propose namespace locations
+def ls_ns_urls(arg, prefix):
+	"""Namespace locators."""
+	suggestions = lsdir(prefix, rdfglobs)
+	# try to extract URIs from rdf data
+	for trp in rdf.ls_rdf():
+		uris = urlex.findall('{} {} {}'.format(*trp))
+		uris = [uri[int(uri[0].startswith('file:/')):] for
+					uri in uris]
+		suggestions.extend([rdf.struct_uri(''.join(uri))[0] 
+			for uri in uris
+			if any([field.startswith(prefix) for field in uri[:2]])])
+	suggestions.extend(propose_default(arg, prefix))
+	return suggestions

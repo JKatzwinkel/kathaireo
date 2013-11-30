@@ -136,21 +136,32 @@ def parse_rdf(*args, **kwargs):
 	# rdflib.RDFUriRef identifier????
 	#if not(None in [location, name]):
 	if location:
+		before = 0
 		# try to parse local file first,
 		# then remote source on failure.
 		# try for multiple rdf formats in both
+		if name:
+			g = rdf.get_graph(name)
+		else:
+			g = rdf.__dict__.get('current_graph')
+		if g:
+			before = len(g)
+		# do the stuff!
 		g = rdf.load_resource(location, name=name)
 		if g:
 			# return success indicator msg
-			return 'Succesfully read {} rdf statements from {} into graph "{}".'.format(
-				len(g), location, name)
+			# if no graph is selected, use this one
+			if rdf.__dict__.get('current_graph') is None:
+				rdf.set_graph(g)
+			return u'Succesfully read {} rdf statements from {} into graph "{}".'.format(
+				len(g)-before, location, name)
 		else:
 			# if parse attempt failed,
 			# return failure msg
-			return '!Error!: Could not import resource at {}.'.format(location)
+			return u'!Error!: Could not import resource at {}; operation returned "None"!'.format(location)
 	# if no location was given
 	# return failure msg
-	return "!Didn't read source:! No location specified."
+	return u"!Didn't read source:! No location specified."
 
 
 # show info about given graph
@@ -168,18 +179,74 @@ def graph_info(*args, **kwargs):
 		return info
 
 
+# list namespaces of single namespace infos
 def show_ns(*args, **kwargs):
 	"""List loaded namespaces.
 	handles:
 	`ls ns`
-	`list namespaces`"""
+	`list namespaces`
+	`ls ns <namespace>`"""
 	# TODO: write smarter global namespace registry!
-	res = rdf.namespaces.get_names()
-	g = rdf.__dict__.get('current_graph')
-	if g:
-		res.extend(['{}: {}'.format(ns, ref) for 
-			ns,url in g.namespaces()])
+	if not 'namespace' in kwargs:
+		res = ['{}:{}'.format(n, ns.url) for n, ns in 
+			rdf.namespaces._namespaces.items()]
+		#g = rdf.__dict__.get('current_graph')
+		#if g:
+			#res.extend(['{}: {}'.format(ns, url) for 
+				#ns,url in g.namespaces()])
+	else:
+		# specific namespace?
+		ns = rdf.namespaces.get(kwargs.get('namespace'))
+		if ns:
+			terms = ['*classes*:']+ns.classes+['*properties*:']+ns.properties
+			res = ['{}:{}'.format(ns.name, t) for t in terms]
+		else:
+			res = ['!Error!.']
 	return '\n'.join(res)
+
+
+# find triples containing specific term
+def find_term_ls(*args, **kwargs):
+	"""Find triples with the given term.
+	handles:
+	`find <rdfentity>`
+	`find <rdfentity> <graphname>`
+	`ls <graphname>`"""
+	rdfentity = kwargs.get('rdfentity')
+	g = rdf.get_graph(kwargs.get('graphname'))
+	# `find` command
+	if rdfentity:
+		if ':' in rdfentity:
+			ns, term = rdfentity.split(':')
+		else:
+			ns, term = None, rdfentity
+		return '\n'.join(rdf.find_term(term, nsp=ns, g=g))
+	else:
+		# `ls` command
+		res = rdf.ls_rdf(g=g)
+	return '\n'.join([u'({} {} {})'.format(*t) for t in res])
+
+
+# bind a new namespace
+def bind_ns(*args, **kwargs):
+	"""Creates a new namespace binding in the current graph.
+	handles:
+	`bind <namespace> <nsurl>`
+	`bind <namespace> <nsurl> <graphname>`"""
+	nsn = kwargs.get('namespace')
+	url = kwargs.get('nsurl')
+	g = rdf.get_graph(kwargs.get('graphname'))
+	if not g:
+		g = rdf.__dict__.get('current_graph')
+	if g:
+		nns = rdf.bind_ns(g, nsn, url)
+		if type(nns) != str:
+			nns = 'Bound namespace {}:{} to graph {}.'.format(nns.name,
+				nns.url, rdf.graph_name(g))
+		rdf.ns.reg_graph(g)
+		rdf.extract_ns_terms(g)
+		return nns
+
 
 
 
@@ -292,7 +359,26 @@ def store_xml(*args, **kwargs):
 	"""Save contents of a graph to an `xml` file."""
 	name = kwargs.get('graphname')
 	filename = kwargs.get('filename')
-	return rdf.save_xml(name, filename)
+	if name:
+		g = rdf.get_graph(name)
+	else:
+		g = rdf.__dict__.get('current_graph')
+	return rdf.save_xml(g, filename)
 
 
 
+# add triple
+def add_stm(*args, **kwargs):
+	"""Add triple.
+	handles:
+	`add <rdfentity> <rdfrelation> <rdfentity>`
+	`add <rdfentity> <rdfrelation> <rdfentity> <graphname>`"""
+	if len(args)>3:
+		name, subj, prop, obj = tuple(*args)
+		g = rdf.get_graph(name)
+	else:
+		subj, prop, obj = tuple(*args)
+		g = rdf.__dict__.get('current_graph')
+	if g:
+		# TODO: implement!
+		pass

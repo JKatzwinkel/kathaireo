@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -55,29 +57,76 @@
 <span class="sd">from the hard disk of the machine we&#39;re running on.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="n">__docformat__</span> <span class="o">=</span> <span class="s">&quot;restructuredtext en&quot;</span>
-<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;0.0.1-dev&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;0.0.1b-dev&quot;</span>
 
 <span class="kn">import</span> <span class="nn">urllib2</span>
 
-<span class="n">mimetypes</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;application/rdf+xml&#39;</span><span class="p">,</span> <span class="s">&#39;text/n3&#39;</span><span class="p">,</span> <span class="s">&#39;application/n-triples&#39;</span><span class="p">,</span>
-	<span class="s">&#39;text/turtle&#39;</span><span class="p">,</span> <span class="s">&#39;application/x-trig&#39;</span><span class="p">,</span> <span class="s">&#39;text/owl-functional&#39;</span><span class="p">]</span>
+<span class="n">mimetypes</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;application/rdf+xml&#39;</span><span class="p">,</span> <span class="s">&#39;text/n3&#39;</span><span class="p">,</span> <span class="s">&#39;text/turtle&#39;</span><span class="p">,</span>
+	<span class="s">&#39;application/n-triples&#39;</span><span class="p">,</span><span class="s">&#39;application/x-trig&#39;</span><span class="p">,</span> <span class="s">&#39;text/owl-functional&#39;</span><span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;List of mimetypes used for parsing of resources whose rdf format can&#39;t</span>
+<span class="sd">be detected automatically.&quot;&quot;&quot;</span>
 <span class="c"># oha: http://www.w3.org/TR/owl2-syntax/</span>
 
 <span class="c"># attempts to parse rdf resource at a certain location</span>
 <span class="c"># by first downloading and then parsing it offline</span>
-<div class="viewcode-block" id="parse"><a class="viewcode-back" href="../../../kathaireo.rdf.html#kathaireo.rdf.remote.parse">[docs]</a><span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="parse"><a class="viewcode-back" href="../../../kathaireo.rdf.html#kathaireo.rdf.remote.parse">[docs]</a><span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">guesses</span><span class="o">=</span><span class="n">mimetypes</span><span class="p">[:</span><span class="mi">3</span><span class="p">]):</span>
+	<span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">	Attempts to parse an RDF resource at a certain location</span>
+<span class="sd">	by first downloading and then parsing it offline.</span>
+<span class="sd">	Choice of parsing implementation depends on `format` </span>
+<span class="sd">	parameter; By default, source format autodetection is</span>
+<span class="sd">	applied, followed by a few attempts on forcing</span>
+<span class="sd">	specific format parsers to process the source, determined</span>
+<span class="sd">	by frequent mimetypes listed in :data:`.mimetypes`. </span>
+
+<span class="sd">	Whilst this behaviour will handle RDF sources reliably</span>
+<span class="sd">	in most cases, the episode of wild guessing beginning</span>
+<span class="sd">	whenever autodetection fails can cause a serious delay.</span>
+<span class="sd">	Passing `guesses=None` mitigates this inefficiency,</span>
+<span class="sd">	but possibly with the downside of parsing failure at</span>
+<span class="sd">	common RDF expression formats.</span>
+
+<span class="sd">	:param g: Graph to write content to</span>
+<span class="sd">	:param location: URL of remote RDF source.</span>
+<span class="sd">	:param format: string identifying a specific format which</span>
+<span class="sd">		the resource is expected to express its RDF contents in.</span>
+<span class="sd">		Default is `None`, getting the parser to autodetect</span>
+<span class="sd">		the source&#39;s format, which goes well in most cases.</span>
+<span class="sd">		If autodetection is likely to err, one can pass</span>
+<span class="sd">		a mimetype like those in :data:`.mimetypes`, but no</span>
+<span class="sd">		promise can be made that a correct format parameter</span>
+<span class="sd">		will lead to parsing success.</span>
+<span class="sd">	:param guesses: List of mimetypes used for wild guessing</span>
+<span class="sd">		of the input format in case autodetection fails. Set to</span>
+<span class="sd">		`None` in order to trade time for chance.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c">#print &#39;parse remote resource {} into graph {}.&#39;.format(location, g)</span>
+	<span class="c"># connect to URL</span>
 	<span class="n">conne</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
-	<span class="k">print</span> <span class="n">conne</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">dict</span>
+	<span class="c"># print conne.headers.dict</span>
+	<span class="c"># download content</span>
 	<span class="n">content</span> <span class="o">=</span> <span class="n">conne</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 	<span class="k">try</span><span class="p">:</span>
-		<span class="n">g</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">content</span><span class="p">)</span>
+		<span class="c"># try to parse source as specified format</span>
+		<span class="c"># or more likely autodetecting format</span>
+		<span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">content</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="n">format</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">g</span>
 	<span class="k">except</span><span class="p">:</span>
-		<span class="k">for</span> <span class="n">mime</span> <span class="ow">in</span> <span class="n">mimetypes</span><span class="p">:</span>
-			<span class="k">try</span><span class="p">:</span>
-				<span class="n">g</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">content</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="n">mime</span><span class="p">)</span>
-				<span class="k">return</span> <span class="n">g</span>
-			<span class="k">except</span><span class="p">:</span>
-				<span class="k">print</span> <span class="s">&#39;mimetype {} failed.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mime</span><span class="p">)</span>
+		<span class="c"># if (autodetect) parsing fails, </span>
+		<span class="c"># try again a few times, guessing the right format</span>
+		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">guesses</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">format</span> <span class="ow">in</span> <span class="n">guesses</span><span class="p">:</span>
+				<span class="n">guesses</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">format</span><span class="p">)</span>
+			<span class="k">for</span> <span class="n">mime</span> <span class="ow">in</span> <span class="n">guesses</span><span class="p">:</span>
+				<span class="k">try</span><span class="p">:</span>
+					<span class="c"># try to parse for specified format and return</span>
+					<span class="c"># graph on success</span>
+					<span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">content</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="n">mime</span><span class="p">)</span>
+					<span class="k">return</span> <span class="n">g</span>
+				<span class="k">except</span><span class="p">:</span>
+					<span class="c"># output debug msg</span>
+					<span class="k">print</span> <span class="s">&#39;mimetype {} failed.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mime</span><span class="p">)</span>
+		<span class="c"># if nothing worked at all, return None</span>
 		<span class="k">return</span> <span class="bp">None</span></div>
 </pre></div>
 
@@ -119,7 +168,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2013, J. Katzwinkel.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

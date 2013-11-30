@@ -36,6 +36,22 @@ Registration of a new command works like this:
     commands.parse("load file.rdf g") # import contents of local RDF file
     commands.parse("triples g object http://www.w3.org/2000/01/rdf-schema#Class")
 
+Thanks to the decorator `@cmd_handler`, handler functions can be
+implemented wherever convenient, without worrying about binding
+commands syntaxes. Binding and registration can be done automatically
+by:
+
+  from kathaireo import cmd_handler
+
+  @cmd_handler
+  def triples_with_object(*args, **kwargs):
+    """Returns list of triples with a specified identifier as object.
+    handles:
+    `triples <graphname> object <ontoclass>`"""
+    [...]
+
+That's it.
+
 
 #### parameter configuration ####
 

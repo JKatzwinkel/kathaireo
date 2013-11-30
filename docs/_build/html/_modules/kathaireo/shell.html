@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -50,31 +52,29 @@
 <span class="c">#!/usr/bin/python</span>
 <span class="c"># -*- coding: utf-8 -*- </span>
 <span class="sd">&quot;&quot;&quot;\</span>
-<span class="sd">The contents of the :currentmodule:`shell` package implement a simple</span>
+<span class="sd">The contents of the :mod:`.shell` package implement a simple</span>
 <span class="sd">interactive command-line shell for operating on RDF resources.</span>
 
 <span class="sd">Main concern of this package is assisting the user&#39;s input, e.g.</span>
 <span class="sd">by providing autocompletion and feedback like error messages.</span>
-<span class="sd">Nonetheless, the :currentmodule:`shell` package serves merely as an interface </span>
+<span class="sd">Nonetheless, the :mod:`.shell` package serves merely as an interface </span>
 <span class="sd">between user and the actual `kathaireo` functionality, which is</span>
-<span class="sd">realized in the :module:`rdf` and :module:`commands` packages. In fact, the </span>
+<span class="sd">realized in the :mod:`.rdf` and :mod:`.commands` packages. In fact, the </span>
 <span class="sd">interactive shell is mainly intended to just take care of useful</span>
 <span class="sd">input/output features. Everything beyond that is delegated </span>
 <span class="sd">elsewhere.</span>
 
-<span class="sd">Some of the more interesting functions of the package&#39;s root </span>
-<span class="sd">module are :func:`run` and :func:`execute`. </span>
+<span class="sd">The more interesting functions of the package&#39;s root </span>
+<span class="sd">module is :func:`run`. </span>
 <span class="sd">By calling :func:`run`, an </span>
 <span class="sd">interactive shell is started which passes user input to the</span>
-<span class="sd">:module:`commands` package for execution. When called as a script, </span>
+<span class="sd">:mod:`.commands` package for execution. When called as a script, </span>
 <span class="sd">this module will automatically start a shell.</span>
-<span class="sd">The :func:`execute` function requests execution of a given</span>
-<span class="sd">command.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="n">__docformat__</span> <span class="o">=</span> <span class="s">&quot;restructuredtext en&quot;</span>
-<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;0.0.2a-dev&quot;</span>
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;prompt&#39;</span><span class="p">,</span> <span class="s">&#39;highlights&#39;</span><span class="p">,</span> <span class="s">&#39;complete&#39;</span><span class="p">]</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;0.0.2c-dev&quot;</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;prompt&#39;</span><span class="p">,</span> <span class="s">&#39;highlights&#39;</span><span class="p">,</span> <span class="s">&#39;complete&#39;</span><span class="p">,</span> <span class="s">&#39;run&#39;</span><span class="p">]</span>
 
 <span class="kn">import</span> <span class="nn">readline</span>
 
@@ -91,8 +91,8 @@
 <span class="sd">	this function retrieves a list of input terms which are</span>
 <span class="sd">	considered likely to be in mind of the typing user, for instance</span>
 <span class="sd">	because they begin with what the user has typed in so far.</span>
-<span class="sd">	This list of candidate terms is put together by the :func:`choices_left`</span>
-<span class="sd">	function in the :module:`commands` module. Read its documentation for</span>
+<span class="sd">	This list of candidate terms is put together by the :func:`~.commands.choices_left`</span>
+<span class="sd">	function in the :mod:`.commands` module. Read its documentation for</span>
 <span class="sd">	more information.</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="c"># http://stackoverflow.com/a/5638688/1933494</span>
@@ -100,7 +100,11 @@
 	<span class="c"># http://doughellmann.com/2008/11/pymotw-readline.html</span>
 	<span class="c"># begin = readline.get_begidx()</span>
 	<span class="c"># end = readline.get_endidx()</span>
-	<span class="n">sgst</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">+</span><span class="s">&#39; &#39;</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">commands</span><span class="o">.</span><span class="n">choices_left</span><span class="p">(</span><span class="n">buf</span><span class="p">)]</span>
+	<span class="c">#sgst = [s+&#39; &#39; for s in commands.choices_left(buf)]</span>
+	<span class="c"># range from position of currently handled term to that of cursor</span>
+	<span class="n">csrng</span> <span class="o">=</span> <span class="p">(</span><span class="n">readline</span><span class="o">.</span><span class="n">get_begidx</span><span class="p">(),</span> <span class="n">readline</span><span class="o">.</span><span class="n">get_endidx</span><span class="p">())</span>
+	<span class="c">#print &#39;{}-{}&#39;.format(*csrng)</span>
+	<span class="n">sgst</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">commands</span><span class="o">.</span><span class="n">choices_left</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">csrng</span><span class="p">)]</span>
 	<span class="k">return</span> <span class="n">sgst</span><span class="p">[</span><span class="n">state</span><span class="p">]</span>
 
 
@@ -111,11 +115,13 @@
 	<span class="sd">&quot;&quot;&quot;Once entered, this function won&#39;t necessarily return within</span>
 <span class="sd">	foreseeable future. It is where the main loop of `kathaireo&#39;s` shell</span>
 <span class="sd">	runs. In every repetition, an input line is retrieved from the</span>
-<span class="sd">	:module:`prompt` module, and passed over to the :func:`execute` function of</span>
-<span class="sd">	module :module:`commands`, whose returning status message or command response</span>
-<span class="sd">	is again given to the :module:`prompt` module for printing.</span>
+<span class="sd">	:mod:`.prompt` module, and passed over to the :func:`~.commands.execute` function of</span>
+<span class="sd">	module :mod:`.commands`, whose returning status message or command response</span>
+<span class="sd">	is again given to the :mod:`.prompt` module for printing.</span>
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="k">print</span> <span class="s">&#39;ok.</span><span class="se">\n</span><span class="s">&#39;</span>
+	<span class="n">rdf</span><span class="o">.</span><span class="n">set_graph</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+	<span class="c">#commands.init() TODO: read, compile and register std cmds</span>
+	<span class="n">prompt</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="s">&#39;*ok*.</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
 	<span class="c"># init readline module</span>
 	<span class="n">readline</span><span class="o">.</span><span class="n">set_completer_delims</span><span class="p">(</span><span class="s">&#39; </span><span class="se">\t\n</span><span class="s">;&#39;</span><span class="p">)</span>
 	<span class="n">readline</span><span class="o">.</span><span class="n">parse_and_bind</span><span class="p">(</span><span class="s">&quot;tab: complete&quot;</span><span class="p">)</span>
@@ -172,7 +178,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2013, J. Katzwinkel.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

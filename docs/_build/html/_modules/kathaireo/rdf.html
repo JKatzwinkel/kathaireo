@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -50,10 +52,15 @@
 <span class="c">#!/usr/bin/python</span>
 <span class="c"># -*- coding: utf-8 -*- </span>
 <span class="sd">&quot;&quot;&quot;\</span>
-<span class="sd">Doku doku doku</span>
+<span class="sd">Serves as some kind of a facade for the &#39;rdflib&#39; library. In addition to</span>
+<span class="sd">just forwarding rdf operations to the library, the :mod:`.rdf` module also</span>
+<span class="sd">maintains some useful directories and registers; this allows to, say, have</span>
+<span class="sd">rdf graphs looked up by their identifier, using the function :func:`.get_graph`</span>
+<span class="sd">or have the :mod:`.namespaces` module download all namespaces for a certain graph by</span>
+<span class="sd">calling :func:`.import_ns`.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="n">__docformat__</span> <span class="o">=</span> <span class="s">&quot;restructuredtext en&quot;</span>
-<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;0.0.15-dev&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;0.0.16c-dev&quot;</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">rdflib</span>
@@ -72,42 +79,28 @@
 <span class="c"># by name</span>
 <span class="n">_graphs</span><span class="o">=</span><span class="p">{}</span>
 
-<div class="viewcode-block" id="suggest_and_load_files"><a class="viewcode-back" href="../../kathaireo.rdf.html#kathaireo.rdf.suggest_and_load_files">[docs]</a><span class="k">def</span> <span class="nf">suggest_and_load_files</span><span class="p">():</span>
-	<span class="sd">&quot;&quot;&quot;Displays a list of *.rdf files in the current</span>
-<span class="sd">	directory and lets choose one of those to be</span>
-<span class="sd">	loaded into an rdf graph, which is then returned.</span>
 
-<span class="sd">	Namespaces referenced in the chosen file are also</span>
-<span class="sd">	loaded, parsed and put in separate graph instances.</span>
-<span class="sd">	&quot;&quot;&quot;</span>
-	<span class="n">rdfFiles</span><span class="o">=</span><span class="p">[</span><span class="n">fn</span> <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">fn</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&quot;.rdf&quot;</span><span class="p">)]</span>
-	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rdfFiles</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
-		<span class="k">print</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&quot;{}: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">fn</span><span class="p">)</span> 
-			<span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">fn</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rdfFiles</span><span class="p">)])</span>
-		<span class="n">c</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="nb">raw_input</span><span class="p">(</span>
-			<span class="s">&quot;Which one of these ontologies would&quot;</span><span class="o">+</span>
-			<span class="s">&quot; you like to be loaded? &quot;</span><span class="p">))</span>
-		<span class="n">fn</span><span class="o">=</span><span class="n">rdfFiles</span><span class="p">[</span><span class="n">c</span><span class="p">]</span>
-		<span class="n">name</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fn</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;.rdf&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-		<span class="c"># create or retrieve graph id&#39;d by filename </span>
-		<span class="n">g</span> <span class="o">=</span> <span class="n">create_graph</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-		<span class="n">load_into</span><span class="p">(</span><span class="n">rdfFiles</span><span class="p">[</span><span class="n">c</span><span class="p">],</span> <span class="n">name</span><span class="p">)</span>
-		<span class="c"># download missing namespace sources</span>
-		<span class="n">ns</span><span class="o">.</span><span class="n">provide_for</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-		<span class="k">return</span> <span class="n">g</span>
-
-
-<span class="c"># returns a nicer output of this graph than he default</span></div>
+<span class="c"># returns a nicer output of this graph than he default</span>
 <div class="viewcode-block" id="repr_graph"><a class="viewcode-back" href="../../kathaireo.rdf.html#kathaireo.rdf.repr_graph">[docs]</a><span class="k">def</span> <span class="nf">repr_graph</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Returns a string representation of given graph</span>
+<span class="sd">	indicating name and storage mode.&quot;&quot;&quot;</span>
 	<span class="k">if</span> <span class="n">g</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
-		<span class="k">return</span> <span class="s">&#39;&lt;Graph &quot;{}&quot;; with store &quot;{}&quot;&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-			<span class="n">g</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
-	<span class="k">return</span> <span class="s">&#39;!nullgraph!&#39;</span>
+		<span class="k">return</span> <span class="s">&#39;&lt;Graph &quot;{}&quot; with {} triples in store &quot;{}&quot;&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+			<span class="nb">str</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">identifier</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">),</span> <span class="n">g</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+	<span class="k">return</span> <span class="s">&#39;-&#39;</span>
+
+
+<span class="c"># return graph identifier as str or null</span></div>
+<div class="viewcode-block" id="graph_name"><a class="viewcode-back" href="../../kathaireo.rdf.html#kathaireo.rdf.graph_name">[docs]</a><span class="k">def</span> <span class="nf">graph_name</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Return graph identifier or `&#39;-&#39;`.&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="n">g</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+		<span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+	<span class="k">return</span> <span class="s">&#39;-&#39;</span>
 
 
 <span class="c"># create and return new graph</span></div>
 <div class="viewcode-block" id="create_graph"><a class="viewcode-back" href="../../kathaireo.rdf.html#kathaireo.rdf.create_graph">[docs]</a><span class="k">def</span> <span class="nf">create_graph</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="s">&#39;default&#39;</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;Returns a new `rdflib.Graph` instance with the</span>
+	<span class="sd">&quot;&quot;&quot;Returns a new `.rdflib.Graph` instance with the</span>
 <span class="sd">	given identifier, if said identifier has not already</span>
 <span class="sd">	been given to an existing graph.&quot;&quot;&quot;</span>
 	<span class="c">#print &quot;attempting to create new graph with name&quot;, name</span>
@@ -125,39 +118,75 @@
 <span class="sd">	if no such graph is available.&quot;&quot;&quot;</span>
 	<span class="k">return</span> <span class="n">_graphs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 
+</div>
+<div class="viewcode-block" id="set_graph"><a class="viewcode-back" href="../../kathaireo.rdf.html#kathaireo.rdf.set_graph">[docs]</a><span class="k">def</span> <span class="nf">set_graph</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Sets the given rdf graph as the current default.</span>
+<span class="sd">	When set, that graph will be the one operated on in interactive</span>
+<span class="sd">	mode. This should cause input in which a ``&lt;graphname&gt;``</span>
+<span class="sd">	value is omitted to work on said current default.</span>
+<span class="sd">	:param g: new default graph. May be ``None``.</span>
+<span class="sd">	:returns: status message.&quot;&quot;&quot;</span>
+	<span class="nb">globals</span><span class="p">()[</span><span class="s">&#39;current_graph&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span>
+	<span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+		<span class="k">return</span> <span class="s">&#39;Unset current graph&#39;</span>
+	<span class="k">return</span> <span class="s">&#39;Select graph: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repr_graph</span><span class="p">(</span><span class="n">g</span><span class="p">))</span>
+
 
 <span class="c"># import rdf data from resource into graph</span></div>
-<div class="viewcode-block" id="load_into"><a class="viewcode-back" href="../../kathaireo.rdf.html#kathaireo.rdf.load_into">[docs]</a><span class="k">def</span> <span class="nf">load_into</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<div class="viewcode-block" id="load_resource"><a class="viewcode-back" href="../../kathaireo.rdf.html#kathaireo.rdf.load_resource">[docs]</a><span class="k">def</span> <span class="nf">load_resource</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Loads rdf graph at location (file/url) and names it.</span>
 <span class="sd">	Reuses (overwrites?) an existing graph if one going by the given name</span>
 <span class="sd">	is known, creates a new instance if not.</span>
 <span class="sd">	Returns whatever graph instance the resource in question</span>
 <span class="sd">	is being read into.</span>
-<span class="sd">	If parsing fails, exceptions are not being handled here.</span>
+<span class="sd">	If parsing fails, a new attempt is made using another mimetype </span>
+<span class="sd">	(:data:`.remote.mimetypes`). If `location` does not seem to</span>
+<span class="sd">	point to a local file, an attempt is made to start a download from that</span>
+<span class="sd">	location via :func:`.remote.parse`.</span>
+<span class="sd">	If everything fails, `None` is returned.</span>
 <span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c"># TODO: write smarter global namespace registry!</span>
 	<span class="c"># TODO: also handle sql/sqlite?</span>
 	<span class="c"># TODO: handle n3!</span>
-	<span class="k">if</span> <span class="ow">not</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_graphs</span><span class="p">:</span>
-		<span class="n">g</span> <span class="o">=</span> <span class="n">create_graph</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+	<span class="c"># if a graphname is given, retrieve corresponding graph</span>
+	<span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+		<span class="n">g</span> <span class="o">=</span> <span class="n">get_graph</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+		<span class="c"># if name is wrong/no graph is found, create one.</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">g</span><span class="p">:</span>
+			<span class="n">g</span> <span class="o">=</span> <span class="n">create_graph</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+	<span class="c"># if no name is given, operate on active graph selected by set_graph</span>
 	<span class="k">else</span><span class="p">:</span>
-		<span class="n">g</span> <span class="o">=</span> <span class="n">_graphs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-		<span class="k">return</span> <span class="s">&quot;!Oh no!: graph &#39;{}&#39; is null!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-	<span class="k">else</span><span class="p">:</span>
+		<span class="n">g</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;current_graph&#39;</span><span class="p">)</span>
+	<span class="c"># if no graph could be found to load into, abort</span>
+		<span class="c">#return &quot;!Oh no!: graph &#39;{}&#39; is null!&quot;.format(graph_name(g))</span>
+	<span class="c"># if graph is ready,</span>
+	<span class="c"># begin attempts to retrieve resource</span>
+	<span class="k">if</span> <span class="n">g</span> <span class="o">!=</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">rdflib</span><span class="o">.</span><span class="n">Graph</span><span class="p">):</span>
+		<span class="c">#print &#39;importing into graph {}&#39;.format(repr_graph(g))</span>
 		<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">location</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">location</span><span class="p">):</span>
-			<span class="k">for</span> <span class="n">mime</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span><span class="o">+</span><span class="n">remote</span><span class="o">.</span><span class="n">mimetypes</span><span class="p">:</span>
+			<span class="c">#print &#39;resource appears to be a local file.&#39;</span>
+			<span class="c"># if source is local file, try to autodetect format,</span>
+			<span class="c"># then suggest default mimetypes if that fails.</span>
+			<span class="k">for</span> <span class="n">mime</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span><span class="o">+</span><span class="n">remote</span><span class="o">.</span><span class="n">mimetypes</span><span class="p">[:</span><span class="mi">3</span><span class="p">]:</span>
 				<span class="k">try</span><span class="p">:</span>
-					<span class="n">g</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="n">mime</span><span class="p">)</span>
+					<span class="c"># call rdflib graph parse method</span>
+					<span class="c">#print &#39;apply format {} to file {}.&#39;.format(mime, location)</span>
+					<span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="n">mime</span><span class="p">)</span>
 					<span class="k">return</span> <span class="n">g</span>
 				<span class="k">except</span><span class="p">:</span>
+					<span class="c">#print &#39;source apparently no {}.&#39;.format(mime)</span>
 					<span class="k">pass</span>
+			<span class="c"># if none of the default formats could be recognized in</span>
+			<span class="c"># source, return None</span>
 			<span class="k">return</span> <span class="bp">None</span>
+		<span class="c"># if source is not a file on disk:</span>
 		<span class="k">else</span><span class="p">:</span>
 			<span class="c"># try to load from internet</span>
-			<span class="k">if</span> <span class="n">remote</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">location</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-				<span class="k">return</span> <span class="bp">None</span>
+			<span class="c">#print &#39;resource is no local file! download from {}.&#39;.format(location)</span>
+			<span class="k">return</span> <span class="n">remote</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">location</span><span class="p">)</span>
 		<span class="c">#print &quot;parsed contents at {} into {}.&quot;.format(</span>
 			<span class="c">#location, g)</span>
+	<span class="c"># return graph resource content went in</span>
 	<span class="k">return</span> <span class="n">g</span>
 
 
@@ -196,18 +225,23 @@
 
 
 <span class="c"># import namespace definitions for graph</span></div>
-<div class="viewcode-block" id="import_ns"><a class="viewcode-back" href="../../kathaireo.rdf.html#kathaireo.rdf.import_ns">[docs]</a><span class="k">def</span> <span class="nf">import_ns</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;Downloads definitions of namespaces used in the rdf</span>
-<span class="sd">	graph identified by the given name.&quot;&quot;&quot;</span>
-	<span class="n">g</span> <span class="o">=</span> <span class="n">get_graph</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<div class="viewcode-block" id="import_ns"><a class="viewcode-back" href="../../kathaireo.rdf.html#kathaireo.rdf.import_ns">[docs]</a><span class="k">def</span> <span class="nf">import_ns</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Downloads definitions of :mod:`.namespaces` used in the rdf</span>
+<span class="sd">	specified graph. This is done by function</span>
+<span class="sd">	:func:`.namespaces.provide_for`.&quot;&quot;&quot;</span>
 	<span class="k">if</span> <span class="n">g</span><span class="p">:</span>
-		<span class="k">return</span> <span class="n">ns</span><span class="o">.</span><span class="n">provide_for</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+		<span class="n">res</span> <span class="o">=</span> <span class="n">ns</span><span class="o">.</span><span class="n">provide_for</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">res</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s">&#39;!!ERROR!! while downloading namespaces.&#39;</span>
 	<span class="k">return</span> <span class="bp">False</span>
 
 
 <span class="c"># attach sqlite store</span></div>
 <div class="viewcode-block" id="store_sqlite"><a class="viewcode-back" href="../../kathaireo.rdf.html#kathaireo.rdf.store_sqlite">[docs]</a><span class="k">def</span> <span class="nf">store_sqlite</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;Store. Sqlite. database.</span>
+	<span class="sd">&quot;&quot;&quot;Store. Sqlite. database. Uses the :mod:`.storage` module.</span>
+<span class="sd">	Overwites graph referenced by `name`.</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="c">#g = get_graph(name)</span>
 	<span class="c">#if g:</span>
@@ -221,8 +255,13 @@
 <span class="c"># save xml dump</span></div>
 <div class="viewcode-block" id="save_xml"><a class="viewcode-back" href="../../kathaireo.rdf.html#kathaireo.rdf.save_xml">[docs]</a><span class="k">def</span> <span class="nf">save_xml</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Dumps rdf/xml to file.</span>
+<span class="sd">	If no `graphname` parameter is passed, try to use</span>
+<span class="sd">	:data:`current_graph` instead.</span>
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="n">g</span> <span class="o">=</span> <span class="n">get_graph</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+		<span class="n">g</span> <span class="o">=</span> <span class="n">get_graph</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">g</span> <span class="o">=</span> <span class="n">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 	<span class="k">if</span> <span class="n">g</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">storage</span><span class="o">.</span><span class="n">save_xml</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
 	<span class="k">return</span> <span class="bp">None</span>
@@ -267,7 +306,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2013, J. Katzwinkel.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>
