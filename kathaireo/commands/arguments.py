@@ -304,11 +304,13 @@ def ls_ns_urls(arg, prefix):
 	# re-urify matching local files
 	suggestions = ['file://{}'.format(s) for s in suggestions]
 	# suggest already bound urls
-	bnd_urls = ['{}'.format(n.url) for n in rdf.ns.spaces()]
+	bnd_urls = ['{}'.format(n.url) for n in rdf.namespaces._namespaces.values()]
+	util.log('URLs suggested from namespace register: {}'.format(len(bnd_urls)))
 	suggestions.extend([u for u in bnd_urls if u.startswith(prefix)])
 	# try to extract URIs from rdf data
 	#print '\b>{}{}'.format(prefix, '\b'*len(prefix)),
 	util.log('Search completion candidates for {}.'.format(prefix))
+	# TODO: this needs to be done more carefully!!
 	for triple in rdf.ls_rdf():
 		uris = urlex.findall('{} {} {}'.format(*triple))
 		#uris = [uri[int(uri[0].startswith('file:/')):] for
@@ -316,14 +318,15 @@ def ls_ns_urls(arg, prefix):
 		#suggestions.extend([rdf.struct_uri(''.join(uri))[0] 
 			#for uri in uris
 			#if any([field.startswith(prefix) for field in uri[:2]])])
-		files = [''.join(uri[:-1])+';' for uri in uris]
+		urls = [''.join(uri[:-1])+';' for uri in uris]
+		util.log('URLs found in current graph: {}\n(total count {})'.format(', '.join(urls), len(urls)))
 		# local file paths are suggestions if they match the likewise
 		# localized input prefix
-		suggestions.extend([fn for fn in files 
-			if fn.startswith(prefix) ])
+		suggestions.extend([u for u in urls 
+			if u.startswith(prefix) ])
 	# done collecting urls from graph
-	suggestions = list(set(suggestions))
 	suggestions.extend(propose_default(arg, prefix))
+	suggestions = [s for s in set(suggestions)]
 	util.log('Have {} completions candidates.'.format(len(suggestions)))
 	util.log(', '.join(suggestions))
 	return suggestions

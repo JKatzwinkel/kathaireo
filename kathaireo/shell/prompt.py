@@ -67,7 +67,7 @@ def tokenize(line):
 				#print u'\tnamespace:', nsp.name, nsp.url
 				line = line.replace(uri, u'{}:{}'.format(nsp.name, term))
 		else:
-			line = line.replace(uri, u'!{}..{}!'.format(uri[:10],uri[-10:]))
+			line = line.replace(uri, u'!{}..{}!'.format(uri[:20],uri[-20:]))
 	# tokenize
 	return _tokex.split(line)
 
