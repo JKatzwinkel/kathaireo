@@ -296,6 +296,8 @@ def cp_graph(*args, **kwargs):
 
 
 # insert one graph into another
+# TODO: look at rdflib graph set operations 
+# https://rdflib.readthedocs.org/en/latest/intro_to_graphs.html#set-operations-on-rdflib-graphs
 def merge_graph(*args, **kwargs):
 	"""merge graph into :data:`.rdf.current_graph`.
 	handles:
@@ -388,6 +390,6 @@ def add_stm(*args, **kwargs):
 		g = rdf.__dict__.get('current_graph')
 	if g:
 		triple = tuple([rdf.expand_term(i) for i in (subj,prop,obj)])
-		g.set(triple)
+		g.add(triple)
 		# TODO: implement!
 		return triple

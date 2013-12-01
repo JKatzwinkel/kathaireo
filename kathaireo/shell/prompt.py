@@ -55,6 +55,9 @@ def tokenize(line):
 		#print '\t', ''.join(['<{}>'.format(u) for u in uri])
 		#if uri[0].startswith('file://'):
 			#uri = uri[1:]
+		#TODO: wahrscheinlich unnoetig:
+		#genauso gut kann der rdflib namespacemanager eingesetzt werden
+		#https://rdflib.readthedocs.org/en/latest/utilities.html#serializing-a-single-term-to-n3
 		uri = ''.join(uri)
 		url, term = rdf.struct_uri(uri)
 		log('Prompt output: Split uri {} into "..{}", "{}".'.format(uri,

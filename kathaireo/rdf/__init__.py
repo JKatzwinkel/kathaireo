@@ -15,16 +15,11 @@ import os
 import rdflib
 import re
 import codecs
-#from rdflib_sqlalchemy.SQLAlchemy import SQLAlchemy
 
 import namespaces as ns
 import storage
 import remote
 
-#store = SQLAlchemy(configuration="sqlite:///newspapers.sqlite")
-#g = rdflib.Graph(store, "newspapers")
-
-#print "Trying to load graph {} from store {}.".format(
 
 # directory of existing rdflib.Graph instances, identified
 # by name
@@ -220,7 +215,7 @@ def bind_ns(g, name, url):
 		g = globals().get('current_graph')
 	if not None in [g, name, url]:
 		nns = ns.create(name, url)
-		g.bind(name, url)
+		g.bind(name, rdflib.namespace.Namespace(url))
 		return nns
 	return '!Error!: could not bind new namespace.'
 
@@ -298,7 +293,7 @@ def ls_rdf(g=None):
 
 
 
-
+# TODO: check out rdflib.
 def find_term(term, nsp=None, g=None):
 	"""Shows triple containing given term."""
 	if not g:

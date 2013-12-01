@@ -6,6 +6,7 @@ use_setuptools()
 from setuptools import setup, find_packages
 import re
 import sys
+import os
 
 if (sys.version_info < (2, 7, 0, 'final', 0)):
     print >> sys.stderr, "*** Python 2.7.0 required, not compatible to Python 3"
@@ -16,7 +17,7 @@ for field in ['version', 'author']:
 	metex[field] = re.compile('\A\s*__'+field+'__\s?=\s?[\"\'](\S+)[\"\'].*')
 
 meta = {}
-f = open('kathaireo.py')
+f = open(os.path.join('kathaireo','__init__.py'))
 for line in f:
 	for field, rex in metex.items():
 		if not field in meta:
@@ -43,27 +44,30 @@ setup(
 		
 		src_root = '',
 		packages = find_packages(),
-		scripts = ['kathaireo-shell', 'rdfshell'],
-		py_modules = ['kathaireo-shell'],
+		scripts = ['kathaireo-shell', #'rdfshell'
+			],
+		#py_modules = ['kathaireo-shell'],
 
 		install_requires = [
 			'rdflib>=4.0.1',
-			'rdflib_sqlalchemy>=0.2',
+			'rdflib-sqlalchemy>=0.2',
 			'sqlalchemy>=0.8.3',
-			'html5lib>=1.0',
-			'urllib2>=2.7'],
+			],
 		dependency_links = [
 			# rdflib-sqlalchemy
+			'https://github.com/RDFLib/rdflib-sqlalchemy',
 			''.join([
-				'git+https://github.com/RDFLib/rdflib-sqlalchemy.git', 
-				'@11c2ba6f76399002b68132ed66257a0b61737bd4',
-				])
+				'https://github.com/RDFLib/rdflib-sqlalchemy.git',
+				#'#egg=rdflib-sqlalchemy', 
+				#'@11c2ba6f76399002b68132ed66257a0b61737bd4',
+				]),
 			],
 
 		entry_points = {
 			'console_scripts': [
-				'kathaireo = kathaireo:main', 
-				'shell = kathaireo.shell:run']
+				#'kathaireo-shell = kathaireo:main', 
+				#'rdfshell = kathaireo.shell:run'
+				]
 			},
 		# closing bracket coming up!
 	)
