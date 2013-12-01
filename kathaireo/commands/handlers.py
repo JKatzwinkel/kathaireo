@@ -185,11 +185,17 @@ def show_ns(*args, **kwargs):
 	handles:
 	`ls ns`
 	`list namespaces`
-	`ls ns <namespace>`"""
+	`ls ns <namespace>`
+	ls ns <graphname> 
+	"""
 	# TODO: write smarter global namespace registry!
 	if not 'namespace' in kwargs:
-		res = ['{}:{}'.format(n, ns.url) for n, ns in 
-			rdf.namespaces._namespaces.items()]
+		g = rdf.get_graph(kwargs.get('graphname'))
+		if g:
+			res = ['{}:{}'.format(ns, url) for ns,url in g.namespaces()]
+		else:
+			res = ['{}:{}'.format(n, ns.url) for n, ns in 
+				rdf.namespaces._namespaces.items()]
 		#g = rdf.__dict__.get('current_graph')
 		#if g:
 			#res.extend(['{}: {}'.format(ns, url) for 
@@ -374,11 +380,13 @@ def add_stm(*args, **kwargs):
 	`add <rdfentity> <rdfrelation> <rdfentity>`
 	`add <rdfentity> <rdfrelation> <rdfentity> <graphname>`"""
 	if len(args)>3:
-		name, subj, prop, obj = tuple(*args)
+		name, subj, prop, obj = args
 		g = rdf.get_graph(name)
 	else:
-		subj, prop, obj = tuple(*args)
+		subj, prop, obj = args
 		g = rdf.__dict__.get('current_graph')
 	if g:
+		triple = tuple([rdf.expand_term(i) for i in (subj,prop,obj)])
+		g.set(triple)
 		# TODO: implement!
-		pass
+		return triple

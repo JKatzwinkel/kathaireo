@@ -28,7 +28,7 @@ __all__ = ['prompt', 'highlights', 'complete', 'run']
 import readline
 
 from . import prompt
-from .. import rdf, commands
+from .. import rdf, commands, util
 
 
 def complete(input, state):
@@ -52,6 +52,7 @@ def complete(input, state):
 	#sgst = [s+' ' for s in commands.choices_left(buf)]
 	# range from position of currently handled term to that of cursor
 	csrng = (readline.get_begidx(), readline.get_endidx())
+	util.log('User input line: "{}"; current range {}'.format(buf, csrng))
 	#print '{}-{}'.format(*csrng)
 	sgst = [s for s in commands.choices_left(buf, csrng)]
 	return sgst[state]
