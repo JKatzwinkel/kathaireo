@@ -1,11 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*- 
+from ez_setup import use_setuptools
+use_setuptools()
+
 from setuptools import setup, find_packages
 import re
 import sys
 
 if (sys.version_info < (2, 7, 0, 'final', 0)):
-    print >> sys.stderr, "*** Python 2.7.0 or better required"
+    print >> sys.stderr, "*** Python 2.7.0 required, not compatible to Python 3"
     sys.exit(1)
 
 metex = {}
@@ -23,19 +26,25 @@ for line in f:
 
 # setup
 setup(
-		name="kathaireo",
-		version=meta.get('version'),
-		description='Interactive tool for managing local and remote RDF resources.',
+		name = "Kathaireo",
+		version = meta.get('version'),
+		description = 'Interactive RDF shell',
 		long_description = open('README.md').read(), #__doc__.strip(),
-		keywords='rdf owl ontology',
+		keywords = 'rdf owl ontology',
+    classifiers=['Environment :: Console',
+    	'Operating System :: OS Independent',
+    	'Programming Language :: Python :: 2.7',
+    	'Programming Language :: Python :: 2 :: Only'],
 		
 		url = 'https://github.com/JKatzwinkel/kathaireo',
 		author = meta.get('author'),
 		author_email = 'dariah-shk@bbaw.de',
 		download_url = 'https://github.com/JKatzwinkel/kathaireo/archive/master.zip',
 		
-		packages=find_packages(),
-		scripts=['kathaireo.py', 'shell.sh'],
+		src_root = '',
+		packages = find_packages(),
+		scripts = ['kathaireo-shell', 'rdfshell'],
+		py_modules = ['kathaireo-shell'],
 
 		install_requires = [
 			'rdflib>=4.0.1',
