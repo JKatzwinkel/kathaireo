@@ -186,9 +186,9 @@ def show_ns(*args, **kwargs):
 	`ls ns`
 	`list namespaces`
 	`ls ns <namespace>`
-	ls ns <graphname> 
-	"""
+	ls ns <graphname>""" # TODO: make sure this works!
 	# TODO: write smarter global namespace registry!
+	head = 'currently bound namespaces:'
 	if not 'namespace' in kwargs:
 		g = rdf.get_graph(kwargs.get('graphname'))
 		if g:
@@ -204,11 +204,12 @@ def show_ns(*args, **kwargs):
 		# specific namespace?
 		ns = rdf.namespaces.get(kwargs.get('namespace'))
 		if ns:
+			head = 'Terms in namespace {} ("{}""):'.format(ns.name, ns.url)
 			terms = ['*classes*:']+ns.classes+['*properties*:']+ns.properties
 			res = ['{}:{}'.format(ns.name, t) for t in terms]
 		else:
 			res = ['!Error!.']
-	return '\n'.join(res)
+	return '\n'.join([head]+res)
 
 
 # find triples containing specific term
