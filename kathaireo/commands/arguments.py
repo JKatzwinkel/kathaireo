@@ -205,6 +205,8 @@ def lsdir(prefix, filetypes):
 		files.extend(glob(os.path.join(rpth,ext)))
 	# make sure files match prefix
 	files = [fn for fn in files if fn.startswith(prefix)]
+	util.log('Local filenames running for autocompletion of prefix "{}":'.format(prefix) )
+	util.log(', '.join(files))
 	return files
 
 
@@ -253,7 +255,7 @@ def ls_ns(arg, prefix):
 	suggestions.extend(propose_default(arg, prefix))
 	return suggestions
 
-
+# autocompletion of `ns:term` clauses. 
 def ls_rdf_ent(arg, prefix):
 	"""Returns rdf entities (classes, properties)."""
 	suggestions = []
@@ -279,23 +281,49 @@ def ls_rdf_ent(arg, prefix):
 	return suggestions
 
 
+# resolving urls makes completion suggesting easier, 
+# but we still want those rueckuebersetzt to urls at the
+# end of the day to evaluate prefix matching and 
+# to work consistent with rdflib objects.
 def resolve_local_url(url):
 	"""Converts from `file:///` URL to absolute path."""
 	#TODO: implement
-	return url.split('/',1)[1]
+	if url.startswith('file://'):
+		path = url.rsplit('file://',1)[1]
+		return path
+	elif 'file://'.startswith(url):
+		url = ''
+	return url
 
 
 # propose namespace locations
+# responsible for <nsurl> arguments
 def ls_ns_urls(arg, prefix):
-	"""Namespace locators."""
-	suggestions = lsdir(prefix, rdfglobs)
+	"""Namespace locators for `<nsurl>` arguments."""
+	suggestions = lsdir(resolve_local_url(prefix), rdfglobs)
+	# re-urify matching local files
+	suggestions = ['file://{}'.format(s) for s in suggestions]
+	# suggest already bound urls
+	bnd_urls = ['{}'.format(n.url) for n in rdf.ns.spaces()]
+	suggestions.extend([u for u in bnd_urls if u.startswith(prefix)])
 	# try to extract URIs from rdf data
-	for trp in rdf.ls_rdf():
-		uris = urlex.findall('{} {} {}'.format(*trp))
-		uris = [uri[int(uri[0].startswith('file:/')):] for
-					uri in uris]
-		suggestions.extend([rdf.struct_uri(''.join(uri))[0] 
-			for uri in uris
-			if any([field.startswith(prefix) for field in uri[:2]])])
+	#print '\b>{}{}'.format(prefix, '\b'*len(prefix)),
+	util.log('Search completion candidates for {}.'.format(prefix))
+	for triple in rdf.ls_rdf():
+		uris = urlex.findall('{} {} {}'.format(*triple))
+		#uris = [uri[int(uri[0].startswith('file:/')):] for
+					#uri in uris]
+		#suggestions.extend([rdf.struct_uri(''.join(uri))[0] 
+			#for uri in uris
+			#if any([field.startswith(prefix) for field in uri[:2]])])
+		files = [''.join(uri[:-1])+';' for uri in uris]
+		# local file paths are suggestions if they match the likewise
+		# localized input prefix
+		suggestions.extend([fn for fn in files 
+			if fn.startswith(prefix) ])
+	# done collecting urls from graph
+	suggestions = list(set(suggestions))
 	suggestions.extend(propose_default(arg, prefix))
+	util.log('Have {} completions candidates.'.format(len(suggestions)))
+	util.log(', '.join(suggestions))
 	return suggestions

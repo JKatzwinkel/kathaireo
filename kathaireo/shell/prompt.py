@@ -9,8 +9,9 @@ __version__ = "0.0.18-dev"
 
 import re
 
-from .highlights import color, hilite, col_demo, stdcol, urlex
+from .highlights import color, hilite, col_demo, stdcol
 from kathaireo import rdf
+from ..util import urlex, log
 
 # colored prompt
 #ps = "\001\033[32m\002>>>\001\033[0m\002 "
@@ -56,10 +57,13 @@ def tokenize(line):
 			#uri = uri[1:]
 		uri = ''.join(uri)
 		url, term = rdf.struct_uri(uri)
+		log('Prompt output: Split uri {} into "..{}", "{}".'.format(uri,
+			url[-10:], term))
 		#print u'\tfiltererd output: {} ending on "{}"'.format(url, term)
 		if term:
-			nsp = rdf.namespaces.get_ns(url)
+			nsp = rdf.ns.get_ns(url)
 			if nsp:
+				log('substitute with {}:{}'.format(nsp.name, term))
 				#print u'\tnamespace:', nsp.name, nsp.url
 				line = line.replace(uri, u'{}:{}'.format(nsp.name, term))
 		else:
