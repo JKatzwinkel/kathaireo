@@ -42,7 +42,8 @@ setup(
 			'rdflib_sqlalchemy>=0.2',
 			'sqlalchemy>=0.8.3',
 			'html5lib>=1.0',
-			'urllib2>=2.7'],
+			'urllib2>=2.7',
+			'isodate'],
 		dependency_links = [
 			# rdflib-sqlalchemy
 			''.join([
