@@ -4,7 +4,7 @@ import os
 import rdflib
 
 from . import remote
-from ..util import log
+from ..util import log, urlex
 
 # TODO: write smarter global namespace registry!
 _namespaces={}
@@ -24,6 +24,9 @@ class Namespace:
 		self.rdf = rdflib.Graph(identifier=name)
 		# try to load namespace source
 		#self.rdf.parse(self.url)
+		if urlex.match(url):
+			print "url points to remote resource."
+		# try to retrieve resource
 		try:
 			remote.parse(self.rdf, self.url, guesses=[])
 			# Part of speech stuff
@@ -150,20 +153,20 @@ def get(name):
 
 
 
+# FIXME: this is not good on machines without internet connection!!
+# _namespaces['rdf'] = Namespace('rdf', 
+# 	'http://www.w3.org/1999/02/22-rdf-syntax-ns#')
+# _namespaces.get('rdf').properties.extend(['type'])
+# _namespaces.get('rdf').classes.extend(['Property', 'Class'])
 
-_namespaces['rdf'] = Namespace('rdf', 
-	'http://www.w3.org/1999/02/22-rdf-syntax-ns#')
-_namespaces.get('rdf').properties.extend(['type'])
-_namespaces.get('rdf').classes.extend(['Property', 'Class'])
+# _namespaces['rdfs'] = Namespace('rdfs', 
+# 	'http://www.w3.org/2000/01/rdf-schema#')
+# _namespaces.get('rdfs').properties.extend(['domain', 'range', 
+# 	'label', 'comment', 'subClassOf'])
+# _namespaces.get('rdfs').classes.extend([])
 
-_namespaces['rdfs'] = Namespace('rdfs', 
-	'http://www.w3.org/2000/01/rdf-schema#')
-_namespaces.get('rdfs').properties.extend(['domain', 'range', 
-	'label', 'comment', 'subClassOf'])
-_namespaces.get('rdfs').classes.extend([])
-
-_namespaces['owl'] = Namespace('owl', 'http://www.w3.org/2002/07/owl#')
-_namespaces.get('owl').properties.extend(['equivalentClass',
-	'disjointWith'])
-_namespaces.get('owl').classes.extend(['Thing', 'Class', 'Ontology'])
+# _namespaces['owl'] = Namespace('owl', 'http://www.w3.org/2002/07/owl#')
+# _namespaces.get('owl').properties.extend(['equivalentClass',
+# 	'disjointWith'])
+# _namespaces.get('owl').classes.extend(['Thing', 'Class', 'Ontology'])
 

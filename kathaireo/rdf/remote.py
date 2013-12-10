@@ -50,7 +50,16 @@ def parse(g, location, format=None, guesses=mimetypes[:3]):
 	"""
 	#print 'parse remote resource {} into graph {}.'.format(location, g)
 	# connect to URL
-	conne = urllib2.urlopen(location)
+	try:
+		conne = urllib2.urlopen(location)
+	except Exception as e:
+		if 'Errno -2' in '{}'.format(e):
+			# netz nicht erreichbar
+			print 'Can\'t get {}: network unreachable!'.format(location)
+		else:
+			print 'Can\'t get {}.'.format(location)
+		return None
+
 	# print conne.headers.dict
 	# download content
 	content = conne.read()
@@ -76,3 +85,20 @@ def parse(g, location, format=None, guesses=mimetypes[:3]):
 					print 'mimetype {} failed.'.format(mime)
 		# if nothing worked at all, return None
 		return None
+
+
+# status internet
+def is_internet_available():
+	"""Tries to establish socket towards google dns server."""
+	try:
+		response = urllib2.socket.gethostbyaddr('8.8.8.8')
+		if 'google.com' in response:
+			return True
+		print response
+		return False
+	except:
+		return False
+
+
+# try to determine if internet connection is available
+web_access=is_internet_available()
