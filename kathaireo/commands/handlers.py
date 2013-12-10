@@ -185,11 +185,17 @@ def show_ns(*args, **kwargs):
 	handles:
 	`ls ns`
 	`list namespaces`
-	`ls ns <namespace>`"""
+	`ls ns <namespace>`
+	ls ns <graphname>""" # TODO: make sure this works!
 	# TODO: write smarter global namespace registry!
+	head = 'currently bound namespaces:'
 	if not 'namespace' in kwargs:
-		res = ['{}:{}'.format(n, ns.url) for n, ns in 
-			rdf.namespaces._namespaces.items()]
+		g = rdf.get_graph(kwargs.get('graphname'))
+		if g:
+			res = ['{}:{}'.format(ns, url) for ns,url in g.namespaces()]
+		else:
+			res = ['{}:{}'.format(n, ns.url) for n, ns in 
+				rdf.namespaces._namespaces.items()]
 		#g = rdf.__dict__.get('current_graph')
 		#if g:
 			#res.extend(['{}: {}'.format(ns, url) for 
@@ -198,11 +204,12 @@ def show_ns(*args, **kwargs):
 		# specific namespace?
 		ns = rdf.namespaces.get(kwargs.get('namespace'))
 		if ns:
+			head = 'Terms in namespace {} ("{}""):'.format(ns.name, ns.url)
 			terms = ['*classes*:']+ns.classes+['*properties*:']+ns.properties
 			res = ['{}:{}'.format(ns.name, t) for t in terms]
 		else:
 			res = ['!Error!.']
-	return '\n'.join(res)
+	return '\n'.join([head]+res)
 
 
 # find triples containing specific term
@@ -289,6 +296,8 @@ def cp_graph(*args, **kwargs):
 
 
 # insert one graph into another
+# TODO: look at rdflib graph set operations 
+# https://rdflib.readthedocs.org/en/latest/intro_to_graphs.html#set-operations-on-rdflib-graphs
 def merge_graph(*args, **kwargs):
 	"""merge graph into :data:`.rdf.current_graph`.
 	handles:
@@ -374,11 +383,13 @@ def add_stm(*args, **kwargs):
 	`add <rdfentity> <rdfrelation> <rdfentity>`
 	`add <rdfentity> <rdfrelation> <rdfentity> <graphname>`"""
 	if len(args)>3:
-		name, subj, prop, obj = tuple(*args)
+		name, subj, prop, obj = args
 		g = rdf.get_graph(name)
 	else:
-		subj, prop, obj = tuple(*args)
+		subj, prop, obj = args
 		g = rdf.__dict__.get('current_graph')
 	if g:
+		triple = tuple([rdf.expand_term(i) for i in (subj,prop,obj)])
+		g.add(triple)
 		# TODO: implement!
-		pass
+		return triple

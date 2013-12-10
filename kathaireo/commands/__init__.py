@@ -323,6 +323,7 @@ def choices_left(input, csrange):
 	# keyword/value in order can be determined later
 	if re.match('.*\s+\Z', input[:end]) or end-beg<1:
 		terms.append('')
+	util.log('autocomplete: detected tokens are {}'.format(terms))
 	#print '\nfind choices for:',terms
 	# #########################3
 	# parse incomplete input
@@ -370,12 +371,14 @@ def choices_left(input, csrange):
 	# or is partly typed in
 	#print 'fragment, keys:', term, level.keys()
 	choices1 = level.keys()[:]
+	util.log('autocomplete: possible input is {}.'.format(choices1))
 	#print term, ':', choices1
 	choices = []
 	for c in choices1:
 		# resolve argument, if any
 		if argex.search(c):
 			a = argex.findall(c)[0]
+			util.log('Apply for completion candidates for arg {}.'.format(a))
 			choices.extend(arguments.get_suggestions(a, term))
 		else:
 			# if not expecting argument: check if keyword can be 
@@ -390,6 +393,8 @@ def choices_left(input, csrange):
 	# go deeper in file structure)
 	choices = [''.join(c[:-1])+[c[-1]+' ',''][int(c[-1]==';')] 
 							for c in choices if len(c) > 0]
+	util.log('Suggest {} completion candidates:'.format(len(choices)))
+	util.log(', '.join(choices))
 	#print 'suggestions:',choices, ''
 	return choices
 

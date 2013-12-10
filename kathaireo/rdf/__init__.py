@@ -15,16 +15,11 @@ import os
 import rdflib
 import re
 import codecs
-#from rdflib_sqlalchemy.SQLAlchemy import SQLAlchemy
 
 import namespaces as ns
 import storage
 import remote
 
-#store = SQLAlchemy(configuration="sqlite:///newspapers.sqlite")
-#g = rdflib.Graph(store, "newspapers")
-
-#print "Trying to load graph {} from store {}.".format(
 
 # directory of existing rdflib.Graph instances, identified
 # by name
@@ -167,7 +162,8 @@ def load_resource(location, name=None):
 rdfinfotempl={"size": "Number of statements in graph '{}': {}",
 	"namespaces": "Graph '{}' binds the following namespaces:\n{}",
 	"n3": "N3 representation of graph '{}' is {}",
-	"types": "Types used in RDF graph '{}' are:\n{}"}
+	"types": "Types used in RDF graph '{}' are:\n{}",
+	'xml': 'XML serialization of {}:\n{}'}
 # show info
 def graph_info(name, attr):
 	"""Show info about specified graph.
@@ -186,6 +182,8 @@ def graph_info(name, attr):
 				for ns,ref in g.namespaces()]))
 		elif attr == "n3":
 			return template.format(name, g.n3())
+		elif attr == 'xml':
+			return template.format(name, g.serialize())
 		elif attr == "types":
 			# TODO: maybe keep information like this globally in this module
 			types = set()
@@ -217,7 +215,7 @@ def bind_ns(g, name, url):
 		g = globals().get('current_graph')
 	if not None in [g, name, url]:
 		nns = ns.create(name, url)
-		g.bind(name, url)
+		g.bind(name, rdflib.namespace.Namespace(url))
 		return nns
 	return '!Error!: could not bind new namespace.'
 
@@ -226,11 +224,11 @@ def bind_ns(g, name, url):
 # TODO: lieber regexe?
 def struct_uri(u):
 	if '#' in u:
-		url, term = unicode(u).rsplit('#',1)
+		url, term = u.rsplit('#',1)
 	elif '/' in u:
-		url, term = unicode(u).rsplit('/',1)
+		url, term = u.rsplit('/',1)
 	else:
-		url, term = unicode(u), None	
+		url, term = u, None	
 	return (url, term)
 
 
@@ -240,7 +238,20 @@ def shorten_url(url):
 	``rdfs:label``."""
 	#TODO: impl
 	base, term = struct_uri(url)
-	return '{}:{}'.format(ns.get_ns(base), term)
+	nspc = ns.get_ns(base)
+	if nspc:
+		return '{}:{}'.format(nspc.name, term)
+	# TODO: if no namespace is present, shorten shomehow else
+	return url
+
+def expand_term(token):
+	"""Un-shorten url."""
+	nn, term = token.rsplit(':',1)
+	nsp = ns.get(nn)
+	if nsp:
+		return rdflib.URIRef('{}{}'.format(nsp.url, term))
+	return rdflib.URIRef(token)
+
 
 
 #harvest namespace terms from graph
@@ -282,7 +293,7 @@ def ls_rdf(g=None):
 
 
 
-
+# TODO: check out rdflib.
 def find_term(term, nsp=None, g=None):
 	"""Shows triple containing given term."""
 	if not g:

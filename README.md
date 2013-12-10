@@ -37,18 +37,20 @@ Registration of a new command works like this:
     commands.parse("triples g object http://www.w3.org/2000/01/rdf-schema#Class")
 
 Thanks to the decorator `@cmd_handler`, handler functions can be
-implemented wherever convenient, without worrying about binding
-commands syntaxes. Binding and registration can be done automatically
-by:
+implemented wherever convenient, without worrying about additionally binding
+commands syntaxes. Binding and registration can be let done automatically
+by having said decorator take care of introducing the handler to the `commands.handlers` module's
+namespace, and fixing its invocation for user input satisfying command syntax specifications
+simply placed anywhere the docstring:
 
-  from kathaireo import cmd_handler
-
-  @cmd_handler
-  def triples_with_object(*args, **kwargs):
-    """Returns list of triples with a specified identifier as object.
-    handles:
-    `triples <graphname> object <ontoclass>`"""
-    [...]
+    from kathaireo import cmd_handler
+    
+    @cmd_handler
+    def triples_with_object(*args, **kwargs):
+      """Returns list of triples with a specified identifier as object.
+      handles:
+      `triples <graphname> object <ontoclass>`"""
+      [...]
 
 That's it.
 
@@ -57,19 +59,19 @@ That's it.
 
 Whenever a new command argument type is introduced by submitting an 
 `<argument>` placeholder, it may also be desirable to configure its possible 
-values. This is what the `kathaireo.commands.arguments` module is for. Its
-function `register(name, proposer=function, format=list)` adds an argument's name to the list of known arguments
-and assigns to it a handler function for input completion proposals and a list
-of regular expressions for input validation.
+values, rather than having those determined by default value constraints. This is what the `kathaireo.commands.arguments` module is for. 
+Its function `register(name, proposer=function, format=list)` adds an argument's name to a registry
+and assigns to it a handler function for user input autocompletion proposals and a list
+of regular expressions for value validation.
 
-A function to be registered as an argument's autocompletion handler must 
+A function to be registered as an argument's autocompletion provider must 
 accept two parameters: the argument's name and the prefix to be completed. It is
-expected to return a list of legal values matching the prefix.
+expected to return a list of autocompletion candidates, i.e. of legal values fitting the currently prepared user input.
 
 When calling `commands.register(arg)` whithout passing any values for 
 `proposer` or `format`, the default behaviour in autocompletion of `<arg>` 
-values will be looking up in previously entered values for `<arg>`, and
-validation will just check if input qualifies as a legal variable name, i.e. 
+values will be that of looking up previously entered values for `<arg>`, and
+validation will merely check if input qualifies as a legal variable name, i.e. 
 consists only of alphanumeric characters and underscores. To complete the above
 example code, we subscribe to those default features for the argument
 introduced by command `triples` as `<ontoclass>`:
@@ -88,15 +90,15 @@ a value of `filename` arguments:
 	from glob import glob
 
 	def list_files(arg, prefix):
-		path = prefix.split(os.sep)[:-1]
-		files = glob(os.path.join(os.sep.join(path), '*'))
-		compl = [[fn for fn in files if fn.startswith(prefix)]
-		arghist = commands.arguments.propose_default(arg, prefix)
-		compl.extend(arghist) # suggest previous values
-		return compl
+	  path = prefix.split(os.sep)[:-1]
+	  files = glob(os.path.join(os.sep.join(path), '*'))
+	  compl = [[fn for fn in files if fn.startswith(prefix)]
+	  arghist = commands.arguments.propose_default(arg, prefix)
+	  compl.extend(arghist) # suggest previous values
+	  return compl
 
 	commands.arguments.register('filename', proposer=list_files, 
-		format=[re.compile(''(/?[^/\s]+/)*\w*\.\w+')])
+	  format=[re.compile(''(/?[^/\s]+/)*\w*\.\w+')])
 
 
 [rdflib]: https://github.com/RDFLib/rdflib

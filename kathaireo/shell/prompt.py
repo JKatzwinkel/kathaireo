@@ -9,8 +9,9 @@ __version__ = "0.0.18-dev"
 
 import re
 
-from .highlights import color, hilite, col_demo, stdcol, urlex
+from .highlights import color, hilite, col_demo, stdcol
 from kathaireo import rdf
+from ..util import urlex, log
 
 # colored prompt
 #ps = "\001\033[32m\002>>>\001\033[0m\002 "
@@ -54,16 +55,22 @@ def tokenize(line):
 		#print '\t', ''.join(['<{}>'.format(u) for u in uri])
 		#if uri[0].startswith('file://'):
 			#uri = uri[1:]
+		#TODO: wahrscheinlich unnoetig:
+		#genauso gut kann der rdflib namespacemanager eingesetzt werden
+		#https://rdflib.readthedocs.org/en/latest/utilities.html#serializing-a-single-term-to-n3
 		uri = ''.join(uri)
 		url, term = rdf.struct_uri(uri)
+		log('Prompt output: Split uri {} into "..{}", "{}".'.format(uri,
+			url[-10:], term))
 		#print u'\tfiltererd output: {} ending on "{}"'.format(url, term)
 		if term:
-			nsp = rdf.namespaces.get_ns(url)
+			nsp = rdf.ns.get_ns(url)
 			if nsp:
+				log('substitute with {}:{}'.format(nsp.name, term))
 				#print u'\tnamespace:', nsp.name, nsp.url
 				line = line.replace(uri, u'{}:{}'.format(nsp.name, term))
 		else:
-			line = line.replace(uri, u'!{}..{}!'.format(uri[:10],uri[-10:]))
+			line = line.replace(uri, u'!{}..{}!'.format(uri[:20],uri[-20:]))
 	# tokenize
 	return _tokex.split(line)
 

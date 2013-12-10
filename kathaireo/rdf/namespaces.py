@@ -4,6 +4,7 @@ import os
 import rdflib
 
 from . import remote
+from ..util import log
 
 # TODO: write smarter global namespace registry!
 _namespaces={}
@@ -76,6 +77,7 @@ def create(name, url):
 def get_ns(url):
 	"""Looks up ns name for given url."""
 	#print '\n'.join(_prefixes.keys())
+	log('Look up ns for {}.'.format(url))
 	res = None
 	i = 0
 	while res is None and i < 5:
@@ -88,6 +90,10 @@ def get_ns(url):
 		else:
 			url = url.rsplit('/',1)[0]
 		i += 1
+	if res:
+		log('Found namespace: {}! ({})'.format(res.name, res.url[-10:]))
+	else:
+		log('No namespace found.')
 	return res
 
 
@@ -103,7 +109,7 @@ def reg_graph(g):
 		# insert namespace directory into global registry
 		_namespaces.update(rdfns)
 		# cross file names under urls
-		prfxs = {str(url).rstrip('/#'):get(n) 
+		prfxs = {unicode(url).rstrip('/#'):get(n) 
 						for n, url in g.namespaces()}
 		_prefixes.update(prfxs)
 		# copy namespace references to module variable namespace
