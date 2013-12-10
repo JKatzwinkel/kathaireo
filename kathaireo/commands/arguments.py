@@ -184,12 +184,22 @@ def lsdir(prefix, filetypes):
 	as a list of globs (``['*.rdf', '*.owl', ...]``).
 	"""
 	# extract path locator (relative)
-	if os.sep in prefix:
-		if prefix.count(os.sep)>1 or prefix[0] != os.sep:
-			path = os.sep.join(prefix.split(os.sep)[:-1])
+	validpath = os.path.isdir(prefix) # check if prefix already 
+	# points to an existing directory
+	if os.sep in prefix or validpath == True:
+		# incomplete?
+		if not validpath:
+			if prefix.count(os.sep)>1 or prefix[0] != os.sep:
+				path = os.sep.join(prefix.split(os.sep)[:-1])
+			else:
+				path = os.sep.join(['']+prefix.split(os.sep)[:-1])
+			rpth = path
 		else:
-			path = os.sep.join(['']+prefix.split(os.sep)[:-1])
-		rpth = path
+			# prefix is actually valid path to directory. keep it
+			# just make sure it has a trailing os.sep
+			path = os.sep.join([lvl for lvl in prefix.split(os.sep)
+				if len(lvl)>0]+[''])
+			rpth = path
 	else:
 		path = '.'
 		rpth = ''
@@ -198,8 +208,9 @@ def lsdir(prefix, filetypes):
 	# module know that this would be still to be
 	# extended, and hence not decorated by a trailing
 	# space, like completions normally do
-	files = ['{}{};'.format(fn, os.sep) for fn in os.listdir(path) 
-						if os.path.isdir(fn)]
+	files = ['{}{};'.format(os.path.join(path,fn), os.sep) 
+				for fn in os.listdir(path) 
+					if os.path.isdir(os.path.join(path,fn))]
 	# extend by files matching extensions
 	for ext in filetypes:
 		files.extend(glob(os.path.join(rpth,ext)))

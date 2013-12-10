@@ -24,8 +24,8 @@ class Namespace:
 		self.rdf = rdflib.Graph(identifier=name)
 		# try to load namespace source
 		#self.rdf.parse(self.url)
-		if urlex.match(url):
-			print "url points to remote resource."
+		#if urlex.match(url):
+			#print "url points to remote resource."
 		# try to retrieve resource
 		try:
 			remote.parse(self.rdf, self.url, guesses=[])

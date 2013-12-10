@@ -92,7 +92,7 @@ def is_internet_available():
 	"""Tries to establish socket towards google dns server."""
 	try:
 		response = urllib2.socket.gethostbyaddr('8.8.8.8')
-		if 'google.com' in response:
+		if 'google.com' in response[0]:
 			return True
 		print response
 		return False
