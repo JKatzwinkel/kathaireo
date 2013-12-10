@@ -44,10 +44,37 @@ if __name__=='__main__':
 
 # https://rdfalchemy.readthedocs.org/en/latest/
 
+# in particular, read the rdflib package doc
+	# https://rdflib.readthedocs.org/en/latest/apidocs/rdflib.html
+# and those about its subpackages:
+	# https://rdflib.readthedocs.org/en/latest/apidocs/rdflib.html#subpackages
+
 #TODO: handle command line parameters in here.
 #TODO: bash autocompletion
-#TODO: parsing of remote resources (https://kask.eti.pg.gda.pl/redmine/projects/sova/repository/revisions/00951bd8e28d7bd58facb5a1da3a17ae9df115d4/raw/portalSubsystem/data/pizza.owl)
+#TODO? parsing of remote resources (https://kask.eti.pg.gda.pl/redmine/projects/sova/repository/revisions/00951bd8e28d7bd58facb5a1da3a17ae9df115d4/raw/portalSubsystem/data/pizza.owl)
 #TODO: somehow wrap line if input gets too long. http://stackoverflow.com/questions/9468435/look-how-to-fix-column-calculation-in-python-readline-if-use-color-prompt
+#TODO: rewrite rdf module from scratch. provide simple facade for rdflib functionality!
+			#	furthermore, maintain directory of active graphs, namespaces and stuff...
+			# resource directories:
+				# >>> paper = Resource(graph, URIRef("http://example.org/def/v#Paper"))
+				# >>> paper.add(RDFS.subClassOf, artifact)
+				# https://rdflib.readthedocs.org/en/latest/apidocs/rdflib.html#module-rdflib.resource
+#TODO: reevaluate module namespaces. rdflib already has such a module, and we must find out if
+			# encapsulating rdflib graphs into namespace objects is worth the redundancy. 
+			# do we even retrieve useful triple content from the namespace urls?
+#TODO: remove url -> ns:term collapsing from prompter module. This can be done better and easier
+			# by rdflib itself: a graph automatically binds namespaces (ns1, ns2...) for every new
+			# ns realm a newly added triple's property introduces. (Not for subject and object, though)
+			# print g.serialize(format='n3') shows n3 formatting of the graph, with properties
+			# collapsed into ns:term, but subjects and objects unaltered.
+			# https://rdflib.readthedocs.org/en/latest/apidocs/rdflib.html
+			# so, maybe we still need to take care of shortening urls ourselves...
+			# No! what we want is the graph.namespace_manager.qname function. (takes a url as
+			# a unicode string and returns its ns:term representation.
+			# weird thing: if url does not fit any already bound ns, a new one is bound to the graph
+			# instantly. so we might end up with very numerous namespace bindings..
+				# g.namespace_manager.qname(u'http://telota.bbarw.de/test#whatevs')
+				# Out[26]: u'ns3:whatevs'
 
 #try to parse these ontologies from the internet:
 # https://owlverbalizer.googlecode.com/hg-history/8da67288d6be51f8d635f3bb347bacb1cf74f811/examples/tests.owl
