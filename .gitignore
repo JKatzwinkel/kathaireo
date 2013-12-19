@@ -6,5 +6,5 @@
 *.sqlite
 lib/
 build/
-doc/
+docs/
 .*
