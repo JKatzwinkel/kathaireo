@@ -1,0 +1,583 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>kathaireo.commands &mdash; kathaireo  documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="kathaireo  documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">kathaireo  documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for kathaireo.commands</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+<span class="c"># -*- coding: utf-8 -*- </span>
+<span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">This package offers a way for convenient registration</span>
+<span class="sd">of custom commands. By calling its :func:`register` method,</span>
+<span class="sd">a formal representation of a command syntax can be</span>
+<span class="sd">bound to a handling function desired to be called for</span>
+<span class="sd">user input matching said command. </span>
+<span class="sd">Functions intended to serve as handlers, when declared</span>
+<span class="sd">like `def func(*args, **kwargs)` have access to </span>
+<span class="sd">their command&#39;s arguments marked by surrounding angle</span>
+<span class="sd">brackets (&lt;&gt;).</span>
+
+<span class="sd">The internal representation of the resulting command</span>
+<span class="sd">language can be found in the :data:`cmdict` member</span>
+<span class="sd">of this module, which resembles a syntax tree in which</span>
+<span class="sd">by traversing down along a command syntax&#39; terms, the</span>
+<span class="sd">thereby reached leafe refers to the corresponding</span>
+<span class="sd">handler function.</span>
+
+<span class="sd">Example:</span>
+
+<span class="sd">	&gt;&gt;&gt; import commands</span>
+<span class="sd">	&gt;&gt;&gt; def handler(*args, **kwargs):</span>
+<span class="sd">	... 	name = kwargs.get(&quot;graphname&quot;) # or = args[0]</span>
+<span class="sd">	... 	[...]</span>
+<span class="sd">	...</span>
+<span class="sd">	&gt;&gt;&gt; commands.register(&quot;create &lt;graphname&gt;&quot;, handler)</span>
+<span class="sd">	Registered handling function handler(&#39;args&#39;, [...]</span>
+<span class="sd">	&gt;&gt;&gt; commands.cmdict</span>
+<span class="sd">	{&#39;create&#39;: {&#39;&lt;graphname&gt;&#39;: {&#39;&#39;: &lt;function handler at 0x86c26f4&gt;}}}</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__docformat__</span> <span class="o">=</span> <span class="s">&quot;restructuredtext en&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;0.0.22-dev&quot;</span>
+<span class="c">#__all__ = [&#39;arguments&#39;, &#39;handlers&#39;]</span>
+
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">arguments</span>
+<span class="kn">import</span> <span class="nn">handlers</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">rdf</span>
+
+
+<span class="c"># argument registry</span>
+<span class="n">reg_arg</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">register</span>
+
+<span class="c"># command syntax language tree</span>
+<span class="n">cmdict</span><span class="o">=</span><span class="p">{}</span>
+<span class="sd">&quot;&quot;&quot;Assembles a tree (more precisely: a forest) of which each path that </span>
+<span class="sd">leads from a root all the way down to a leaf, stands for a legal command.&quot;&quot;&quot;</span>
+
+
+<span class="c"># define regular expressions for command resolution</span>
+<span class="c"># argument placeholder</span>
+<span class="n">argex</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;&lt;([a-zA-Z_]\w*)&gt;&#39;</span><span class="p">)</span>
+<span class="c"># single term</span>
+<span class="n">trmex</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;(</span><span class="se">\&quot;</span><span class="s">.+</span><span class="se">\&quot;</span><span class="s">|\S+)&#39;</span><span class="p">)</span>
+<span class="c"># file name TODO: besser</span>
+<span class="n">flnex</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;\S+\.(rdf|owl|RDF|OWL|xml|n3)&#39;</span><span class="p">)</span>
+<span class="c"># url TODO: verbessern</span>
+<span class="n">urlex</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;(https?|ftp)://\w+\.[a-z]+(/.*)*&#39;</span><span class="p">)</span>
+
+
+
+<span class="c"># implementation of decorator @cmd_handler</span>
+<div class="viewcode-block" id="register_handler"><a class="viewcode-back" href="../../kathaireo.commands.html#kathaireo.commands.register_handler">[docs]</a><span class="k">def</span> <span class="nf">register_handler</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">        Decorator for command handler functions.</span>
+<span class="sd">        Function will be copied into :mod:`.commands.handlers`</span>
+<span class="sd">        and, if their docstring contains a command syntax,</span>
+<span class="sd">        registered as a handler for matching input.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hnd_ns</span> <span class="o">=</span> <span class="n">handlers</span><span class="o">.</span><span class="n">__dict__</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">func_name</span>
+        <span class="k">if</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">hnd_ns</span><span class="p">:</span>
+        	<span class="k">print</span> <span class="s">&#39;Overwrite handler module pointer {} with&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fname</span><span class="p">),</span>
+        	<span class="k">print</span> <span class="s">&#39;new command handler function at {}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">func_code</span><span class="o">.</span><span class="n">co_filename</span><span class="p">)</span>
+        <span class="n">hnd_ns</span><span class="p">[</span><span class="n">fname</span><span class="p">]</span> <span class="o">=</span> <span class="n">func</span>
+       	<span class="c"># if `command ...` is defined in doc line, register</span>
+       	<span class="n">sntxs</span> <span class="o">=</span> <span class="n">handlers</span><span class="o">.</span><span class="n">extract_cmd_syntax</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+       	<span class="k">if</span> <span class="n">sntxs</span><span class="p">:</span>
+        	<span class="k">for</span> <span class="n">syntax</span> <span class="ow">in</span> <span class="n">sntxs</span><span class="p">:</span>
+        		<span class="n">register</span><span class="p">(</span><span class="n">syntax</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+        	<span class="k">print</span> <span class="s">&quot;Couldn&#39;t find handler function {}!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">func</span>
+        
+
+
+
+<span class="c"># register a handler function for a command syntax </span></div>
+<div class="viewcode-block" id="register"><a class="viewcode-back" href="../../kathaireo.commands.html#kathaireo.commands.register">[docs]</a><span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="n">syntax</span><span class="p">,</span> <span class="n">function</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">	Inserts the given command&#39;s syntax into a known commands</span>
+<span class="sd">	dictionary and registers the given function as</span>
+<span class="sd">	its handler.</span>
+
+<span class="sd">	:param syntax: A String containing a formal </span>
+<span class="sd">	representation of a new command&#39;s syntax.</span>
+<span class="sd">	A command syntax may contain argument identifiers </span>
+<span class="sd">	s.t. the handling function (and shell-features like </span>
+<span class="sd">	autocomplete) has access to argument variables </span>
+<span class="sd">	passed to a command. A command syntax string </span>
+<span class="sd">	indicating a handler&#39;s capability of processing </span>
+<span class="sd">	command arguments would look something like this, </span>
+<span class="sd">	for instance:</span>
+
+<span class="sd">		&#39;command option &lt;arg1&gt; &lt;arg2&gt; someswitch &lt;arg3&gt;&#39;</span>
+
+<span class="sd">	:param function: A function intended to be called when</span>
+<span class="sd">	said command is to be executed. Should accept </span>
+<span class="sd">	an unlimited number of both positional and keyword </span>
+<span class="sd">	arguments and is hence recommended to look sth like </span>
+<span class="sd">	the following: </span>
+
+<span class="sd">		&gt;&gt;&gt; def func(*args, **kwargs):</span>
+<span class="sd">		...    [...]</span>
+
+<span class="sd">	Note that nonetheless, it is not </span>
+<span class="sd">	tested for fitting this requirement, but one might</span>
+<span class="sd">	get in trouble when ignoring it.</span>
+
+<span class="sd">	:returns: `True`, if function was successfully bound to</span>
+<span class="sd">	command syntax, `False`, if command syntax</span>
+<span class="sd">	is already in registry.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c"># anchor at top level of command path dict</span>
+	<span class="n">level</span><span class="o">=</span><span class="n">cmdict</span>
+	<span class="c"># split generic syntax string and append linebreak</span>
+	<span class="n">terms</span> <span class="o">=</span> <span class="n">trmex</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">syntax</span><span class="p">)</span>
+	<span class="c"># insert new command binding into cmd dict tree</span>
+	<span class="c"># term-wise</span>
+	<span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">:</span>
+		<span class="c"># if no path to current term exists so far, </span>
+		<span class="c"># prepare a new one by attaching empty dict {}</span>
+		<span class="n">down</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="p">{})</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">level</span><span class="p">:</span>
+			<span class="n">level</span><span class="p">[</span><span class="n">term</span><span class="p">]</span> <span class="o">=</span> <span class="n">down</span>
+		<span class="c"># if term is an argument placeholder, register it</span>
+		<span class="k">if</span> <span class="n">argex</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">term</span><span class="p">):</span>
+			<span class="n">arg</span> <span class="o">=</span> <span class="n">argex</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">term</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+			<span class="n">arguments</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+		<span class="c"># walk down one level in command dict tree</span>
+		<span class="n">level</span> <span class="o">=</span> <span class="n">down</span>
+	<span class="c"># every command syntax string must end w linebreak</span>
+	<span class="c"># char (or EOL or whatever) s.t. optional command</span>
+	<span class="c"># parameters can be handled later</span>
+	<span class="c"># at last, attach leave referring to function(args**,</span>
+	<span class="c"># **kwargs) responsible for handling the new command</span>
+	<span class="c"># unless, of course, command already exists</span>
+	<span class="n">boundf</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">boundf</span><span class="p">:</span>
+		<span class="n">level</span><span class="p">[</span><span class="s">&#39;&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">function</span>
+		<span class="n">msg</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+			<span class="s">&#39;Registered handling function {}{}&#39;</span><span class="p">,</span>
+			<span class="s">&#39;for command syntax </span><span class="se">\&quot;</span><span class="s">{}</span><span class="se">\&quot;</span><span class="s">.&#39;</span><span class="p">])</span>
+		<span class="n">res</span> <span class="o">=</span> <span class="bp">True</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">msg</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;Failed to register function {}{};&#39;</span><span class="p">,</span>
+			<span class="s">&#39;command syntax </span><span class="se">\&quot;</span><span class="s">{}</span><span class="se">\&quot;</span><span class="s"> already binds&#39;</span><span class="p">,</span>
+			<span class="s">&#39;function {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">boundf</span><span class="o">.</span><span class="n">func_name</span><span class="p">)])</span>
+		<span class="n">res</span> <span class="o">=</span> <span class="bp">False</span>
+	<span class="c"># print msg.format(function.func_name, </span>
+	<span class="c"># 	function.func_code.co_varnames[:2],</span>
+	<span class="c"># 	&#39; &#39;.join(terms))</span>
+	<span class="c">#TODO: register argument placeholders</span>
+	<span class="k">return</span> <span class="n">res</span>
+
+
+
+<span class="c"># message: incomplete input string</span></div>
+<div class="viewcode-block" id="msg_incomplete_cmd"><a class="viewcode-back" href="../../kathaireo.commands.html#kathaireo.commands.msg_incomplete_cmd">[docs]</a><span class="k">def</span> <span class="nf">msg_incomplete_cmd</span><span class="p">(</span><span class="n">keywords</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Returns a helpful error message in case an input string</span>
+<span class="sd">	didn&#39;t contain a complete command, and the parser had still been</span>
+<span class="sd">	expecting upcoming content at the time of termination.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keywords</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+		<span class="n">msg</span> <span class="o">=</span> <span class="s">&#39; or &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">keywords</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> 
+			<span class="n">keywords</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">msg</span> <span class="o">=</span> <span class="n">keywords</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+	<span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;!Incomplete command!: expecting &#39;{}&#39; instead of EOL.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+		<span class="n">msg</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">msg</span>
+
+
+<span class="c"># execute input string, if command matches</span></div>
+<div class="viewcode-block" id="execute"><a class="viewcode-back" href="../../kathaireo.commands.html#kathaireo.commands.execute">[docs]</a><span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="nb">input</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">	Tests given input string against currently</span>
+<span class="sd">	registered command syntaxes. If input turns out</span>
+<span class="sd">	to be a valid command, a corresponding handler </span>
+<span class="sd">	function is called. If matching syntax contains</span>
+<span class="sd">	argument placeholders (`&quot;command &lt;arg&gt;&quot;`), their</span>
+<span class="sd">	respective values are extracted from the input and</span>
+<span class="sd">	passed to the handler function.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c"># split input string into single terms</span>
+	<span class="n">terms</span> <span class="o">=</span> <span class="n">trmex</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+	<span class="c"># init path log for recreation of generic command</span>
+	<span class="n">path</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+	<span class="c"># return message</span>
+	<span class="n">msg</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="c"># check if terms match known commands:</span>
+	<span class="c"># begin at language tree root</span>
+	<span class="n">level</span> <span class="o">=</span> <span class="n">cmdict</span>
+	<span class="c"># walk down as long as input seems to be</span>
+	<span class="c"># a valid command language word, i.e. input</span>
+	<span class="c"># term reachable by walking along its predecessors</span>
+	<span class="n">term</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">:</span>
+		<span class="c">#print &#39; &#39;.join(level.keys())</span>
+		<span class="c"># still on track?</span>
+		<span class="k">if</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">level</span><span class="p">:</span>
+			<span class="n">level</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+			<span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="c"># might be just an argument value that we</span>
+			<span class="c"># need to recognize, validate and extract</span>
+			<span class="c"># first, get all argument ids that</span>
+			<span class="c"># might be applicable</span>
+			<span class="n">argnames</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">level</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+				<span class="k">if</span> <span class="n">argex</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">t</span><span class="p">)]</span>
+			<span class="n">resolved</span> <span class="o">=</span> <span class="bp">False</span>
+			<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">argnames</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+				<span class="c"># then test if found input is valid for</span>
+				<span class="c"># at least one of them</span>
+				<span class="c">#TODO: we will probably have to recurse</span>
+				<span class="c">#TODO here, because we might get on the</span>
+				<span class="c"># wrong track by picking just any matching</span>
+				<span class="c"># placeholder here</span>
+				<span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">argnames</span><span class="p">:</span>
+					<span class="k">if</span> <span class="ow">not</span> <span class="n">resolved</span><span class="p">:</span>
+						<span class="n">arg</span> <span class="o">=</span> <span class="n">argex</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">a</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+						<span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">term</span><span class="p">):</span>
+							<span class="c">#print &#39;reading value for argument&#39;,</span>
+							<span class="c">#print &#39;{}: {}.&#39;.format(a,term)</span>
+							<span class="c"># input valid! collect value</span>
+							<span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+							<span class="n">kwargs</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span> <span class="o">=</span> <span class="n">term</span>
+							<span class="c"># proceed</span>
+							<span class="n">level</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+							<span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+							<span class="n">resolved</span><span class="o">=</span><span class="bp">True</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">resolved</span><span class="p">:</span>
+				<span class="c"># path lost -&gt; input not in language</span>
+				<span class="c"># not a valid command</span>
+				<span class="n">msg</span> <span class="o">=</span> <span class="n">term</span>
+				<span class="n">term</span> <span class="o">=</span> <span class="bp">None</span>
+				<span class="k">break</span>
+	<span class="c"># do we have a match? or not?</span>
+	<span class="k">if</span> <span class="n">term</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+		<span class="k">return</span> <span class="s">&#39;!!Syntax error!!: term &quot;{}&quot; not recognized.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="c"># if EOL code terminates term sequence, we are good.</span>
+		<span class="c"># if not, input is incomplete</span>
+		<span class="k">if</span> <span class="n">level</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+			<span class="n">msg</span> <span class="o">=</span> <span class="n">msg_incomplete_cmd</span><span class="p">(</span><span class="n">level</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+			<span class="c"># return a hint on expected input</span>
+			<span class="k">return</span> <span class="n">msg</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="c"># we have a match!</span>
+			<span class="c"># command is valid! get handler!</span>
+			<span class="c"># print &#39; &#39;.join(path)</span>
+			<span class="n">func</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+			<span class="c">#print &#39;Calling {}&#39;.format(func.__name__)</span>
+			<span class="n">ret</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+			<span class="c"># log argument values</span>
+			<span class="k">for</span> <span class="n">arg</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+				<span class="n">arguments</span><span class="o">.</span><span class="n">to_history</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+			<span class="k">return</span> <span class="n">ret</span>
+
+
+
+<span class="c"># what can possibly be typed in given certain prefix?</span></div>
+<div class="viewcode-block" id="choices_left"><a class="viewcode-back" href="../../kathaireo.commands.html#kathaireo.commands.choices_left">[docs]</a><span class="k">def</span> <span class="nf">choices_left</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">csrange</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Assembles a list of terms that allow a valid input line</span>
+<span class="sd">	given the prefix passed as `input` has been typed in so far.</span>
+<span class="sd">	Those terms can include command keywords and argument values</span>
+<span class="sd">	and depend on the command syntax to which the input line so far </span>
+<span class="sd">	typed in matches, as well as legal argument values for that </span>
+<span class="sd">	incomplete input line. </span>
+<span class="sd">	The resulting list will only contain keywords or argument values</span>
+<span class="sd">	that either have been started typing in, or those that may legally</span>
+<span class="sd">	extend the current prefix, in case the latter doesn&#39;t end with </span>
+<span class="sd">	an incomplete keyword or argument value.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c"># TODO: read carefully for potential logical flaws!</span>
+	<span class="c"># TODO: read carefully for potential logical flaws!</span>
+	<span class="c"># TODO: read carefully for potential logical flaws!</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">input</span><span class="p">:</span>
+		<span class="nb">input</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="c"># range of relevant input (beginning of incomplete word </span>
+	<span class="c">#	and cursor position)</span>
+	<span class="n">beg</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">csrange</span>
+	<span class="c"># begin traversing language tree as long as it matches current input</span>
+	<span class="n">level</span> <span class="o">=</span> <span class="n">cmdict</span>
+	<span class="n">level_down</span> <span class="o">=</span> <span class="n">level</span>
+	<span class="c"># split input string into single terms</span>
+	<span class="c"># BUT only up to cursor position!</span>
+	<span class="n">terms</span> <span class="o">=</span> <span class="n">trmex</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="nb">input</span><span class="p">[:</span><span class="n">end</span><span class="p">])</span>
+	<span class="c"># append empty string if line ends on whitespace. thus the next</span>
+	<span class="c"># keyword/value in order can be determined later</span>
+	<span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s">&#39;.*\s+\Z&#39;</span><span class="p">,</span> <span class="nb">input</span><span class="p">[:</span><span class="n">end</span><span class="p">])</span> <span class="ow">or</span> <span class="n">end</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">:</span>
+		<span class="n">terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+	<span class="c">#print &#39;\nfind choices for:&#39;,terms</span>
+	<span class="c"># #########################3</span>
+	<span class="c"># parse incomplete input</span>
+	<span class="c"># word by word</span>
+	<span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">:</span>
+		<span class="c"># walk downwards</span>
+		<span class="n">level</span> <span class="o">=</span> <span class="n">level_down</span>
+		<span class="k">if</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">level</span><span class="p">:</span>
+			<span class="c">#print &#39;fitting:&#39;, term</span>
+			<span class="n">level_down</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="c"># if not a keyword, term might be an attribute value</span>
+			<span class="n">argnames</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">level</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+				<span class="k">if</span> <span class="n">argex</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">t</span><span class="p">)]</span>
+			<span class="n">resolved</span> <span class="o">=</span> <span class="bp">False</span>
+			<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">argnames</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+				<span class="c"># check if term satisfies any attribute value requirements</span>
+				<span class="c"># TODO: auch hier das problem, dasz sich mit dem erstbesten </span>
+				<span class="c"># TODO zufrieden gegeben wird..?</span>
+				<span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">argnames</span><span class="p">:</span>
+					<span class="k">if</span> <span class="ow">not</span> <span class="n">resolved</span><span class="p">:</span>
+						<span class="n">arg</span> <span class="o">=</span> <span class="n">argex</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">a</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+						<span class="c"># print &#39;(argument to match is {})&#39;.format(a)</span>
+						<span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">term</span><span class="p">):</span>
+							<span class="c"># value matches attribute. proceed</span>
+							<span class="n">level_down</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+							<span class="n">resolved</span><span class="o">=</span><span class="bp">True</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">resolved</span><span class="p">:</span>
+				<span class="c"># here is probably where the input breaks up.</span>
+				<span class="c"># also possibly where input goes on invalidly</span>
+				<span class="c"># nevertheless, we have to proceed until there</span>
+				<span class="c"># is no input left at all. otherwise, we might</span>
+				<span class="c"># end up with autocomplete suggestions for terms</span>
+				<span class="c"># in the middle of nowhere. If an input turns out</span>
+				<span class="c"># to be invalid way before it is done parsing, </span>
+				<span class="c"># then we simply can&#39;t provide autocompletion</span>
+				<span class="c"># for that input. </span>
+				<span class="c"># TODO: or can we? how exactly is cursor position</span>
+				<span class="c"># handled by readline module???</span>
+				<span class="k">break</span>
+	<span class="c"># incomplete input line has been matched against known</span>
+	<span class="c"># commands as far as possible. what do we have here?</span>
+	<span class="c"># possibility 1): input ends w potential or partly typed keyword</span>
+	<span class="c"># possibility 2): input ends where a value should follow</span>
+	<span class="c"># or is partly typed in</span>
+	<span class="c">#print &#39;fragment, keys:&#39;, term, level.keys()</span>
+	<span class="n">choices1</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">keys</span><span class="p">()[:]</span>
+	<span class="c">#print term, &#39;:&#39;, choices1</span>
+	<span class="n">choices</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">choices1</span><span class="p">:</span>
+		<span class="c"># resolve argument, if any</span>
+		<span class="k">if</span> <span class="n">argex</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+			<span class="n">a</span> <span class="o">=</span> <span class="n">argex</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">c</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+			<span class="n">choices</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">arguments</span><span class="o">.</span><span class="n">get_suggestions</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">term</span><span class="p">))</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="c"># if not expecting argument: check if keyword can be </span>
+			<span class="c"># completed</span>
+			<span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">term</span><span class="p">):</span>
+				<span class="n">choices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+	<span class="c"># by default, append whitespace behind completion choice </span>
+	<span class="c"># if completion is ultimate (e.g. command names). </span>
+	<span class="c"># If choice ends on ;, this means it can possibly be</span>
+	<span class="c"># extended further, but is not meant to stay like it is</span>
+	<span class="c"># (e.g. directory names: even if completed, you can still</span>
+	<span class="c"># go deeper in file structure)</span>
+	<span class="n">choices</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">+</span><span class="p">[</span><span class="n">c</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="s">&#39; &#39;</span><span class="p">,</span><span class="s">&#39;&#39;</span><span class="p">][</span><span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s">&#39;;&#39;</span><span class="p">)]</span> 
+							<span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">choices</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+	<span class="c">#print &#39;suggestions:&#39;,choices, &#39;&#39;</span>
+	<span class="k">return</span> <span class="n">choices</span>
+
+
+
+
+
+
+
+<span class="c">###############################################</span>
+<span class="c">###############################################</span>
+<span class="c">##############                  ###############</span>
+<span class="c">##############     default      ###############</span>
+<span class="c">##############     commands     ###############</span>
+<span class="c">##############        +         ###############</span>
+<span class="c">##############     handlers     ###############</span>
+<span class="c">##############                  ###############</span>
+<span class="c">###############################################</span>
+<span class="c">###############################################</span>
+</div>
+<span class="n">default_cmds</span> <span class="o">=</span> <span class="p">{</span>
+	<span class="c">#&#39;exit&#39;: handlers.quit,</span>
+	<span class="c">#&#39;:q&#39;: handlers.quit,</span>
+	<span class="c">#&#39;create &lt;graphname&gt;&#39;: handlers.create_graph,</span>
+	<span class="s">&#39;create &lt;graphname&gt; store sqlite &lt;sqlite&gt;&#39;</span><span class="p">:</span> <span class="n">handlers</span><span class="o">.</span><span class="n">store_sqlite</span><span class="p">,</span>
+	<span class="s">&#39;load &lt;resource&gt; &lt;graphname&gt;&#39;</span><span class="p">:</span> <span class="n">handlers</span><span class="o">.</span><span class="n">parse_rdf</span><span class="p">,</span>
+	<span class="s">&#39;show &lt;graphname&gt; &lt;attribute&gt;&#39;</span><span class="p">:</span> <span class="n">handlers</span><span class="o">.</span><span class="n">graph_info</span><span class="p">,</span>
+	<span class="c">#&#39;load namespaces &lt;graphname&gt;&#39;: handlers.import_namespaces,</span>
+	<span class="s">&#39;connect &lt;graphname&gt; to sqlite &lt;sqlite&gt;&#39;</span><span class="p">:</span> <span class="n">handlers</span><span class="o">.</span><span class="n">store_sqlite</span><span class="p">,</span>
+	<span class="c">#&#39;save &lt;graphname&gt; to xml &lt;filename&gt;&#39;: handlers.store_xml,</span>
+	<span class="c">#&#39;save xml &lt;filename&gt;&#39;: handlers.store_xml,</span>
+	<span class="s">&#39;copy &lt;graphname&gt; &lt;graphname&gt;&#39;</span><span class="p">:</span> <span class="n">handlers</span><span class="o">.</span><span class="n">cp_graph</span><span class="p">,</span>
+	<span class="c">#&#39;merge &lt;graphname&gt;&#39;: handlers.merge_graph,</span>
+	<span class="c">#&#39;use &lt;graphname&gt;&#39;: handlers.set_graph,</span>
+	<span class="s">&#39;&lt;namespace&gt;:&lt;subject&gt; &lt;namespace&gt;:&lt;predicate&gt; &lt;namespace&gt;:&lt;object&gt;&#39;</span><span class="p">:</span><span class="bp">None</span>
+	<span class="c">#&#39;namespace &lt;namespace&gt; classes&#39;: handlers.ns_classes,</span>
+	<span class="c">#&#39;namespace &lt;namespace&gt; properties&#39;: handlers.ns_properties,</span>
+	<span class="p">}</span>
+
+<span class="c"># read, compile, register command syntaxes</span>
+<div class="viewcode-block" id="init"><a class="viewcode-back" href="../../kathaireo.commands.html#kathaireo.commands.init">[docs]</a><span class="k">def</span> <span class="nf">init</span><span class="p">():</span>
+	<span class="sd">&quot;&quot;&quot;Read, compile and register default commands.</span>
+<span class="sd">	These are those contained by :data:`default_cmds`</span>
+<span class="sd">	plus those defined by the :mod:`.commands.stdcmd` module,</span>
+<span class="sd">	parse docstrings of all functions in :mod:`.handlers` namespace</span>
+<span class="sd">	for `command ...` syntax specifications and :func:`.register`</span>
+<span class="sd">	those that have some.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c"># default_cmds dictionarty</span>
+	<span class="k">for</span> <span class="n">command</span><span class="p">,</span> <span class="n">handler</span> <span class="ow">in</span> <span class="n">default_cmds</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+		<span class="n">register</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">handler</span><span class="p">)</span>
+	<span class="c"># functions in handlers-namespace</span>
+	<span class="c"># for all functions within this namespace, parse</span>
+	<span class="c"># docstrings for `command` specification and register</span>
+	<span class="c"># functions as handlers in case of matches.</span>
+	<span class="n">funcs</span> <span class="o">=</span> <span class="p">[(</span><span class="n">n</span><span class="p">,</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">f</span> <span class="ow">in</span> <span class="n">handlers</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> 
+		<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s">&#39;__call__&#39;</span><span class="p">)]</span>
+	<span class="k">for</span> <span class="n">fname</span><span class="p">,</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">funcs</span><span class="p">:</span>
+		<span class="n">sntxs</span> <span class="o">=</span> <span class="n">handlers</span><span class="o">.</span><span class="n">extract_cmd_syntax</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">sntxs</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+			<span class="k">for</span> <span class="n">syntax</span> <span class="ow">in</span> <span class="n">sntxs</span><span class="p">:</span>
+				<span class="n">register</span><span class="p">(</span><span class="n">syntax</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">print</span> <span class="s">&quot;Not found!&quot;</span>
+	<span class="c"># read, compile, register stdcmd.py</span>
+	<span class="c"># ok. read commands from stdcmd.py</span>
+	<span class="kn">import</span> <span class="nn">stdcmd</span>
+	<span class="k">print</span> <span class="s">&#39;parse&#39;</span><span class="p">,</span> <span class="n">stdcmd</span><span class="o">.</span><span class="n">__file__</span>
+	<span class="k">for</span> <span class="n">fn</span><span class="p">,</span> <span class="n">cc</span> <span class="ow">in</span> <span class="n">stdcmd</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+		<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">handlers</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+			<span class="n">f</span> <span class="o">=</span> <span class="n">handlers</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+			<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s">&#39;__call__&#39;</span><span class="p">):</span>
+				<span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cc</span><span class="p">:</span>
+					<span class="k">print</span> <span class="n">fn</span><span class="p">,</span> <span class="s">&#39;invoked by:&#39;</span><span class="p">,</span> <span class="n">c</span>
+					<span class="n">register</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+	<span class="c"># TODO: arguments!</span>
+	<span class="k">del</span> <span class="n">stdcmd</span>
+
+
+
+<span class="c"># read, compile, register command syntaxes</span></div>
+<span class="n">init</span><span class="p">()</span> <span class="c">#TODO: sure this shouldnt be called by application modules</span>
+<span class="c"># like the shell instead of here? </span>
+<span class="c"># registering bindings in stdcmds.py might fail if </span>
+<span class="c"># handler functions with @cmd_handler decorator are in</span>
+<span class="c"># modules that haven&#39;t been imported yet</span>
+
+
+
+<span class="c">#################################################</span>
+<span class="c"># command argument placeholder handling</span>
+
+<span class="c"># TODO: write decorator to handle arguments like commands</span>
+<span class="c"># &lt;resources&gt;</span>
+<span class="n">reg_arg</span><span class="p">(</span><span class="s">&quot;resource&quot;</span><span class="p">,</span> <span class="n">proposer</span><span class="o">=</span><span class="n">arguments</span><span class="o">.</span><span class="n">list_files_rdf</span><span class="p">,</span> 
+	<span class="n">format</span><span class="o">=</span><span class="p">[</span><span class="n">flnex</span><span class="p">,</span> <span class="n">urlex</span><span class="p">])</span>
+
+<span class="c"># &lt;attribute&gt;</span>
+<span class="n">attrs</span><span class="o">=</span><span class="s">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rdf</span><span class="o">.</span><span class="n">rdfinfotempl</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="n">reg_arg</span><span class="p">(</span><span class="s">&quot;attribute&quot;</span><span class="p">,</span> <span class="n">proposer</span><span class="o">=</span><span class="n">arguments</span><span class="o">.</span><span class="n">graph_attrs</span><span class="p">,</span>
+	<span class="n">format</span><span class="o">=</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;({})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">attrs</span><span class="p">))</span> <span class="p">])</span>
+<span class="k">del</span> <span class="n">attrs</span>
+
+<span class="c"># &lt;sqlite&gt;</span>
+<span class="n">reg_arg</span><span class="p">(</span><span class="s">&quot;sqlite&quot;</span><span class="p">,</span> <span class="n">arguments</span><span class="o">.</span><span class="n">list_files_sqlite</span><span class="p">,</span>
+	<span class="n">format</span><span class="o">=</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;.*\.sqlite3?&#39;</span><span class="p">)])</span>
+
+<span class="c"># &lt;filename&gt;</span>
+<span class="n">reg_arg</span><span class="p">(</span><span class="s">&quot;filename&quot;</span><span class="p">,</span> <span class="n">arguments</span><span class="o">.</span><span class="n">list_files_rdf</span><span class="p">,</span>
+	<span class="n">format</span><span class="o">=</span><span class="p">[</span><span class="n">flnex</span><span class="p">])</span>
+
+<span class="c"># &lt;namespace&gt;</span>
+<span class="n">reg_arg</span><span class="p">(</span><span class="s">&#39;namespace&#39;</span><span class="p">,</span> <span class="n">arguments</span><span class="o">.</span><span class="n">ls_ns</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">kathaireo  documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, J. Katzwinkel.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

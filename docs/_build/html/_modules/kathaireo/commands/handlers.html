@@ -1,0 +1,391 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>kathaireo.commands.handlers &mdash; kathaireo  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="kathaireo  documentation" href="../../../index.html" />
+    <link rel="up" title="kathaireo.commands" href="../commands.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">kathaireo  documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../commands.html" accesskey="U">kathaireo.commands</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for kathaireo.commands.handlers</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+<span class="c"># -*- coding: utf-8 -*- </span>
+<span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">Contains implementations of handler functions for </span>
+<span class="sd">standard commands in interactive shell mode.</span>
+
+<span class="sd">Functions intended to serve as handlers, when declared</span>
+<span class="sd">like ``def func(*args, **kwargs)``, can be registered</span>
+<span class="sd">using the :mod:`.commands` module:</span>
+<span class="sd">::</span>
+
+<span class="sd">	&gt;&gt;&gt; commands.register(&quot;create &lt;graphname&gt;&quot;, handler)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__docformat__</span> <span class="o">=</span> <span class="s">&quot;restructuredtext en&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;0.0.92-dev&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">rdf</span>
+
+
+<span class="c"># Returns a list of `command` syntax specifications</span>
+<span class="c"># in docstring of a function identified by their name.</span>
+<div class="viewcode-block" id="extract_cmd_syntax"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.handlers.extract_cmd_syntax">[docs]</a><span class="k">def</span> <span class="nf">extract_cmd_syntax</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Extract command syntax definition from handler function</span>
+<span class="sd">	docstring.</span>
+<span class="sd">	:param fname: the function&#39;s name. Expected to be known by</span>
+<span class="sd">	this (:mod:`.`) module, either because the function&#39;s </span>
+<span class="sd">	implementation in the module source code anyway, or due</span>
+<span class="sd">	to previous calls of :func:`.commands.register_handler`</span>
+<span class="sd">	invoked by the ``@cmd_handler`` decorator.&quot;&quot;&quot;</span>
+	<span class="n">func</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">func</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+		<span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c"># command syntax extraction from __doc__</span>
+        <span class="n">fdoc</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">func_doc</span>
+        <span class="k">if</span> <span class="n">fdoc</span><span class="p">:</span>
+	        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fdoc</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">):</span>
+	        	<span class="n">sntxs</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">&#39;^\s*`([^`]+)`&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+	        	<span class="n">res</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">sntxs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+
+
+<span class="c">###############################################################</span>
+<span class="c">###############################################################</span>
+<span class="c">###############################################################</span>
+<span class="c">###################       handlers           ##################</span>
+<span class="c">###############################################################</span>
+<span class="c">###############################################################</span>
+<span class="c">###############################################################</span>
+
+<span class="c"># quit</span></div>
+<div class="viewcode-block" id="quit"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.handlers.quit">[docs]</a><span class="k">def</span> <span class="nf">quit</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Simply calls :func:`exit`.&quot;&quot;&quot;</span>
+	<span class="nb">exit</span><span class="p">()</span>
+
+
+<span class="c"># return rdf graph</span></div>
+<div class="viewcode-block" id="create_graph"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.handlers.create_graph">[docs]</a><span class="k">def</span> <span class="nf">create_graph</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">	Creates a new :class:`.rdf.rdflib.Graph` instance going by</span>
+<span class="sd">	the identifier passed as first argument.</span>
+<span class="sd">	</span>
+<span class="sd">	:param identifier: Id for the new Graph</span>
+<span class="sd">	:returns: The resulting `rdflib.Graph` instance when </span>
+<span class="sd">		successful, `None` otherwise.</span>
+<span class="sd">	</span>
+<span class="sd">	handles:</span>
+<span class="sd">	`create &lt;graphname&gt;`</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="s">&quot;graphname&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+		<span class="n">g</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">create_graph</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;graphname&quot;</span><span class="p">))</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">return</span> <span class="s">&quot;!!Error!!: Wrong number of arguments: {}.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+			<span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+	<span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+		<span class="k">return</span> <span class="n">g</span>
+	<span class="k">return</span> <span class="n">rdf</span><span class="o">.</span><span class="n">repr_graph</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+
+<span class="c"># select graph to work on</span></div>
+<div class="viewcode-block" id="set_graph"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.handlers.set_graph">[docs]</a><span class="k">def</span> <span class="nf">set_graph</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Select default graph for rdf operations.</span>
+<span class="sd">	handles:</span>
+<span class="sd">	`use &lt;graphname&gt;`&quot;&quot;&quot;</span>
+	<span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;graphname&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+		<span class="n">g</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">g</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">rdf</span><span class="o">.</span><span class="n">set_graph</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="s">&#39;!Fail:! No graph &quot;{}&quot;!&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">return</span> <span class="s">&#39;!!Error!!: No graph specified.&#39;</span>
+
+
+<span class="c"># return list of graph registry entry str reprs.</span></div>
+<div class="viewcode-block" id="show_graphs"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.handlers.show_graphs">[docs]</a><span class="k">def</span> <span class="nf">show_graphs</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Returns a list of strings representing all </span>
+<span class="sd">	graph instances currently registered.</span>
+<span class="sd">	handles:</span>
+<span class="sd">	`show graphs`</span>
+<span class="sd">	`list`</span>
+<span class="sd">	`ls`&quot;&quot;&quot;</span>
+	<span class="n">reg</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">_graphs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+	<span class="k">return</span> <span class="p">[</span><span class="s">&#39;{}: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">rdf</span><span class="o">.</span><span class="n">repr_graph</span><span class="p">(</span><span class="n">g</span><span class="p">))</span> <span class="k">for</span>
+		<span class="n">name</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">reg</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+
+
+
+<span class="c"># load resource content into graph</span></div>
+<div class="viewcode-block" id="parse_rdf"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.handlers.parse_rdf">[docs]</a><span class="k">def</span> <span class="nf">parse_rdf</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">	Parses the resource at a given location and reads it into</span>
+<span class="sd">	a `rdflib.Graph` identified by its name.</span>
+
+<span class="sd">	:param location: A String specifying the location of the </span>
+<span class="sd">		resource to be read. Can be a path to a local file or a URL.</span>
+<span class="sd">	:param graphname: A String identifying an `rdflib.Graph` instance.</span>
+<span class="sd">	:returns: `True`, if parsing was successful.</span>
+
+<span class="sd">	handles:</span>
+<span class="sd">	`load &lt;resource&gt;`</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">location</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;resource&#39;</span><span class="p">)</span>
+	<span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;graphname&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="bp">None</span> <span class="ow">in</span> <span class="p">[</span><span class="n">location</span><span class="p">,</span> <span class="n">name</span><span class="p">]:</span>
+		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+			<span class="n">location</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">args</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+		<span class="c">#else:</span>
+			<span class="c">#name = rdf.graph_name(rdf.current_graph)</span>
+	<span class="c"># FIXME: why does this lead to an additional graph instance with a </span>
+	<span class="c"># rdflib.RDFUriRef identifier????</span>
+	<span class="c">#if not(None in [location, name]):</span>
+	<span class="k">if</span> <span class="n">location</span><span class="p">:</span>
+		<span class="c"># try to parse local file first,</span>
+		<span class="c"># then remote source on failure.</span>
+		<span class="c"># try for multiple rdf formats in both</span>
+		<span class="n">g</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">load_resource</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">g</span><span class="p">:</span>
+			<span class="c"># return success indicator msg</span>
+			<span class="k">return</span> <span class="s">&#39;Succesfully read {} rdf statements from {} into graph &quot;{}&quot;.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+				<span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">),</span> <span class="n">location</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="c"># if parse attempt failed,</span>
+			<span class="c"># return failure msg</span>
+			<span class="k">return</span> <span class="s">&#39;!Error!: Could not import resource at {}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
+	<span class="c"># if no location was given</span>
+	<span class="c"># return failure msg</span>
+	<span class="k">return</span> <span class="s">&quot;!Didn&#39;t read source:! No location specified.&quot;</span>
+
+
+<span class="c"># show info about given graph</span></div>
+<div class="viewcode-block" id="graph_info"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.handlers.graph_info">[docs]</a><span class="k">def</span> <span class="nf">graph_info</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Display information about certain rdf graph.</span>
+<span class="sd">	Possible keywords: size, ...</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">field</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;attribute&#39;</span><span class="p">)</span>
+	<span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;graphname&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="bp">None</span> <span class="ow">in</span> <span class="p">[</span><span class="n">field</span><span class="p">,</span> <span class="n">name</span><span class="p">]:</span>
+		<span class="k">return</span> <span class="s">&quot;!!Error!!. Can&#39;t find attribute {} for graph {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+			<span class="n">field</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">info</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">graph_info</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">info</span>
+
+</div>
+<div class="viewcode-block" id="show_ns"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.handlers.show_ns">[docs]</a><span class="k">def</span> <span class="nf">show_ns</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;List loaded namespaces.</span>
+<span class="sd">	handles:</span>
+<span class="sd">	`ls ns`</span>
+<span class="sd">	`list namespaces`&quot;&quot;&quot;</span>
+	<span class="c"># TODO: write smarter global namespace registry!</span>
+	<span class="n">res</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">namespaces</span><span class="o">.</span><span class="n">get_names</span><span class="p">()</span>
+	<span class="n">g</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;current_graph&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">g</span><span class="p">:</span>
+		<span class="n">res</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s">&#39;{}: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ns</span><span class="p">,</span> <span class="n">ref</span><span class="p">)</span> <span class="k">for</span> 
+			<span class="n">ns</span><span class="p">,</span><span class="n">url</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">namespaces</span><span class="p">()])</span>
+	<span class="k">return</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+
+
+<span class="c"># copy graph </span></div>
+<div class="viewcode-block" id="cp_graph"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.handlers.cp_graph">[docs]</a><span class="k">def</span> <span class="nf">cp_graph</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Create new graph by given name and clone contents</span>
+<span class="sd">	of another graph into it.</span>
+<span class="sd">	handles:</span>
+<span class="sd">	`cp &lt;graphname&gt; &lt;graphname&gt;`</span>
+<span class="sd">	`cp &lt;graphname&gt;`&quot;&quot;&quot;</span>
+	<span class="c"># use parameters</span>
+	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+		<span class="n">name1</span><span class="p">,</span> <span class="n">name2</span> <span class="o">=</span> <span class="n">args</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+		<span class="n">g1</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">name1</span><span class="p">)</span>
+		<span class="n">g1</span><span class="p">,</span> <span class="n">g2</span> <span class="o">=</span> <span class="p">[</span><span class="n">rdf</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">args</span><span class="p">[:</span><span class="mi">2</span><span class="p">]]</span>
+	<span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+		<span class="n">g1</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">current_graph</span>
+		<span class="n">name2</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;graphname&#39;</span><span class="p">)</span>
+		<span class="n">g2</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">name2</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">return</span> <span class="s">&#39;!!Error!!: Parameter count mismatch ({}).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+			<span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+	<span class="c"># do copying</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">g2</span><span class="p">:</span>
+		<span class="n">g2</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">create_graph</span><span class="p">(</span><span class="n">name2</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">return</span> <span class="s">&quot;!Didn&#39;t copy!: Graph {} exists. Delete it first.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name2</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">in</span> <span class="p">[</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">]:</span>
+		<span class="c"># format MUST be pretty-xml, since xml ignores triples</span>
+		<span class="n">contents</span> <span class="o">=</span> <span class="n">g1</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;pretty-xml&#39;</span><span class="p">)</span>
+		<span class="n">g2</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">contents</span><span class="p">)</span>
+		<span class="k">return</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+			<span class="s">&quot;Created copy of graph &#39;{}&#39; under name &#39;{}&#39; &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+				<span class="n">rdf</span><span class="o">.</span><span class="n">graph_name</span><span class="p">(</span><span class="n">g1</span><span class="p">),</span> <span class="n">name2</span><span class="p">),</span>
+			<span class="s">&quot; with {} triples.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">g2</span><span class="p">)),</span>
+			<span class="s">&#39;</span><span class="se">\n</span><span class="s">{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rdf</span><span class="o">.</span><span class="n">repr_graph</span><span class="p">(</span><span class="n">g2</span><span class="p">))])</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">return</span> <span class="s">&quot;!!Error!!: Couldn&#39;t copy graph &#39;{}&#39; to name &#39;{}&#39;!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+			<span class="n">rdf</span><span class="o">.</span><span class="n">graph_name</span><span class="p">(</span><span class="n">g1</span><span class="p">),</span> <span class="n">name2</span><span class="p">)</span>
+
+
+<span class="c"># insert one graph into another</span></div>
+<div class="viewcode-block" id="merge_graph"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.handlers.merge_graph">[docs]</a><span class="k">def</span> <span class="nf">merge_graph</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;merge graph into :data:`.rdf.current_graph`.</span>
+<span class="sd">	handles:</span>
+<span class="sd">	`merge &lt;graphname&gt;`</span>
+<span class="sd">	`insert &lt;graphname&gt; into &lt;graphname&gt;`&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+		<span class="c"># currently selected graph, command probably was merge</span>
+		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+			<span class="n">g</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">current_graph</span>
+			<span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;graphname&#39;</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+				<span class="c"># graph specified by parameter</span>
+				<span class="n">g2</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+		<span class="c"># two specified graphs, command probably was insert</span>
+		<span class="k">else</span><span class="p">:</span> 
+			<span class="n">g2</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="p">[</span><span class="n">rdf</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">args</span><span class="p">[:</span><span class="mi">2</span><span class="p">]]</span>
+		<span class="c"># in case of wrong graphname(s), print warning.</span>
+		<span class="k">if</span> <span class="bp">None</span> <span class="ow">in</span> <span class="p">[</span><span class="n">g</span><span class="p">,</span><span class="n">g2</span><span class="p">]:</span>
+			<span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="p">[</span><span class="n">g</span><span class="p">,</span> <span class="n">g2</span><span class="p">]</span> <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">]:</span>
+				<span class="n">msg</span> <span class="o">=</span> <span class="s">&#39;Could not find graph &quot;{}&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="c"># actual merge:</span>
+			<span class="k">for</span> <span class="n">ns</span><span class="p">,</span><span class="n">url</span> <span class="ow">in</span> <span class="n">g2</span><span class="o">.</span><span class="n">namespaces</span><span class="p">():</span>
+				<span class="n">g</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">ns</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">url</span><span class="p">))</span>
+			<span class="c"># copy triples from g2 into currently active graph</span>
+			<span class="k">for</span> <span class="n">triple</span> <span class="ow">in</span> <span class="n">g2</span><span class="p">:</span>
+				<span class="n">g</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">triple</span><span class="p">)</span>
+			<span class="k">return</span> <span class="s">&#39;Merged {} triples from {} into {}, resulting in {}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+				<span class="nb">len</span><span class="p">(</span><span class="n">g2</span><span class="p">),</span> <span class="n">g2</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">))</span>
+	<span class="c"># not enough parameters?</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">msg</span> <span class="o">=</span> <span class="s">&#39;Parameter count mismatch ({}).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+	<span class="k">return</span> <span class="s">&quot;!Couldn&#39;t merge graphs!: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+
+
+<span class="c"># download namespaces for given graph name</span></div>
+<div class="viewcode-block" id="import_namespaces"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.handlers.import_namespaces">[docs]</a><span class="k">def</span> <span class="nf">import_namespaces</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Download namespaces for given graph name.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;graphname&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+		<span class="n">g</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">g</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;current_graph&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">g</span><span class="p">:</span>
+		<span class="n">res</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">import_ns</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">return</span> <span class="s">&#39;!Abort!: no graph specified.&#39;</span>
+	<span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+		<span class="k">return</span> <span class="n">res</span>
+	<span class="k">return</span> <span class="s">&#39;!!Error!!: could not import namespaces bound by graph {}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+		<span class="n">rdf</span><span class="o">.</span><span class="n">graph_name</span><span class="p">(</span><span class="n">g</span><span class="p">))</span>
+
+
+<span class="c"># set sqlite resource as persistent store</span></div>
+<div class="viewcode-block" id="store_sqlite"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.handlers.store_sqlite">[docs]</a><span class="k">def</span> <span class="nf">store_sqlite</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Set sqlite as store for graph.&quot;&quot;&quot;</span>
+	<span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;graphname&#39;</span><span class="p">)</span>
+	<span class="n">filename</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;sqlite&#39;</span><span class="p">)</span>
+	<span class="n">g</span><span class="p">,</span> <span class="n">store</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">store_sqlite</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+	<span class="n">msg</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">repr_graph</span><span class="p">(</span><span class="n">g</span><span class="p">)</span><span class="o">+</span><span class="s">&#39; at &#39;</span><span class="o">+</span> <span class="n">store</span><span class="o">.</span><span class="n">configuration</span>
+	<span class="k">return</span> <span class="n">msg</span> <span class="o">+</span> <span class="s">&#39; updated. Size: {}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">))</span>
+
+
+</div>
+<div class="viewcode-block" id="store_xml"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.handlers.store_xml">[docs]</a><span class="k">def</span> <span class="nf">store_xml</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Save contents of a graph to an `xml` file.&quot;&quot;&quot;</span>
+	<span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;graphname&#39;</span><span class="p">)</span>
+	<span class="n">filename</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;filename&#39;</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">rdf</span><span class="o">.</span><span class="n">save_xml</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">kathaireo  documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../commands.html" >kathaireo.commands</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, J. Katzwinkel.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

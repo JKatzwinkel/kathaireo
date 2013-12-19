@@ -5,6 +5,4 @@
 *.xml
 *.sqlite
 lib/
-build/
-docs/
 .*

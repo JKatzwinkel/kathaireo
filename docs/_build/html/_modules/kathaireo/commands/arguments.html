@@ -1,0 +1,344 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>kathaireo.commands.arguments &mdash; kathaireo  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="kathaireo  documentation" href="../../../index.html" />
+    <link rel="up" title="kathaireo.commands" href="../commands.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">kathaireo  documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../commands.html" accesskey="U">kathaireo.commands</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for kathaireo.commands.arguments</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+<span class="c"># -*- coding: utf-8 -*- </span>
+<span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">The :mod:`.arguments` module keeps track of command argument usage.</span>
+
+<span class="sd">On the one hand, it keeps track of proper values from user</span>
+<span class="sd">input fitting argument placeholders in typed-in commands.</span>
+<span class="sd">Every argument placeholder thus has its own input</span>
+<span class="sd">history.</span>
+
+<span class="sd">On the other hand, each argument placeholder gets equipped</span>
+<span class="sd">with two properties to impose requirements on its legal </span>
+<span class="sd">values with: the :meth:`~.ArgValidator.propose` function provides a suggestions </span>
+<span class="sd">list of possible values that may replace the placeholder,</span>
+<span class="sd">and can be used for like autocompletion.</span>
+<span class="sd">The :attr:`~.ArgValidator.format` list contains regular expressions determining</span>
+<span class="sd">what input values are allowed. </span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__docformat__</span> <span class="o">=</span> <span class="s">&quot;restructuredtext en&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;0.0.18a-dev&quot;</span>
+
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">glob</span> <span class="kn">import</span> <span class="n">glob</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">rdf</span>
+
+<span class="c"># value history for each known argument placeholder</span>
+<span class="n">arghist</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="sd">&quot;&quot;&quot;Dictionary object in which lists of previously submitted values are</span>
+<span class="sd">stored under assigned argument identifiers.&quot;&quot;&quot;</span>
+
+<span class="c"># directory of known arguments and their ArgValidator instances</span>
+<span class="n">argvals</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="sd">&quot;&quot;&quot;Directory of registered argument identifiers, each one referencing their</span>
+<span class="sd">assigned :class:`.ArgValidator` instance.&quot;&quot;&quot;</span>
+
+<span class="c"># default regex for e.g identifiers, names</span>
+<span class="n">namex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;\A[a-zA-Z_]\w*\Z&#39;</span><span class="p">)</span>
+
+<span class="c">###############################################################</span>
+<span class="c">####################   arg handling class  ####################</span>
+<span class="c">###############################################################</span>
+<div class="viewcode-block" id="ArgValidator"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.arguments.ArgValidator">[docs]</a><span class="k">class</span> <span class="nc">ArgValidator</span><span class="p">:</span>
+	<span class="sd">&quot;&quot;&quot;Container class for the two main validity specifiers an argument</span>
+<span class="sd">	identifier can be assigned to: an autocompletion candidate proposal</span>
+<span class="sd">	function (default one is :func:`.propose_default`) and a</span>
+<span class="sd">	:attr:`~.ArgValidator.format` list of regular expressions for checking</span>
+<span class="sd">	value validity.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">propose_func</span> <span class="o">=</span> <span class="n">propose_default</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="p">[</span><span class="n">namex</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ArgValidator.propose"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.arguments.ArgValidator.propose">[docs]</a>	<span class="k">def</span> <span class="nf">propose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Calls this instance&#39;s value proposal handler</span>
+<span class="sd">		and returns all suggestions for the given </span>
+<span class="sd">		input prefix.&quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">propose_func</span><span class="o">.</span><span class="n">__call__</span><span class="p">(</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">prefix</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ArgValidator.validate"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.arguments.ArgValidator.validate">[docs]</a>	<span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;Tests validity of a given string according</span>
+<span class="sd">		to this argument&#39;s value restrictions.&quot;&quot;&quot;</span>
+		<span class="n">valid</span> <span class="o">=</span> <span class="nb">any</span><span class="p">([</span><span class="n">r</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">])</span>
+		<span class="k">return</span> <span class="n">valid</span>
+		
+
+
+<span class="c">###############################################################</span>
+<span class="c">####################    module functions   ####################</span>
+<span class="c">###############################################################</span>
+
+<span class="c"># default function for value proposal</span></div></div>
+<div class="viewcode-block" id="propose_default"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.arguments.propose_default">[docs]</a><span class="k">def</span> <span class="nf">propose_default</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Default function for argument value proposal.</span>
+<span class="sd">	Looks up previous values for this argument and</span>
+<span class="sd">	suggests those that match the given prefix.</span>
+<span class="sd">	Can be overwritten under this premise.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">hist</span> <span class="o">=</span> <span class="n">arghist</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="p">[])</span>
+	<span class="n">suggestions</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">hist</span> <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">)]</span>
+	<span class="k">return</span> <span class="n">suggestions</span>
+
+
+<span class="c"># calls an argument placeholder&#39;s propose handler and</span>
+<span class="c"># returns resulting suggestions</span></div>
+<div class="viewcode-block" id="get_suggestions"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.arguments.get_suggestions">[docs]</a><span class="k">def</span> <span class="nf">get_suggestions</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;calls an argument placeholder&#39;s :meth:`~.ArgValidator.propose` handler </span>
+<span class="sd">	function and returns resulting suggestions.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c"># get validator or assign a new default instance</span>
+	<span class="n">validator</span> <span class="o">=</span> <span class="n">argvals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ArgValidator</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+	<span class="c"># call it</span>
+	<span class="n">suggestions</span> <span class="o">=</span> <span class="n">validator</span><span class="o">.</span><span class="n">propose</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">suggestions</span>
+
+
+
+<span class="c"># validate argument value</span></div>
+<div class="viewcode-block" id="validate"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.arguments.validate">[docs]</a><span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Validates given input string according to specified</span>
+<span class="sd">	argument&#39;s value restrictions.</span>
+<span class="sd">	Return true if input is ok.&quot;&quot;&quot;</span>
+	<span class="n">validator</span> <span class="o">=</span> <span class="n">argvals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">ArgValidator</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span>
+	<span class="k">return</span> <span class="n">validator</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+
+
+<span class="c"># add to arg history</span></div>
+<div class="viewcode-block" id="to_history"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.arguments.to_history">[docs]</a><span class="k">def</span> <span class="nf">to_history</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Write a value to an argument&#39;s input history stored in :obj:`arghist`.&quot;&quot;&quot;</span>
+	<span class="n">hist</span> <span class="o">=</span> <span class="n">arghist</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="p">[])</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">arghist</span><span class="p">:</span>
+		<span class="n">arghist</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span> <span class="o">=</span> <span class="n">hist</span>
+	<span class="n">hist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+
+
+
+<span class="c"># register</span></div>
+<div class="viewcode-block" id="register"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.arguments.register">[docs]</a><span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">proposer</span><span class="o">=</span><span class="n">propose_default</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Registers an argument placeholder. This means,</span>
+<span class="sd">	for an arguments name/identifier, a user input history</span>
+<span class="sd">	and an :class:`.ArgValidator` instance are created.</span>
+
+<span class="sd">	The latter is responsible for suggesting appropriate </span>
+<span class="sd">	input values for this argument (which might be useful</span>
+<span class="sd">	in features like autocompletion) and for determining</span>
+<span class="sd">	wheather a given value is legal for this argument </span>
+<span class="sd">	(like variable names are not meant to start with a number,</span>
+<span class="sd">	urls must satisfy a certain format, and stuff like that.).</span>
+
+<span class="sd">	If an argument has been registered before, no changes</span>
+<span class="sd">	are made unless a custom proposal function or a list</span>
+<span class="sd">	of regular expressions is being passed in this call.</span>
+
+<span class="sd">	:param name: identifier of argument to register</span>
+<span class="sd">	:param proposer: input value proposal</span>
+<span class="sd">		handling function for this argument (optional). This will</span>
+<span class="sd">		be called when autocompletion recognizes that</span>
+<span class="sd">		someone is about to input a value for this</span>
+<span class="sd">		argument and wants assistance. Any function</span>
+<span class="sd">		meant to serve as a proposal handler must take</span>
+<span class="sd">		exactly two parameters: </span>
+<span class="sd">	</span>
+<span class="sd">			1. the argument placeholder identifier,</span>
+<span class="sd">			2. the prefix that needs to be autocompleted</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c"># create value history </span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">arghist</span><span class="p">:</span>
+		<span class="n">arghist</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="c"># create or retrieve validator</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">argvals</span><span class="p">:</span>
+		<span class="n">validator</span> <span class="o">=</span> <span class="n">ArgValidator</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+		<span class="n">argvals</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">validator</span>
+		<span class="c"># print &#39;Registered argument \&quot;{}\&quot;.&#39;.format(name)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">validator</span> <span class="o">=</span> <span class="n">argvals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+	<span class="c"># update validator if necessary</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">proposer</span> <span class="ow">in</span> <span class="p">[</span><span class="n">propose_default</span><span class="p">,</span> <span class="bp">None</span><span class="p">]:</span>
+		<span class="n">validator</span><span class="o">.</span><span class="n">propose_func</span> <span class="o">=</span> <span class="n">proposer</span>
+	<span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">format</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+		<span class="n">validator</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="n">format</span>
+
+
+<span class="c">########################################################</span>
+<span class="c">########################################################</span>
+<span class="c">########################################################</span>
+<span class="c">############ argument handler functions</span>
+<span class="c">########################################################</span>
+<span class="c">########################################################</span>
+<span class="c">########################################################</span>
+</div>
+<div class="viewcode-block" id="lsdir"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.arguments.lsdir">[docs]</a><span class="k">def</span> <span class="nf">lsdir</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">filetypes</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;List contents of whatever directory can be</span>
+<span class="sd">	dereived from given prefix. Result contains</span>
+<span class="sd">	subdirectories and files whose extensions and</span>
+<span class="sd">	names match the prefix. filetypes are passed</span>
+<span class="sd">	as a list of globs (``[&#39;*.rdf&#39;, &#39;*.owl&#39;, ...]``).</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c"># extract path locator (relative)</span>
+	<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="ow">in</span> <span class="n">prefix</span><span class="p">:</span>
+		<span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">prefix</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+		<span class="n">rpth</span> <span class="o">=</span> <span class="n">path</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">path</span> <span class="o">=</span> <span class="s">&#39;.&#39;</span>
+		<span class="n">rpth</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+	<span class="c"># initialize sugg list with subdirs</span>
+	<span class="c"># terminate string w no space char ; to let commands</span>
+	<span class="c"># module know that this would be still to be</span>
+	<span class="c"># extended, and hence not decorated by a trailing</span>
+	<span class="c"># space, like completions normally do</span>
+	<span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;{}{};&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">)</span> <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> 
+						<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">fn</span><span class="p">)]</span>
+	<span class="c"># extend by files matching extensions</span>
+	<span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="n">filetypes</span><span class="p">:</span>
+		<span class="n">files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rpth</span><span class="p">,</span><span class="n">ext</span><span class="p">)))</span>
+	<span class="c"># make sure files match prefix</span>
+	<span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">fn</span> <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">fn</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">)]</span>
+	<span class="k">return</span> <span class="n">files</span>
+
+
+<span class="c"># list of globs matching potential ontology files</span></div>
+<span class="n">rdfglobs</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;*.rdf&quot;</span><span class="p">,</span> <span class="s">&quot;*.RDF&quot;</span><span class="p">,</span> <span class="s">&quot;*.owl&quot;</span><span class="p">,</span> <span class="s">&quot;*.OWL&quot;</span><span class="p">,</span> <span class="s">&quot;*.n3&quot;</span><span class="p">,</span> <span class="s">&quot;*.xml&quot;</span><span class="p">]</span>
+<span class="c"># list ontology files in current directory (rdf, owl, n3, xml)</span>
+<div class="viewcode-block" id="list_files_rdf"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.arguments.list_files_rdf">[docs]</a><span class="k">def</span> <span class="nf">list_files_rdf</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Returns a list of local files with extensions `.rdf, .owl, .n3` and `.xml`,</span>
+<span class="sd">	matching given prefix.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">suggestions</span> <span class="o">=</span> <span class="n">lsdir</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">rdfglobs</span><span class="p">)</span>
+	<span class="n">suggestions</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">propose_default</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">prefix</span><span class="p">))</span>
+	<span class="k">return</span> <span class="n">suggestions</span> <span class="c"># TODO: +[None] ??</span>
+
+
+<span class="c"># suggest local sqlite files</span></div>
+<div class="viewcode-block" id="list_files_sqlite"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.arguments.list_files_sqlite">[docs]</a><span class="k">def</span> <span class="nf">list_files_sqlite</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Returns a list of local files with extensions `.sqlite` and </span>
+<span class="sd">	`.sqlite3`.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">suggestions</span> <span class="o">=</span> <span class="n">lsdir</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;*.sqlite&#39;</span><span class="p">,</span> <span class="s">&#39;*.sqlite3&#39;</span><span class="p">])</span>
+	<span class="n">suggestions</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">propose_default</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">prefix</span><span class="p">))</span>
+	<span class="k">return</span> <span class="n">suggestions</span> <span class="c"># TODO: +[None] ??</span>
+
+
+
+<span class="c"># propose rdf graph attribute ids</span></div>
+<div class="viewcode-block" id="graph_attrs"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.arguments.graph_attrs">[docs]</a><span class="k">def</span> <span class="nf">graph_attrs</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Returns a list of names matching the given prefix and identifying</span>
+<span class="sd">	RDF graphs registered by the :mod:`.rdf` module.&quot;&quot;&quot;</span>
+	<span class="n">attrs</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">rdfinfotempl</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+	<span class="n">suggestions</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">attrs</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">)]</span>
+	<span class="n">suggestions</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">propose_default</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">prefix</span><span class="p">))</span>
+	<span class="k">return</span> <span class="n">suggestions</span>
+
+
+<span class="c"># autocomplete namespaces</span></div>
+<div class="viewcode-block" id="ls_ns"><a class="viewcode-back" href="../../../kathaireo.commands.html#kathaireo.commands.arguments.ls_ns">[docs]</a><span class="k">def</span> <span class="nf">ls_ns</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Returns currently loaded namespaces.&quot;&quot;&quot;</span>
+	<span class="n">suggestions</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">rdf</span><span class="o">.</span><span class="n">namespaces</span><span class="o">.</span><span class="n">get_names</span><span class="p">()</span>
+		<span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">)]</span>
+	<span class="n">g</span> <span class="o">=</span> <span class="n">rdf</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;current_graph&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">g</span><span class="p">:</span>
+		<span class="n">suggestions</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">ns</span> <span class="k">for</span> <span class="n">ns</span><span class="p">,</span><span class="n">_</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">namespaces</span><span class="p">()</span>
+			<span class="k">if</span> <span class="n">ns</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">)])</span>
+	<span class="n">suggestions</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">propose_default</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">prefix</span><span class="p">))</span>
+	<span class="k">return</span> <span class="p">[</span><span class="n">s</span><span class="o">+</span><span class="s">&#39;;&#39;</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">suggestions</span><span class="p">]</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">kathaireo  documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../commands.html" >kathaireo.commands</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, J. Katzwinkel.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

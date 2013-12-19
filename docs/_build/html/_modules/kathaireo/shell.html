@@ -1,0 +1,184 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>kathaireo.shell &mdash; kathaireo  documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="kathaireo  documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">kathaireo  documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for kathaireo.shell</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+<span class="c"># -*- coding: utf-8 -*- </span>
+<span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">The contents of the :mod:`.shell` package implement a simple</span>
+<span class="sd">interactive command-line shell for operating on RDF resources.</span>
+
+<span class="sd">Main concern of this package is assisting the user&#39;s input, e.g.</span>
+<span class="sd">by providing autocompletion and feedback like error messages.</span>
+<span class="sd">Nonetheless, the :mod:`.shell` package serves merely as an interface </span>
+<span class="sd">between user and the actual `kathaireo` functionality, which is</span>
+<span class="sd">realized in the :mod:`.rdf` and :mod:`.commands` packages. In fact, the </span>
+<span class="sd">interactive shell is mainly intended to just take care of useful</span>
+<span class="sd">input/output features. Everything beyond that is delegated </span>
+<span class="sd">elsewhere.</span>
+
+<span class="sd">The more interesting functions of the package&#39;s root </span>
+<span class="sd">module is :func:`run`. </span>
+<span class="sd">By calling :func:`run`, an </span>
+<span class="sd">interactive shell is started which passes user input to the</span>
+<span class="sd">:mod:`.commands` package for execution. When called as a script, </span>
+<span class="sd">this module will automatically start a shell.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__docformat__</span> <span class="o">=</span> <span class="s">&quot;restructuredtext en&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;0.0.2c-dev&quot;</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;prompt&#39;</span><span class="p">,</span> <span class="s">&#39;highlights&#39;</span><span class="p">,</span> <span class="s">&#39;complete&#39;</span><span class="p">,</span> <span class="s">&#39;run&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">readline</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">prompt</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">rdf</span><span class="p">,</span> <span class="n">commands</span>
+
+
+<div class="viewcode-block" id="complete"><a class="viewcode-back" href="../../kathaireo.shell.html#kathaireo.shell.complete">[docs]</a><span class="k">def</span> <span class="nf">complete</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Performs generic autocompletion action for whatever incomplete</span>
+<span class="sd">	input string has been typed into the shell so far. Will be </span>
+<span class="sd">	automatically called from somewhere in the `readline` module.</span>
+<span class="sd">	</span>
+<span class="sd">	Depending on the current content of `readline.get_line_buffer()`,</span>
+<span class="sd">	this function retrieves a list of input terms which are</span>
+<span class="sd">	considered likely to be in mind of the typing user, for instance</span>
+<span class="sd">	because they begin with what the user has typed in so far.</span>
+<span class="sd">	This list of candidate terms is put together by the :func:`~.commands.choices_left`</span>
+<span class="sd">	function in the :mod:`.commands` module. Read its documentation for</span>
+<span class="sd">	more information.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c"># http://stackoverflow.com/a/5638688/1933494</span>
+	<span class="n">buf</span> <span class="o">=</span> <span class="n">readline</span><span class="o">.</span><span class="n">get_line_buffer</span><span class="p">()</span>
+	<span class="c"># http://doughellmann.com/2008/11/pymotw-readline.html</span>
+	<span class="c"># begin = readline.get_begidx()</span>
+	<span class="c"># end = readline.get_endidx()</span>
+	<span class="c">#sgst = [s+&#39; &#39; for s in commands.choices_left(buf)]</span>
+	<span class="c"># range from position of currently handled term to that of cursor</span>
+	<span class="n">csrng</span> <span class="o">=</span> <span class="p">(</span><span class="n">readline</span><span class="o">.</span><span class="n">get_begidx</span><span class="p">(),</span> <span class="n">readline</span><span class="o">.</span><span class="n">get_endidx</span><span class="p">())</span>
+	<span class="c">#print &#39;{}-{}&#39;.format(*csrng)</span>
+	<span class="n">sgst</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">commands</span><span class="o">.</span><span class="n">choices_left</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">csrng</span><span class="p">)]</span>
+	<span class="k">return</span> <span class="n">sgst</span><span class="p">[</span><span class="n">state</span><span class="p">]</span>
+
+
+
+<span class="c"># http://stackoverflow.com/questions/9468435/look-how-to-fix-column-calculation-in-python-readline-if-use-color-prompt</span>
+</div>
+<div class="viewcode-block" id="run"><a class="viewcode-back" href="../../kathaireo.shell.html#kathaireo.shell.run">[docs]</a><span class="k">def</span> <span class="nf">run</span><span class="p">():</span>
+	<span class="sd">&quot;&quot;&quot;Once entered, this function won&#39;t necessarily return within</span>
+<span class="sd">	foreseeable future. It is where the main loop of `kathaireo&#39;s` shell</span>
+<span class="sd">	runs. In every repetition, an input line is retrieved from the</span>
+<span class="sd">	:mod:`.prompt` module, and passed over to the :func:`~.commands.execute` function of</span>
+<span class="sd">	module :mod:`.commands`, whose returning status message or command response</span>
+<span class="sd">	is again given to the :mod:`.prompt` module for printing.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">rdf</span><span class="o">.</span><span class="n">set_graph</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+	<span class="c">#commands.init() TODO: read, compile and register std cmds</span>
+	<span class="n">prompt</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="s">&#39;*ok*.</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+	<span class="c"># init readline module</span>
+	<span class="n">readline</span><span class="o">.</span><span class="n">set_completer_delims</span><span class="p">(</span><span class="s">&#39; </span><span class="se">\t\n</span><span class="s">;&#39;</span><span class="p">)</span>
+	<span class="n">readline</span><span class="o">.</span><span class="n">parse_and_bind</span><span class="p">(</span><span class="s">&quot;tab: complete&quot;</span><span class="p">)</span>
+	<span class="n">readline</span><span class="o">.</span><span class="n">set_completer</span><span class="p">(</span><span class="n">complete</span><span class="p">)</span>
+	<span class="c">#TODO: naja...</span>
+	<span class="c"># go!</span>
+	<span class="n">line</span><span class="o">=</span><span class="s">&#39;&#39;</span>
+	<span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+		<span class="n">line</span> <span class="o">=</span> <span class="n">prompt</span><span class="o">.</span><span class="n">input</span><span class="p">()</span>
+		<span class="n">readline</span><span class="o">.</span><span class="n">redisplay</span><span class="p">()</span>
+		<span class="n">output</span> <span class="o">=</span> <span class="n">commands</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+		<span class="n">prompt</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
+
+</div>
+<span class="k">if</span> <span class="n">__name__</span><span class="o">==</span><span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+	<span class="n">run</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">kathaireo  documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, J. Katzwinkel.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
