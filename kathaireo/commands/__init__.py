@@ -1,13 +1,13 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 """\
 This package offers a way for convenient registration
 of custom commands. By calling its :func:`register` method,
 a formal representation of a command syntax can be
 bound to a handling function desired to be called for
-user input matching said command. 
+user input matching said command.
 Functions intended to serve as handlers, when declared
-like ``def func(*args, **kwargs)`` have access to 
+like ``def func(*args, **kwargs)`` have access to
 their command's arguments marked by surrounding angle
 brackets (<>).
 
@@ -31,7 +31,7 @@ Example:
 	{'create': {'<graphname>': {'': <function handler at 0x86c26f4>}}}
 
 Alternativley, one can also use the ``@cmd_handler`` decorator
-provided by the :mod:`..kathaireo` package itself and implemented at 
+provided by the :mod:`..kathaireo` package itself and implemented at
 :func:`register_handler`:
 ::
 
@@ -63,7 +63,7 @@ reg_arg = arguments.register
 
 # command syntax language tree
 cmdict={}
-"""Assembles a tree (more precisely: a forest) of which each path that 
+"""Assembles a tree (more precisely: a forest) of which each path that
 leads from a root all the way down to a leaf, stands for a legal command."""
 
 
@@ -80,60 +80,79 @@ urlex = util.urlex
 
 # implementation of decorator @cmd_handler
 def register_handler(func):
-        """\
-        Decorator for command handler functions.
-        Function will be copied into :mod:`.commands.handlers`
-        and, if their docstring contains a command syntax,
-        registered as a handler for matching input.
-        """
-        hnd_ns = handlers.__dict__
-        fname = func.func_name
-        if fname in hnd_ns:
-        	print 'Overwrite handler module pointer {} with'.format(fname),
-        	print 'new command handler function at {}.'.format(func.func_code.co_filename)
-        hnd_ns[fname] = func
-       	# if `command ...` is defined in doc line, register
-       	sntxs = handlers.extract_cmd_syntax(fname)
-       	if sntxs:
-        	for syntax in sntxs:
-        		register(syntax, func)
-        else:
-        	print "Couldn't find handler function {}!".format(fname)
-        return func
-        
+	"""\
+	Decorator for command handler functions.
+	Function will be copied into :mod:`.commands.handlers`
+	and registered as a handler for all commands
+	whose syntaxes it specifies in its docstring.
+	The package root module, :mod:`..kathaireo`, defines an
+	alias of this function, the decorator ``@cmd_handler``.
+	This should make it easy to extend ``kathaireo``'s
+	functionality, since implementation, invocation syntax definition
+	and deployment of custom commands can all be taken
+	care of in the same place.
+	:param func: function to be registered as a
+	command handler in the :mod:`handlers` module
+	namespace. Handler functions **must accept** both
+	``\*args`` and ``\*\*kwargs`` parameter collections.
+	:returns: function passed on call, i.e. functions
+	with ``@cmd_handler`` decorator imported from
+	root module (:mod:`..kathaireo``).
+	"""
+	hnd_ns = handlers.__dict__
+	fname = func.func_name
+	if fname in hnd_ns:
+		print 'Overwrite handler module pointer {} with'.format(fname),
+		print 'new command handler function at {}.'.format(func.func_code.co_filename)
+	hnd_ns[fname] = func
+	# if `command ...` is defined in doc line, register
+	sntxs = handlers.extract_cmd_syntax(fname)
+	if sntxs:
+		for syntax in sntxs:
+			register(syntax, func)
+	else:
+		print "Couldn't find handler function {}!".format(fname)
+	return func
 
 
 
-# register a handler function for a command syntax 
+
+# register a handler function for a command syntax
 def register(syntax, function):
 	"""\
 	Inserts the given command's syntax into a known commands
 	dictionary and registers the given function as
 	its handler.
 
-	:param syntax: A String containing a formal 
+	*Note:* this will be called automatically for
+	every function with a ``@cmd_handler`` decorator
+	satisfying the requirement described below, and
+	specifying its invocation command syntax in its
+	docstring. See :func:`.register_handler` for details.
+
+	:param syntax: A String containing a formal
 		representation of a new command's syntax.
-		A command syntax may contain argument identifiers 
-		s.t. the handling function (and shell-features like 
-		autocomplete) has access to argument variables 
-		passed to a command. A command syntax string 
-		indicating a handler's capability of processing 
-		command arguments would look something like this, 
+		A command syntax may contain argument identifiers
+		s.t. the handling function (and shell-features like
+		autocomplete) has access to argument variables
+		passed to a command. A command syntax string
+		indicating a handler's capability of processing
+		command arguments would look something like this,
 		for instance:
 		::
 
 			'command option <arg1> <arg2> someswitch <arg3>'
 
 	:param function: A function intended to be called when
-		said command is to be executed. Should accept 
-		an unlimited number of both positional and keyword 
-		arguments and is hence recommended to look sth like 
-		the following: 
+		said command is to be executed. Should accept
+		an unlimited number of both positional and keyword
+		arguments and is hence recommended to look sth like
+		the following:
 
 			>>> def func(*args, **kwargs):
 			...    [...]
 
-		Note that nonetheless, it is not 
+		Note that nonetheless, it is not
 		tested for fitting this requirement, but one might
 		get in trouble when ignoring it.
 
@@ -148,7 +167,7 @@ def register(syntax, function):
 	# insert new command binding into cmd dict tree
 	# term-wise
 	for term in terms:
-		# if no path to current term exists so far, 
+		# if no path to current term exists so far,
 		# prepare a new one by attaching empty dict {}
 		down = level.get(term, {})
 		if not term in level:
@@ -177,7 +196,7 @@ def register(syntax, function):
 			'command syntax \"{}\" already binds',
 			'function {}'.format(boundf.func_name)])
 		res = False
-	# print msg.format(function.func_name, 
+	# print msg.format(function.func_name,
 	# 	function.func_code.co_varnames[:2],
 	# 	' '.join(terms))
 	#TODO: register argument placeholders
@@ -193,7 +212,7 @@ def msg_incomplete_cmd(keywords):
 	"""
 	keywords = ['*{}*'.format(k) for k in keywords]
 	if len(keywords)>1:
-		msg = ' or '.join([', '.join(keywords[:-1]), 
+		msg = ' or '.join([', '.join(keywords[:-1]),
 			keywords[-1]])
 	else:
 		msg = keywords[0]
@@ -207,7 +226,7 @@ def execute(input):
 	"""\
 	Tests given input string against currently
 	registered command syntaxes. If input turns out
-	to be a valid command, a corresponding handler 
+	to be a valid command, a corresponding handler
 	function is called. If matching syntax contains
 	argument placeholders (`"command <arg>"`), their
 	respective values are extracted from the input and
@@ -297,12 +316,12 @@ def choices_left(input, csrange):
 	"""Assembles a list of terms that allow a valid input line
 	given the prefix passed as `input` has been typed in so far.
 	Those terms can include command keywords and argument values
-	and depend on the command syntax to which the input line so far 
-	typed in matches, as well as legal argument values for that 
-	incomplete input line. 
+	and depend on the command syntax to which the input line so far
+	typed in matches, as well as legal argument values for that
+	incomplete input line.
 	The resulting list will only contain keywords or argument values
 	that either have been started typing in, or those that may legally
-	extend the current prefix, in case the latter doesn't end with 
+	extend the current prefix, in case the latter doesn't end with
 	an incomplete keyword or argument value.
 	"""
 	# TODO: read carefully for potential logical flaws!
@@ -310,7 +329,7 @@ def choices_left(input, csrange):
 	# TODO: read carefully for potential logical flaws!
 	if not input:
 		input = ''
-	# range of relevant input (beginning of incomplete word 
+	# range of relevant input (beginning of incomplete word
 	#	and cursor position)
 	beg, end = csrange
 	# begin traversing language tree as long as it matches current input
@@ -341,7 +360,7 @@ def choices_left(input, csrange):
 			resolved = False
 			if len(argnames)>0:
 				# check if term satisfies any attribute value requirements
-				# TODO: auch hier das problem, dasz sich mit dem erstbesten 
+				# TODO: auch hier das problem, dasz sich mit dem erstbesten
 				# TODO zufrieden gegeben wird..?
 				for a in argnames:
 					if not resolved:
@@ -358,9 +377,9 @@ def choices_left(input, csrange):
 				# is no input left at all. otherwise, we might
 				# end up with autocomplete suggestions for terms
 				# in the middle of nowhere. If an input turns out
-				# to be invalid way before it is done parsing, 
+				# to be invalid way before it is done parsing,
 				# then we simply can't provide autocompletion
-				# for that input. 
+				# for that input.
 				# TODO: or can we? how exactly is cursor position
 				# handled by readline module???
 				break
@@ -381,17 +400,17 @@ def choices_left(input, csrange):
 			util.log('Apply for completion candidates for arg {}.'.format(a))
 			choices.extend(arguments.get_suggestions(a, term))
 		else:
-			# if not expecting argument: check if keyword can be 
+			# if not expecting argument: check if keyword can be
 			# completed
 			if c.startswith(term):
 				choices.append(c)
-	# by default, append whitespace behind completion choice 
-	# if completion is ultimate (e.g. command names). 
+	# by default, append whitespace behind completion choice
+	# if completion is ultimate (e.g. command names).
 	# If choice ends on ;, this means it can possibly be
 	# extended further, but is not meant to stay like it is
 	# (e.g. directory names: even if completed, you can still
 	# go deeper in file structure)
-	choices = [''.join(c[:-1])+[c[-1]+' ',''][int(c[-1]==';')] 
+	choices = [''.join(c[:-1])+[c[-1]+' ',''][int(c[-1]==';')]
 							for c in choices if len(c) > 0]
 	util.log('Suggest {} completion candidates:'.format(len(choices)))
 	util.log(', '.join(choices))
@@ -450,7 +469,7 @@ def init():
 	# for all functions within this namespace, parse
 	# docstrings for `command` specification and register
 	# functions as handlers in case of matches.
-	funcs = [(n,f) for n,f in handlers.__dict__.items() 
+	funcs = [(n,f) for n,f in handlers.__dict__.items()
 		if hasattr(f, '__call__')]
 	for fname, func in funcs:
 		sntxs = handlers.extract_cmd_syntax(fname)
@@ -478,8 +497,8 @@ def init():
 
 # read, compile, register command syntaxes
 init() #TODO: sure this shouldnt be called by application modules
-# like the shell instead of here? 
-# registering bindings in stdcmds.py might fail if 
+# like the shell instead of here?
+# registering bindings in stdcmds.py might fail if
 # handler functions with @cmd_handler decorator are in
 # modules that haven't been imported yet
 
@@ -490,7 +509,7 @@ init() #TODO: sure this shouldnt be called by application modules
 
 # TODO: write decorator to handle arguments like commands
 # <resources>
-reg_arg("resource", proposer=arguments.list_files_rdf, 
+reg_arg("resource", proposer=arguments.list_files_rdf,
 	format=[flnex, urlex])
 
 # <attribute>

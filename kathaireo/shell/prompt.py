@@ -1,8 +1,9 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 """\
-This module reads user input and responds with pretty and
-colorful output.
+This module echoes a prompt, reads user input and does output with
+automatic syntax highlighting for better decipherability. Before printing,
+given output messages are
 """
 __docformat__ = "restructuredtext en"
 __version__ = "0.0.18-dev"
@@ -15,7 +16,7 @@ from ..util import urlex, log
 
 # colored prompt
 #ps = "\001\033[32m\002>>>\001\033[0m\002 "
-ps = "{}\001\033[32m\002[{}{{}}{}] {}{}".format(
+PS = "{}\001\033[32m\002[{}{{}}{}] {}{}".format(
 	color(0), color(7), color(5), color(23), color(1))
 
 # tokenizer regex
@@ -41,13 +42,32 @@ if not hasattr(rdf, 'current_graph'):
 
 # wait for input
 def input():
+	"""
+	Displays a single prompt, indicating the RDF
+	graph currently selected for operation, then waits for user input.
+	This calls standard function ``raw_input``, but given the enhancements
+	that were made using the ``readline`` module at execution of
+	:func:`.shell.run` with startup of the interactive interpreter.
+	Thanks to these, the entity in front of the keyboard will experience
+	convenience features like advanced cursor navigation and
+	automatic keyword completion.
+	"""
 	gname = rdf.graph_name(rdf.current_graph)
-	line = raw_input(ps.format(gname))
+	line = raw_input(PS.format(gname))
 	print ''.join([color(0), color(stdcol),'\r']),
 	return line
 
 
 def tokenize(line):
+	"""
+	Dissolves a given string into its single tokens, based on
+	a collection of regular expressions. Character sequences thus being recognized
+	contain those within quotation marks, angle or square brackets, text
+	representing numeric (decimal) values and single words marked for emphasizing
+	with surrounding ``*`` or ``!``.
+	:param line: single line of text to be printed to stdout
+	:returns: list of single tokens
+	"""
 	# replace url locators by ns:term clauses.
 	uris = urlex.findall(line)
 	for uri in uris:
@@ -59,7 +79,7 @@ def tokenize(line):
 		#genauso gut kann der rdflib namespacemanager eingesetzt werden
 		#https://rdflib.readthedocs.org/en/latest/utilities.html#serializing-a-single-term-to-n3
 		uri = ''.join(uri)
-		url, term = rdf.struct_uri(uri)
+		url, term = rdf.struct_uri(uri) #FIXME nein!
 		log('Prompt output: Split uri {} into "..{}", "{}".'.format(uri,
 			url[-10:], term))
 		#print u'\tfiltererd output: {} ending on "{}"'.format(url, term)
@@ -68,18 +88,29 @@ def tokenize(line):
 			if nsp:
 				log('substitute with {}:{}'.format(nsp.name, term))
 				#print u'\tnamespace:', nsp.name, nsp.url
-				line = line.replace(uri, u'{}:{}'.format(nsp.name, term))
+				line = line.replace(uri, u'{}:{}'.format(nsp.name, term)) #FIXME: nicht hier!
 		else:
-			line = line.replace(uri, u'!{}..{}!'.format(uri[:20],uri[-20:]))
+			line = line.replace(uri, u'!{}..{}!'.format(uri[:20],uri[-20:])) #TODO: ok, vielleicht
 	# tokenize
 	return _tokex.split(line)
 
 
 def display(output):
+	"""
+	Print a given output message to stdout (active shell) linewise.
+	Tokenizes each line in message and passes single tokens
+	to :func:`.highlights.hilite` before reassemblage of resulting,
+	possibly color-coded text parts.
+	:param output: output message to be printed. Can be either one
+	single string variable (linebreaks will be interpreted) or a
+	list of strings (linebreaks are ignored). Unicode is preferred.
+	"""
 	# prefer list of strings, so try to force content into one
 	if type(output) != unicode:
 		if type(output) is not list:
 			output = u'{}'.format(output)
+	else:
+		output = unicode(output)
 	if type(output) is unicode:
 		output = output.split('\n')
 	# colorize single tokens

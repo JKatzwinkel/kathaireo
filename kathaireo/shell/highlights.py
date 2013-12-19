@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 """\
 Syntax highlighting.
 """
@@ -59,13 +59,13 @@ _colscheme = {
 	sqrex: 23, # bright green
 	nmrex: 6,  # yellow
 	flnex: 9,  # turquois
-	keyex: 27  # bright blue 
+	keyex: 27  # bright blue
 	}
 
-_rexorder = [errex, wrnex, bldex, qutex, angex, urlex, 
+_rexorder = [errex, wrnex, bldex, qutex, angex, urlex,
 			sqrex, nmrex, flnex, keyex]
 
-#print '\n'.join(['{}:{}'.format(k.pattern,v) 
+#print '\n'.join(['{}:{}'.format(k.pattern,v)
 	#for k,v in _colscheme.items()])
 
 _colors=[
@@ -92,7 +92,7 @@ _colors=[
 '\033[47m', # grey bg   20
 '\033[90m', # grey text
 '\033[91m', # bright red
-'\033[92m', # green 
+'\033[92m', # green
 '\033[93m', # yellow
 '\033[94m', # blue      25
 '\033[95m', # pink
@@ -114,10 +114,15 @@ _colors=[
 
 # returns ith color code
 def color(i):
+	"""Returns color/formatting control sequence identified by
+	given index, beginning with the parent terminal's default
+	unformatted, ``\\033[0m``, at position ``0``, and ending at
+	position ``39``."""
 	return _colors[i]
 
 # demonstrates how applied color codes look
 def col_demo():
+	"""Prints an overview of the available highlights."""
 	for i,col in enumerate(_colors):
 		print '{}{:2}{}'.format(color(i), i, color(0)),
 		if i % 8 > 6:
@@ -126,6 +131,12 @@ def col_demo():
 
 # returns a colored representation of a given token
 def hilite(token):
+	"""
+	Based on a list of regular expressions, a given character
+	sequence (e.g. a single word) is optionally equipped with
+	text formatting/coloring control sequences.
+	TODO: specify hilite conditions/hilites/regexes
+	"""
 	#cid = rnd(13)
 	#return '{}'.format(color(cid)+token+color(0))
 	#
@@ -149,7 +160,7 @@ def hilite(token):
 					cid, token[i:-i], color(0), color(stdcol))
 			# if filename matches, check if such file exists
 			elif rex is flnex:
-				if not(os.path.exists(token) 
+				if not(os.path.exists(token)
 					and os.path.isfile(token)):
 					cid = color(7)
 					continue

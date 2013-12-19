@@ -1,28 +1,28 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 """\
 The contents of the :mod:`.shell` package implement a simple
 interactive command-line shell for operating on RDF resources.
 
 Main concern of this package is assisting the user's input, e.g.
 by providing autocompletion and feedback like error messages.
-Nonetheless, the :mod:`.shell` package serves merely as an interface 
+Nonetheless, the :mod:`.shell` package serves merely as an interface
 between user and the actual `kathaireo` functionality, which is
-realized in the :mod:`.rdf` and :mod:`.commands` packages. In fact, the 
+realized in the :mod:`.rdf` and :mod:`.commands` packages. In fact, the
 interactive shell is mainly intended to just take care of useful
-input/output features. Everything beyond that is delegated 
+input/output features. Everything beyond that is delegated
 elsewhere.
 
-The more interesting functions of the package's root 
-module is :func:`run`. 
-By calling :func:`run`, an 
+The more interesting functions of the package's root
+module is :func:`run`.
+By calling :func:`run`, an
 interactive shell is started which passes user input to the
-:mod:`.commands` package for execution. When called as a script, 
+:mod:`.commands` package for execution. When called as a script,
 this module will automatically start a shell.
 """
 
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.2c-dev"
+__version__ = "0.0.24-dev"
 __all__ = ['prompt', 'highlights', 'complete', 'run']
 
 import readline
@@ -33,9 +33,9 @@ from .. import rdf, commands, util
 
 def complete(input, state):
 	"""Performs generic autocompletion action for whatever incomplete
-	input string has been typed into the shell so far. Will be 
+	input string has been typed into the shell so far. Will be
 	automatically called from somewhere in the `readline` module.
-	
+
 	Depending on the current content of `readline.get_line_buffer()`,
 	this function retrieves a list of input terms which are
 	considered likely to be in mind of the typing user, for instance
