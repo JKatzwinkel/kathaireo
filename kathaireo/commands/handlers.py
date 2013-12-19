@@ -1,7 +1,7 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 """\
-Contains implementations of handler functions for 
+Contains implementations of handler functions for
 standard commands in interactive shell mode.
 
 Functions intended to serve as handlers, when declared
@@ -25,9 +25,11 @@ from .. import rdf
 # in docstring of a function identified by their name.
 def extract_cmd_syntax(fname):
 	"""Extract command syntax definition from handler function
-	docstring.
+	docstring. The resulting syntax list is used
+	by :func:`.commands.init` and :func:`.commands.register_handler`,
+	for calls of :func:`.commands.register`.
 	:param fname: the function's name. Expected to be known by
-	this (:mod:`.`) module, either because the function's 
+	this (:mod:`.`) module, either because the function's
 	implementation in the module source code anyway, or due
 	to previous calls of :func:`.commands.register_handler`
 	invoked by the ``@cmd_handler`` decorator."""
@@ -52,6 +54,12 @@ def extract_cmd_syntax(fname):
 ###############################################################
 ###############################################################
 
+# FIXME: every single handler expecting a <graphname> argument
+# reinvents the same retrievals and error checkings. Might argument
+# resolving be better off at commands.execute or somewhere in commands.arguments?
+# FIXME: at least write some default arg resolv functions in here,
+# reusable by similar commands.
+
 # quit
 def quit(*args, **kwargs):
 	"""Simply calls :func:`exit`."""
@@ -63,11 +71,11 @@ def create_graph(*args, **kwargs):
 	"""\
 	Creates a new :class:`.rdf.rdflib.Graph` instance going by
 	the identifier passed as first argument.
-	
+
 	:param identifier: Id for the new Graph
-	:returns: The resulting `rdflib.Graph` instance when 
+	:returns: The resulting `rdflib.Graph` instance when
 		successful, `None` otherwise.
-	
+
 	handles:
 	`create <graphname>`
 	"""
@@ -99,7 +107,7 @@ def set_graph(*args, **kwargs):
 
 # return list of graph registry entry str reprs.
 def show_graphs(*args, **kwargs):
-	"""Returns a list of strings representing all 
+	"""Returns a list of strings representing all
 	graph instances currently registered.
 	handles:
 	`show graphs`
@@ -117,7 +125,7 @@ def parse_rdf(*args, **kwargs):
 	Parses the resource at a given location and reads it into
 	a `rdflib.Graph` identified by its name.
 
-	:param location: A String specifying the location of the 
+	:param location: A String specifying the location of the
 		resource to be read. Can be a path to a local file or a URL.
 	:param graphname: A String identifying an `rdflib.Graph` instance.
 	:returns: `True`, if parsing was successful.
@@ -132,7 +140,7 @@ def parse_rdf(*args, **kwargs):
 			location, name = args[:2]
 		#else:
 			#name = rdf.graph_name(rdf.current_graph)
-	# FIXME: why does this lead to an additional graph instance with a 
+	# FIXME: why does this lead to an additional graph instance with a
 	# rdflib.RDFUriRef identifier????
 	#if not(None in [location, name]):
 	if location:
@@ -194,11 +202,11 @@ def show_ns(*args, **kwargs):
 		if g:
 			res = ['{}:{}'.format(ns, url) for ns,url in g.namespaces()]
 		else:
-			res = ['{}:{}'.format(n, ns.url) for n, ns in 
+			res = ['{}:{}'.format(n, ns.url) for n, ns in
 				rdf.namespaces._namespaces.items()]
 		#g = rdf.__dict__.get('current_graph')
 		#if g:
-			#res.extend(['{}: {}'.format(ns, url) for 
+			#res.extend(['{}: {}'.format(ns, url) for
 				#ns,url in g.namespaces()])
 	else:
 		# specific namespace?
@@ -257,7 +265,7 @@ def bind_ns(*args, **kwargs):
 
 
 
-# copy graph 
+# copy graph
 def cp_graph(*args, **kwargs):
 	"""Create new graph by given name and clone contents
 	of another graph into it.
@@ -296,7 +304,7 @@ def cp_graph(*args, **kwargs):
 
 
 # insert one graph into another
-# TODO: look at rdflib graph set operations 
+# TODO: look at rdflib graph set operations
 # https://rdflib.readthedocs.org/en/latest/intro_to_graphs.html#set-operations-on-rdflib-graphs
 def merge_graph(*args, **kwargs):
 	"""merge graph into :data:`.rdf.current_graph`.
@@ -312,7 +320,7 @@ def merge_graph(*args, **kwargs):
 				# graph specified by parameter
 				g2 = rdf.get_graph(name)
 		# two specified graphs, command probably was insert
-		else: 
+		else:
 			g2, g = [rdf.get_graph(n) for n in args[:2]]
 		# in case of wrong graphname(s), print warning.
 		if None in [g,g2]:

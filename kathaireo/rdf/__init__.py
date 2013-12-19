@@ -1,12 +1,15 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 """\
-Serves as some kind of a facade for the 'rdflib' library. In addition to
-just forwarding rdf operations to the library, the :mod:`.rdf` module also
-maintains some useful directories and registers; this allows to, say, have
-rdf graphs looked up by their identifier, using the function :func:`.get_graph`
+Serves as some kind of facade for the rdflib_ library.
+Mainly concerned with
+just forwarding RDF operations to said backend, the :mod:`.rdf` module also
+maintains additional session data; this allows to, say, have
+RDF graphs looked up by their identifier, using the function :func:`.get_graph`
 or have the :mod:`.namespaces` module download all namespaces for a certain graph by
 calling :func:`.import_ns`.
+
+.. _rdflib: https://github.com/RDFLib/rdflib
 """
 __docformat__ = "restructuredtext en"
 __version__ = "0.0.16c-dev"
@@ -25,15 +28,25 @@ import remote
 # by name
 _graphs={}
 
+# TODO: directories of included classes/entities/properties like this?
+# *included: per namespace/resource
+# struct: {graphname: [term, term, ...], graphname: [...]}
+_terms={}
 
-# returns a nicer output of this graph than he default
-def repr_graph(g):
-	"""Returns a string representation of given graph
-	indicating name and storage mode."""
-	if g != None:
-		return '<Graph "{}" with {} triples in store "{}">'.format(
-			str(g.identifier), len(g), g.store.__class__.__name__)
-	return '-'
+
+#TODO: offer rdflib set operations using exact same syntax?
+# (g1 + g2, g1 += g2, g1 & g2, ...)
+
+
+################################################################
+# reviewed/rewritten parts following
+################################################################
+
+# find graph known by name
+def get_graph(name):
+	"""Returns the graph identified by the given name, or `None`
+	if no such graph is available."""
+	return _graphs.get(name)
 
 
 # return graph identifier as str or null
@@ -49,20 +62,11 @@ def create_graph(name, store='default'):
 	"""Returns a new `.rdflib.Graph` instance with the
 	given identifier, if said identifier has not already
 	been given to an existing graph."""
-	#print "attempting to create new graph with name", name
 	if not name in _graphs:
 		g = rdflib.Graph(store=store, identifier=name)
 		_graphs[name] = g
-		#print g
 		return g
 	return "!Warning!: graph '{}' already exists.".format(name)
-
-
-# find graph known by name
-def get_graph(name):
-	"""Returns the graph identified by the given name, or `None`
-	if no such graph is available."""
-	return _graphs.get(name)
 
 
 def set_graph(g):
@@ -78,6 +82,27 @@ def set_graph(g):
 	return u'Select graph: {}'.format(repr_graph(g))
 
 
+
+#################################################################
+##################### below: parts to be reviewed ###############
+#################################################################
+
+# returns a nicer output of this graph than he default
+def repr_graph(g):
+	"""Returns a string representation of given graph
+	indicating name and storage mode."""
+	if g != None:
+		return '<Graph "{}" with {} triples in store "{}">'.format(
+			str(g.identifier), len(g), g.store.__class__.__name__)
+	return '-'
+
+
+
+
+
+
+
+
 # import rdf data from resource into graph
 def load_resource(location, name=None):
 	"""Loads rdf graph at location (file/url) and names it.
@@ -85,7 +110,7 @@ def load_resource(location, name=None):
 	is known, creates a new instance if not.
 	Returns whatever graph instance the resource in question
 	is being read into.
-	If parsing fails, a new attempt is made using another mimetype 
+	If parsing fails, a new attempt is made using another mimetype
 	(:data:`.remote.mimetypes`). If `location` does not seem to
 	point to a local file, an attempt is made to start a download from that
 	location via :func:`.remote.parse`.
@@ -177,8 +202,8 @@ def graph_info(name, attr):
 		if attr == "size":
 			return template.format(name, len(g))
 		elif attr == "namespaces":
-			return template.format(name, 
-				'\n'.join(['"{}": {}'.format(ns, ref) 
+			return template.format(name,
+				'\n'.join(['"{}": {}'.format(ns, ref)
 				for ns,ref in g.namespaces()]))
 		elif attr == "n3":
 			return template.format(name, g.n3())
@@ -189,7 +214,7 @@ def graph_info(name, attr):
 			types = set()
 			for s,o in g.subject_objects(rdflib.RDF.type):
 				types.add(o)
-			return template.format(name, 
+			return template.format(name,
 				'\n'.join([t for t in types]))
 	else:
 		return "!Failed!: Don't know attribute", attr
@@ -209,6 +234,10 @@ def import_ns(g):
 	return False
 
 
+# FIXME: rewrite this entirely, using rdflib methods and some
+# brains this time
+# TODO rdflib.Namespace, rdflib.NamespaceManager
+# URIRef.n3(g.namespace_manager)
 def bind_ns(g, name, url):
 	"""Create new namespace binding."""
 	if g is None:
@@ -222,16 +251,20 @@ def bind_ns(g, name, url):
 
 
 # TODO: lieber regexe?
+# FIXME: we dont need this. rdflib
+# URIRef.n3(g.namespace_manager)
 def struct_uri(u):
 	if '#' in u:
 		url, term = u.rsplit('#',1)
 	elif '/' in u:
 		url, term = u.rsplit('/',1)
 	else:
-		url, term = u, None	
+		url, term = u, None
 	return (url, term)
 
 
+# FIXME: we dont need this. rdflib
+# URIRef.n3(g.namespace_manager)
 def shorten_url(url):
 	"""Shortens a given url by collapsing it to a pair
 	of identifiers denoting namespace and term, like
@@ -244,6 +277,7 @@ def shorten_url(url):
 	# TODO: if no namespace is present, shorten shomehow else
 	return url
 
+# FIXME: we dont need this. rdflib
 def expand_term(token):
 	"""Un-shorten url."""
 	nn, term = token.rsplit(':',1)
@@ -267,13 +301,14 @@ def extract_ns_terms(g):
 				if term:
 					nsp = ns.get_ns(url)
 					if nsp:
-						#print '\n\nextract namespace term from rdf data:', 
+						#print '\n\nextract namespace term from rdf data:',
 						#print '{}..{}'.format(url[:10],url[-10:]), nsp.name, term
 						dest = [nsp.classes, nsp.properties][int(term.islower())]
 						if not term in dest:
 							dest.append(term)
 
-
+# TODO: we dont need this. rdflib
+# URIRef.n3(...)
 def ls_rdf(g=None):
 	"""Returns rdf content of graph line by line as tuples."""
 	if not g:
@@ -294,6 +329,8 @@ def ls_rdf(g=None):
 
 
 # TODO: check out rdflib.
+# FIXME: either use slicing: g[:foaf.knows]
+# or functions like g.subject_objects(pred), ...
 def find_term(term, nsp=None, g=None):
 	"""Shows triple containing given term."""
 	if not g:
@@ -359,4 +396,4 @@ def save_xml(g, filename):
 		return storage.save_xml(g, filename)
 	return None
 
-	
+

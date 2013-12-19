@@ -99,8 +99,8 @@ TODO
 """
 
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.11-dev"
-__all__ = ['rdf', 'commands', 'shell']
+__version__ = "0.0.12-dev"
+__all__ = ['rdf', 'commands', 'shell', 'cmd_handler']
 
 import rdf
 import commands
@@ -115,4 +115,5 @@ to the global namespace of the
 be registered for any command syntax declared
 within their docstring."""
 
+# demo module showing example custom command declaration
 import extended
