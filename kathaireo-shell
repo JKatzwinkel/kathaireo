@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*- 
 """Dokudoku!"""
 __docformat__ = "restructuredtext en"
-__version__ = "0.0.2b-dev"
+__version__ = "0.0.21-dev"
 __author__ = "Dariah-DE"
 
 import getopt
@@ -75,6 +75,8 @@ if __name__=='__main__':
 			# instantly. so we might end up with very numerous namespace bindings..
 				# g.namespace_manager.qname(u'http://telota.bbarw.de/test#whatevs')
 				# Out[26]: u'ns3:whatevs'
+#TODO: write reusable command args resolving at arguments? module
+#TODO: better reuse of own code and especially rdflib methods in rdf module!!!
 
 #try to parse these ontologies from the internet:
 # https://owlverbalizer.googlecode.com/hg-history/8da67288d6be51f8d635f3bb347bacb1cf74f811/examples/tests.owl

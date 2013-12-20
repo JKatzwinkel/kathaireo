@@ -57,17 +57,6 @@ def graph_name(g):
 	return '-'
 
 
-# create and return new graph
-def create_graph(name, store='default'):
-	"""Returns a new `.rdflib.Graph` instance with the
-	given identifier, if said identifier has not already
-	been given to an existing graph."""
-	if not name in _graphs:
-		g = rdflib.Graph(store=store, identifier=name)
-		_graphs[name] = g
-		return g
-	return "!Warning!: graph '{}' already exists.".format(name)
-
 
 def set_graph(g):
 	"""Sets the given rdf graph as the current default.
@@ -83,9 +72,57 @@ def set_graph(g):
 
 
 
+# list all triples in graph
+def ls(g=None):
+	"""
+	Returns a list of strings, each one representing one RDF triple of the given
+	graph. Triple's URIs are substituted by their corresponding namespace-relative
+	``ns:term`` `qualified name`_ identifiers as returned by
+	``Graph.namespace_manager.qname``.
+	.. _qualified name: http://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-QName
+	:param g: ``rdflib.Graph`` instance
+	:returns: list of strings
+	"""
+	# TODO: this is a generic operation. make retrieval of default graph reusable
+	if g is None:
+		g = globals().get('current_graph')
+	if g is None:
+		return ['Error']
+	# TODO: test, handle namespaces, handle urls
+	res=[] # string list
+	trp=[] # list of triples in str repr
+	# FIXME: fails on invalid identifiers: with no base url
+	# available, rdflib.split_uri throws exception. catch it!
+	for triple in g:
+		res.append([g.namespace_manager.qname(t) for t in triple])
+	if len(trp)>0:
+		clmwidths=[ # determine column widths
+				max([len(triple[i]) for triple in trp]) for i in [0,1,2]]
+		# align triple strings
+		tmpl='{{:<{}}} {{:^{}}} {{:>{}}}'.format(*clmwidths)
+		for triple in trp:
+			res.append('{} {} {}'.format(*triple))
+	return res
+
+
+
 #################################################################
 ##################### below: parts to be reviewed ###############
 #################################################################
+
+
+# create and return new graph
+def create_graph(name, store='default'):
+	"""Returns a new `.rdflib.Graph` instance with the
+	given identifier, if said identifier has not already
+	been given to an existing graph."""
+	# FIXME: if no graph selected so far, select newly created one
+	if not name in _graphs:
+		g = rdflib.Graph(store=store, identifier=name)
+		_graphs[name] = g
+		return g
+	return "!Warning!: graph '{}' already exists.".format(name)
+
 
 # returns a nicer output of this graph than he default
 def repr_graph(g):
