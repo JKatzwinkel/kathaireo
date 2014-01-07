@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 """\
 The :mod:`.arguments` module keeps track of command argument usage.
 
@@ -9,12 +9,12 @@ Every argument placeholder thus has its own input
 history.
 
 On the other hand, each argument placeholder gets equipped
-with two properties to impose requirements on its legal 
-values with: the :meth:`~.ArgValidator.propose` function provides a suggestions 
+with two properties to impose requirements on its legal
+values with: the :meth:`~.ArgValidator.propose` function provides a suggestions
 list of possible values that may replace the placeholder,
 and can be used for like autocompletion.
 The :attr:`~.ArgValidator.format` list contains regular expressions determining
-what input values are allowed. 
+what input values are allowed.
 """
 
 __docformat__ = "restructuredtext en"
@@ -26,6 +26,21 @@ from glob import glob
 
 from .. import rdf
 from .. import util
+
+
+#FIXME: both argument declaration and validation/handling/resolving
+# is a big mess. need to find a way to offer user-friendly
+# API like the one we now have for command handler functions and their
+# invokations.
+# with argument processing that messy, the command handlers API doesnt
+# give satisfaction either, because handlers implementations get so
+# ugly because of unclean argument resolution/validation...
+#TODO: find a way to register argument value validation/autocompletion
+# conveniently, like with cmd handlers/syntaxes
+#TODO: find a way to resolve argument input values:
+# for a handler, <graphname> is less interesting than the actual denoted graph,
+# <filename> less than the actual file resource.
+# Is this even doable????
 
 # value history for each known argument placeholder
 arghist = {}
@@ -59,7 +74,7 @@ class ArgValidator:
 
 	def propose(self, prefix):
 		"""Calls this instance's value proposal handler
-		and returns all suggestions for the given 
+		and returns all suggestions for the given
 		input prefix."""
 		return self.propose_func.__call__(
 			self.name, prefix)
@@ -69,7 +84,7 @@ class ArgValidator:
 		to this argument's value restrictions."""
 		valid = any([r.search(str) for r in self.format])
 		return valid
-		
+
 
 
 ###############################################################
@@ -91,7 +106,7 @@ def propose_default(arg, prefix):
 # calls an argument placeholder's propose handler and
 # returns resulting suggestions
 def get_suggestions(name, prefix):
-	"""calls an argument placeholder's :meth:`~.ArgValidator.propose` handler 
+	"""calls an argument placeholder's :meth:`~.ArgValidator.propose` handler
 	function and returns resulting suggestions.
 	"""
 	# get validator or assign a new default instance
@@ -128,10 +143,10 @@ def register(name, proposer=propose_default, format=None):
 	for an arguments name/identifier, a user input history
 	and an :class:`.ArgValidator` instance are created.
 
-	The latter is responsible for suggesting appropriate 
+	The latter is responsible for suggesting appropriate
 	input values for this argument (which might be useful
 	in features like autocompletion) and for determining
-	wheather a given value is legal for this argument 
+	wheather a given value is legal for this argument
 	(like variable names are not meant to start with a number,
 	urls must satisfy a certain format, and stuff like that.).
 
@@ -146,12 +161,12 @@ def register(name, proposer=propose_default, format=None):
 		someone is about to input a value for this
 		argument and wants assistance. Any function
 		meant to serve as a proposal handler must take
-		exactly two parameters: 
-	
+		exactly two parameters:
+
 			1. the argument placeholder identifier,
 			2. the prefix that needs to be autocompleted
 	"""
-	# create value history 
+	# create value history
 	if not name in arghist:
 		arghist[name] = []
 	# create or retrieve validator
@@ -184,7 +199,7 @@ def lsdir(prefix, filetypes):
 	as a list of globs (``['*.rdf', '*.owl', ...]``).
 	"""
 	# extract path locator (relative)
-	validpath = os.path.isdir(prefix) # check if prefix already 
+	validpath = os.path.isdir(prefix) # check if prefix already
 	# points to an existing directory
 	if os.sep in prefix or validpath == True:
 		# incomplete?
@@ -208,8 +223,8 @@ def lsdir(prefix, filetypes):
 	# module know that this would be still to be
 	# extended, and hence not decorated by a trailing
 	# space, like completions normally do
-	files = ['{}{};'.format(os.path.join(path,fn), os.sep) 
-				for fn in os.listdir(path) 
+	files = ['{}{};'.format(os.path.join(path,fn), os.sep)
+				for fn in os.listdir(path)
 					if os.path.isdir(os.path.join(path,fn))]
 	# extend by files matching extensions
 	for ext in filetypes:
@@ -235,7 +250,7 @@ def list_files_rdf(arg, prefix):
 
 # suggest local sqlite files
 def list_files_sqlite(arg, prefix):
-	"""Returns a list of local files with extensions `.sqlite` and 
+	"""Returns a list of local files with extensions `.sqlite` and
 	`.sqlite3`.
 	"""
 	suggestions = lsdir(prefix, ['*.sqlite', '*.sqlite3'])
@@ -266,7 +281,7 @@ def ls_ns(arg, prefix):
 	suggestions.extend(propose_default(arg, prefix))
 	return suggestions
 
-# autocompletion of `ns:term` clauses. 
+# autocompletion of `ns:term` clauses.
 def ls_rdf_ent(arg, prefix):
 	"""Returns rdf entities (classes, properties)."""
 	suggestions = []
@@ -281,7 +296,7 @@ def ls_rdf_ent(arg, prefix):
 			terms = ns.properties[:] #make deep copy or cry.
 			if arg == 'rdfentity':
 				terms.extend(ns.classes)
-			suggestions.extend(['{}:{}'.format(nn,t) for 
+			suggestions.extend(['{}:{}'.format(nn,t) for
 				t in  terms if t.startswith(ent)])
 			#print suggestions
 	else:
@@ -292,9 +307,9 @@ def ls_rdf_ent(arg, prefix):
 	return suggestions
 
 
-# resolving urls makes completion suggesting easier, 
+# resolving urls makes completion suggesting easier,
 # but we still want those rueckuebersetzt to urls at the
-# end of the day to evaluate prefix matching and 
+# end of the day to evaluate prefix matching and
 # to work consistent with rdflib objects.
 def resolve_local_url(url):
 	"""Converts from `file:///` URL to absolute path."""
@@ -326,14 +341,14 @@ def ls_ns_urls(arg, prefix):
 		uris = urlex.findall('{} {} {}'.format(*triple))
 		#uris = [uri[int(uri[0].startswith('file:/')):] for
 					#uri in uris]
-		#suggestions.extend([rdf.struct_uri(''.join(uri))[0] 
+		#suggestions.extend([rdf.struct_uri(''.join(uri))[0]
 			#for uri in uris
 			#if any([field.startswith(prefix) for field in uri[:2]])])
 		urls = [''.join(uri[:-1])+';' for uri in uris]
 		util.log('URLs found in current graph: {}\n(total count {})'.format(', '.join(urls), len(urls)))
 		# local file paths are suggestions if they match the likewise
 		# localized input prefix
-		suggestions.extend([u for u in urls 
+		suggestions.extend([u for u in urls
 			if u.startswith(prefix) ])
 	# done collecting urls from graph
 	suggestions.extend(propose_default(arg, prefix))

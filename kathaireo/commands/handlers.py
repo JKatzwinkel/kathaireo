@@ -20,6 +20,9 @@ import re
 
 from .. import rdf
 
+###############################################################
+#################          stuff            ###################
+###############################################################
 
 # Returns a list of `command` syntax specifications
 # in docstring of a function identified by their name.
@@ -33,6 +36,7 @@ def extract_cmd_syntax(fname):
 	implementation in the module source code anyway, or due
 	to previous calls of :func:`.commands.register_handler`
 	invoked by the ``@cmd_handler`` decorator."""
+	#NOTE: this is a very good feature, just to say sth positive..
 	func = globals().get(fname)
 	if func != None:
 		res = []
@@ -44,6 +48,38 @@ def extract_cmd_syntax(fname):
 	        	res.extend(sntxs)
         return res
 
+
+# retrieve standard stuff like <graphname>
+def res_arg(**kwargs):
+	"""
+	Takes a kwargs dict from any handler and does whatever is possible
+	to replace argument placeholder type identifiers by appropriate
+	values. For instance: an argument <graphname> should be resolved
+	so that the actual RDF graph instance identified by the given name
+	is returned, or at least the currently selected default graph or
+	an error message instead.
+	"""
+	#TODO: unfortunately, I didnt think this through.
+	#TODO: this thing could end up causing more work than it can even
+	#TODO save from. For instance: If <graphname> reification fails,
+	#TODO: what are we gonna return instead? a nullpointer, so that calling
+	#TODO: handlers have no way left to craft proper error messages? or
+	#TODO: just return the original graphname string, so that handler has to
+	#TODO: check the parameter type before being halfway save using it?
+	#TODO: We might actually be better off having seperate arg resv functions
+	#TODO: for every single argument in use (which on its part will make argument
+	#TODO: declaration much worse...). Handlers then can individually ask
+	#TODO: for resolution of single argument value fields.
+	# resolve <graphname> arg
+	name = kwargs.get('graphname')
+	if name:
+		g = rdf.get_graph(name)
+	else:
+		g = rdf.__dict__.get('current_graph')
+	kwargs['graphname'] = g
+	# return kwargs dict with arg names resolved to objects
+	# unpacked as collection of positional parameters
+	return kwargs
 
 
 ###############################################################
@@ -133,11 +169,24 @@ def parse_rdf(*args, **kwargs):
 	handles:
 	`load <resource>`
 	"""
+	# perform standard arg resv operations, like reifying graph from graphname
+	# TODO: maybe this should even be called beforehand, by the commands parser
+	# TODO: that way, we could already have an actual parameter variable 'graph',
+	# TODO: pointing to an actual graph instance and available in this very
+	# local namespace!
+	kwargs = res_args(**kwargs)
 	location = kwargs.get('resource')
-	name = kwargs.get('graphname')
-	if None in [location, name]:
+	g = kwargs.get('graphname')
+	#name = kwargs.get('graphname')
+	if None in [location, g]:
 		if len(args)>1:
 			location, name = args[:2]
+			# FIXME: processing *args list should be left to functions
+			# that expect more than one value for the same argument name...
+			if name:
+				g = rdf.get_graph(name)
+			if not g:
+				return '!Failed! to address RDF graph!'
 		#else:
 			#name = rdf.graph_name(rdf.current_graph)
 	# FIXME: why does this lead to an additional graph instance with a
@@ -148,10 +197,6 @@ def parse_rdf(*args, **kwargs):
 		# try to parse local file first,
 		# then remote source on failure.
 		# try for multiple rdf formats in both
-		if name:
-			g = rdf.get_graph(name)
-		else:
-			g = rdf.__dict__.get('current_graph')
 		if g:
 			before = len(g)
 		# do the stuff!
@@ -173,6 +218,7 @@ def parse_rdf(*args, **kwargs):
 
 
 # show info about given graph
+#FIXME: this was nice as a lorem ipsum interaction dummy, but seriously...
 def graph_info(*args, **kwargs):
 	"""Display information about certain rdf graph.
 	Possible keywords: size, ...
@@ -196,6 +242,9 @@ def show_ns(*args, **kwargs):
 	`ls ns <namespace>`
 	ls ns <graphname>""" # TODO: make sure this works!
 	# TODO: write smarter global namespace registry!
+	#FIXME: we can keep a directory of namespaces and which graphs bind them,
+	#but apart from that, namespace managing should be left to rdflib namespace
+	#manager!!
 	head = 'currently bound namespaces:'
 	if not 'namespace' in kwargs:
 		g = rdf.get_graph(kwargs.get('graphname'))
@@ -221,6 +270,7 @@ def show_ns(*args, **kwargs):
 
 
 # find triples containing specific term
+#FIXME: come on!
 def find_term_ls(*args, **kwargs):
 	"""Find triples with the given term.
 	handles:
@@ -243,6 +293,7 @@ def find_term_ls(*args, **kwargs):
 
 
 # bind a new namespace
+#TODO: do this properly
 def bind_ns(*args, **kwargs):
 	"""Creates a new namespace binding in the current graph.
 	handles:
