@@ -9,7 +9,7 @@ like ``def func(*args, **kwargs)``, can be registered
 using the :mod:`.commands` module:
 ::
 
-	>>> commands.register("create <graphname>", handler)
+	>>> commands.register("create <graph>", handler)
 
 """
 __docformat__ = "restructuredtext en"
@@ -49,19 +49,19 @@ def extract_cmd_syntax(fname):
         return res
 
 
-# retrieve standard stuff like <graphname>
+# retrieve standard stuff like <graph>
 def res_arg(**kwargs):
 	"""
 	Takes a kwargs dict from any handler and does whatever is possible
 	to replace argument placeholder type identifiers by appropriate
-	values. For instance: an argument <graphname> should be resolved
+	values. For instance: an argument <graph> should be resolved
 	so that the actual RDF graph instance identified by the given name
 	is returned, or at least the currently selected default graph or
 	an error message instead.
 	"""
 	#TODO: unfortunately, I didnt think this through.
 	#TODO: this thing could end up causing more work than it can even
-	#TODO save from. For instance: If <graphname> reification fails,
+	#TODO save from. For instance: If <graph> reification fails,
 	#TODO: what are we gonna return instead? a nullpointer, so that calling
 	#TODO: handlers have no way left to craft proper error messages? or
 	#TODO: just return the original graphname string, so that handler has to
@@ -70,7 +70,7 @@ def res_arg(**kwargs):
 	#TODO: for every single argument in use (which on its part will make argument
 	#TODO: declaration much worse...). Handlers then can individually ask
 	#TODO: for resolution of single argument value fields.
-	# resolve <graphname> arg
+	# resolve <graph> arg
 	name = kwargs.get('graphname')
 	if name:
 		g = rdf.get_graph(name)
@@ -90,7 +90,7 @@ def res_arg(**kwargs):
 ###############################################################
 ###############################################################
 
-# FIXME: every single handler expecting a <graphname> argument
+# FIXME: every single handler expecting a <graph> argument
 # reinvents the same retrievals and error checkings. Might argument
 # resolving be better off at commands.execute or somewhere in commands.arguments?
 # FIXME: at least write some default arg resolv functions in here,
@@ -113,7 +113,7 @@ def create_graph(*args, **kwargs):
 		successful, `None` otherwise.
 
 	handles:
-	`create <graphname>`
+	`create <graph>`
 	"""
 	if "graphname" in kwargs:
 		g = rdf.create_graph(kwargs.get("graphname"))
@@ -129,7 +129,7 @@ def create_graph(*args, **kwargs):
 def set_graph(*args, **kwargs):
 	"""Select default graph for rdf operations.
 	handles:
-	`use <graphname>`"""
+	`use <graph>`"""
 	name = kwargs.get('graphname')
 	if name:
 		g = rdf.get_graph(name)
@@ -240,7 +240,7 @@ def show_ns(*args, **kwargs):
 	`ls ns`
 	`list namespaces`
 	`ls ns <namespace>`
-	ls ns <graphname>""" # TODO: make sure this works!
+	ls ns <graph>""" # TODO: make sure this works!
 	# TODO: write smarter global namespace registry!
 	#FIXME: we can keep a directory of namespaces and which graphs bind them,
 	#but apart from that, namespace managing should be left to rdflib namespace
@@ -275,8 +275,8 @@ def find_term_ls(*args, **kwargs):
 	"""Find triples with the given term.
 	handles:
 	`find <rdfentity>`
-	`find <rdfentity> <graphname>`
-	`ls <graphname>`"""
+	`find <rdfentity> <graph>`
+	`ls <graph>`"""
 	rdfentity = kwargs.get('rdfentity')
 	g = rdf.get_graph(kwargs.get('graphname'))
 	# `find` command
@@ -298,7 +298,7 @@ def bind_ns(*args, **kwargs):
 	"""Creates a new namespace binding in the current graph.
 	handles:
 	`bind <namespace> <nsurl>`
-	`bind <namespace> <nsurl> <graphname>`"""
+	`bind <namespace> <nsurl> <graph>`"""
 	nsn = kwargs.get('namespace')
 	url = kwargs.get('nsurl')
 	g = rdf.get_graph(kwargs.get('graphname'))
@@ -321,8 +321,8 @@ def cp_graph(*args, **kwargs):
 	"""Create new graph by given name and clone contents
 	of another graph into it.
 	handles:
-	`cp <graphname> <graphname>`
-	`cp <graphname>`"""
+	`cp <graph> <graph>`
+	`cp <graph>`"""
 	# use parameters
 	if len(args) == 2:
 		name1, name2 = args[:2]
@@ -360,8 +360,8 @@ def cp_graph(*args, **kwargs):
 def merge_graph(*args, **kwargs):
 	"""merge graph into :data:`.rdf.current_graph`.
 	handles:
-	`merge <graphname>`
-	`insert <graphname> into <graphname>`"""
+	`merge <graph>`
+	`insert <graph> into <graph>`"""
 	if len(args) > 0:
 		# currently selected graph, command probably was merge
 		if len(args) < 2:
@@ -440,7 +440,7 @@ def add_stm(*args, **kwargs):
 	"""Add triple.
 	handles:
 	`add <rdfentity> <rdfrelation> <rdfentity>`
-	`add <rdfentity> <rdfrelation> <rdfentity> <graphname>`"""
+	`add <rdfentity> <rdfrelation> <rdfentity> <graph>`"""
 	if len(args)>3:
 		name, subj, prop, obj = args
 		g = rdf.get_graph(name)

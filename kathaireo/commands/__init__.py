@@ -25,10 +25,10 @@ Example:
 	... 	name = kwargs.get("graphname") # or = args[0]
 	... 	[...]
 	...
-	>>> commands.register("create <graphname>", handler)
+	>>> commands.register("create <graph>", handler)
 	Registered handling function handler('args', [...]
 	>>> commands.cmdict
-	{'create': {'<graphname>': {'': <function handler at 0x86c26f4>}}}
+	{'create': {'<graph>': {'': <function handler at 0x86c26f4>}}}
 
 Alternativley, one can also use the ``@cmd_handler`` decorator
 provided by the :mod:`..kathaireo` package itself and implemented at
@@ -38,7 +38,7 @@ provided by the :mod:`..kathaireo` package itself and implemented at
 	from kathaireo import cmd_handler
 	@cmd_handler
 	def handler(*args, **kwargs):
-		\"\"\"`create <graphname>`\"\"\"
+		\"\"\"`create <graph>`\"\"\"
 		[...]
 
 ...does the same as the snippet above.
@@ -160,7 +160,7 @@ def register(syntax, function):
 		command syntax, `False`, if command syntax
 		is already in registry.
 	"""
-	# anchor at top level of command path dict
+	# initialize at root level of command path tree
 	level=cmdict
 	# split generic syntax string and append linebreak
 	terms = trmex.findall(syntax)
@@ -206,9 +206,12 @@ def register(syntax, function):
 
 # message: incomplete input string
 def msg_incomplete_cmd(keywords):
-	"""Returns a helpful error message in case an input string
-	didn't contain a complete command, and the parser had still been
-	expecting upcoming content at the time of termination.
+	"""Returns a formatted (see :module:`..shell/highlights`) string
+	representation of a list, separating its items with commata.
+	Intended use is the assembly of helpful error messages in case an input string
+	resembles only an incomplete command, and the parser is terminating at
+	the end of the input line or an unknown term, while still
+	expecting one or more keywords to come up.
 	"""
 	keywords = ['*{}*'.format(k) for k in keywords]
 	if len(keywords)>1:
@@ -437,17 +440,17 @@ def choices_left(input, csrange):
 default_cmds = {
 	#'exit': handlers.quit,
 	#':q': handlers.quit,
-	#'create <graphname>': handlers.create_graph,
-	'create <graphname> store sqlite <sqlite>': handlers.store_sqlite,
-	'load <resource> <graphname>': handlers.parse_rdf,
-	'show <graphname> <attribute>': handlers.graph_info,
-	#'load namespaces <graphname>': handlers.import_namespaces,
-	'connect <graphname> to sqlite <sqlite>': handlers.store_sqlite,
-	#'save <graphname> to xml <filename>': handlers.store_xml,
+	#'create <graph>': handlers.create_graph,
+	'create <graph> store sqlite <sqlite>': handlers.store_sqlite,
+	'load <resource> <graph>': handlers.parse_rdf,
+	'show <graph> <attribute>': handlers.graph_info,
+	#'load namespaces <graph>': handlers.import_namespaces,
+	'connect <graph> to sqlite <sqlite>': handlers.store_sqlite,
+	#'save <graph> to xml <filename>': handlers.store_xml,
 	#'save xml <filename>': handlers.store_xml,
-	'copy <graphname> <graphname>': handlers.cp_graph,
-	#'merge <graphname>': handlers.merge_graph,
-	#'use <graphname>': handlers.set_graph,
+	'copy <graph> <graph>': handlers.cp_graph,
+	#'merge <graph>': handlers.merge_graph,
+	#'use <graph>': handlers.set_graph,
 	#'add <namespace>:<rdfentity> <namespace>:<rdfproperty> <namespace>:<rdfentity>':None
 	#'namespace <namespace> classes': handlers.ns_classes,
 	#'namespace <namespace> properties': handlers.ns_properties,

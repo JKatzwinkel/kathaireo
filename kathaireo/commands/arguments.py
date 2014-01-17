@@ -10,10 +10,10 @@ history.
 
 On the other hand, each argument placeholder gets equipped
 with two properties to impose requirements on its legal
-values with: the :meth:`~.ArgValidator.propose` function provides a suggestions
+values with: the :meth:`~.Argument.propose` function provides a suggestions
 list of possible values that may replace the placeholder,
 and can be used for like autocompletion.
-The :attr:`~.ArgValidator.format` list contains regular expressions determining
+The :attr:`~.Argument.format` list contains regular expressions determining
 what input values are allowed.
 """
 
@@ -47,10 +47,10 @@ arghist = {}
 """Dictionary object in which lists of previously submitted values are
 stored under assigned argument identifiers."""
 
-# directory of known arguments and their ArgValidator instances
-argvals = {}
+# directory of known arguments and their Argument instances
+arghs = {}
 """Directory of registered argument identifiers, each one referencing their
-assigned :class:`.ArgValidator` instance."""
+assigned :class:`.Argument` instance."""
 
 # default regex for e.g identifiers, names
 namex = re.compile('\A[a-zA-Z_]\w*\Z')
@@ -58,30 +58,44 @@ namex = re.compile('\A[a-zA-Z_]\w*\Z')
 urlex = util.urlex
 
 ###############################################################
-####################   arg handling class  ####################
+#################   arg configuration class  ##################
 ###############################################################
-class ArgValidator:
+class Argument(object):
+	#TODO: doku
 	"""Container class for the two main validity specifiers an argument
 	identifier can be assigned to: an autocompletion candidate proposal
 	function (default one is :func:`.propose_default`) and a
-	:attr:`~.ArgValidator.format` list of regular expressions for checking
+	:attr:`~.Argument.format` list of regular expressions for checking
 	value validity.
 	"""
 	def __init__(self, name):
+		"""
+		Creates an argument configuration instance for the given argument
+		name with default settings. This means said argument identifier gets
+		standard value proposing (:func:`.propose_default`) and validation
+		(:data:`.namex`) assigned. The resulting object is stored as the
+		argument identifier's configuration in the :data:`.arghs` directory,
+		possibly overwriting any configuration assigned earlier."""
 		self.name = name
 		self.propose_func = propose_default
 		self.format = [namex]
+		self.hist = []
+		# save configuration for arg id
+		arghs[name] = self
 
 	def propose(self, prefix):
 		"""Calls this instance's value proposal handler
-		and returns all suggestions for the given
-		input prefix."""
+		and returns a list of suggestions for the given
+		input prefix. Behaviour of suggestion list assembly can be changed
+		by overwriting an instance's ''propose_func'' member with another
+		function of signature ''func(arg, prefix)''."""
 		return self.propose_func.__call__(
 			self.name, prefix)
 
 	def validate(self, str):
 		"""Tests validity of a given string according
-		to this argument's value restrictions."""
+		to this argument's value restrictions by checking if it matches any
+		of the regular expressions in this instance's ''format'' list."""
 		valid = any([r.search(str) for r in self.format])
 		return valid
 
@@ -94,26 +108,27 @@ class ArgValidator:
 # default function for value proposal
 def propose_default(arg, prefix):
 	"""Default function for argument value proposal.
-	Looks up previous values for this argument and
+	Iterate over previous values for this argument (LIFO) and
 	suggests those that match the given prefix.
-	Can be overwritten under this premise.
 	"""
-	hist = arghist.get(arg, [])
-	suggestions = [v for v in hist if v.startswith(prefix)]
+	#hist = arghist.get(arg, [])
+	hist = arghs.get(arg, Argument(arg)).hist
+	# return items of history list in reverse order
+	suggestions = [v for v in hist[::-1] if v.startswith(prefix)]
 	return suggestions
 
 
 # calls an argument placeholder's propose handler and
 # returns resulting suggestions
 def get_suggestions(name, prefix):
-	"""calls an argument placeholder's :meth:`~.ArgValidator.propose` handler
-	function and returns resulting suggestions.
+	"""calls an argument placeholder's :meth:`~.Argument.propose` handler
+	function and returns resulting suggestions, stripped of double occurences.
 	"""
 	# get validator or assign a new default instance
-	validator = argvals.get(name, ArgValidator(name))
+	argh = arghs.get(name, Argument(name))
 	# call it
-	suggestions = validator.propose(prefix)
-	return suggestions
+	suggestions = argh.propose(prefix)
+	return [v for i,v in enumerate(suggestions) if suggestions[:i+1].count(v) < 2]
 
 
 
@@ -122,16 +137,17 @@ def validate(arg, input):
 	"""Validates given input string according to specified
 	argument's value restrictions.
 	Return true if input is ok."""
-	validator = argvals.get(arg, ArgValidator(arg))
+	validator = arghs.get(arg, Argument(arg))
 	return validator.validate(input)
 
 
 # add to arg history
 def to_history(arg, value):
-	"""Write a value to an argument's input history stored in :obj:`arghist`."""
-	hist = arghist.get(arg, [])
-	if not arg in arghist:
-		arghist[arg] = hist
+	"""Append a value to an argument's input history stored in :obj:`arghist`."""
+	#hist = arghist.get(arg, [])
+	#if not arg in arghist:
+		#arghist[arg] = hist
+	hist = arghs.get(arg, Argument(arg)).hist
 	hist.append(value)
 
 
@@ -141,7 +157,7 @@ def to_history(arg, value):
 def register(name, proposer=propose_default, format=None):
 	"""Registers an argument placeholder. This means,
 	for an arguments name/identifier, a user input history
-	and an :class:`.ArgValidator` instance are created.
+	and an :class:`.Argument` instance are created.
 
 	The latter is responsible for suggesting appropriate
 	input values for this argument (which might be useful
@@ -167,15 +183,15 @@ def register(name, proposer=propose_default, format=None):
 			2. the prefix that needs to be autocompleted
 	"""
 	# create value history
-	if not name in arghist:
-		arghist[name] = []
+	#if not name in arghist:
+		#arghist[name] = []
 	# create or retrieve validator
-	if not name in argvals:
-		validator = ArgValidator(name)
-		argvals[name] = validator
+	if not name in arghs:
+		validator = Argument(name)
+		arghs[name] = validator
 		# print 'Registered argument \"{}\".'.format(name)
 	else:
-		validator = argvals.get(name)
+		validator = arghs.get(name)
 	# update validator if necessary
 	if not proposer in [propose_default, None]:
 		validator.propose_func = proposer

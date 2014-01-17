@@ -61,7 +61,7 @@ def graph_name(g):
 def set_graph(g):
 	"""Sets the given rdf graph as the current default.
 	When set, that graph will be the one operated on in interactive
-	mode. This should cause input in which a ``<graphname>``
+	mode. This should cause input in which a ``<graph>``
 	value is omitted to work on said current default.
 	:param g: new default graph. May be ``None``.
 	:returns: status message."""
