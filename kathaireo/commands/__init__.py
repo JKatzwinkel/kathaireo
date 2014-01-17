@@ -82,7 +82,7 @@ urlex = util.urlex
 def register_handler(func):
 	"""\
 	Decorator for command handler functions.
-	Function will be copied into :mod:`.commands.handlers`
+	Function will be copied into the namespace of :mod:`.commands.handlers`
 	and registered as a handler for all commands
 	whose syntaxes it specifies in its docstring.
 	The package root module, :mod:`..kathaireo`, defines an
@@ -91,10 +91,12 @@ def register_handler(func):
 	functionality, since implementation, invocation syntax definition
 	and deployment of custom commands can all be taken
 	care of in the same place.
+
 	:param func: function to be registered as a
 	command handler in the :mod:`handlers` module
 	namespace. Handler functions **must accept** both
-	``\*args`` and ``\*\*kwargs`` parameter collections.
+	``\*args`` and ``\*\*kwargs`` parameter collections. `(Ist das so, ja?)`
+
 	:returns: function passed on call, i.e. functions
 	with ``@cmd_handler`` decorator imported from
 	root module (:mod:`..kathaireo``).

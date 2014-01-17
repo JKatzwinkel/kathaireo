@@ -82,22 +82,45 @@ class Argument(object):
 		self.hist = []
 		# save configuration for arg id
 		arghs[name] = self
+		#TODO: every arg configuration should have an optional reification function for argument value resolution (retrieve actual graph for a <graph> value)
 
 	def propose(self, prefix):
 		"""Calls this instance's value proposal handler
 		and returns a list of suggestions for the given
 		input prefix. Behaviour of suggestion list assembly can be changed
-		by overwriting an instance's ''propose_func'' member with another
-		function of signature ''func(arg, prefix)''."""
+		by overwriting an instance's ``propose_func`` member with another
+		function of signature ``func(arg, prefix)``."""
+		#TODO: multiple proposers for each arg?
 		return self.propose_func.__call__(
 			self.name, prefix)
 
 	def validate(self, str):
 		"""Tests validity of a given string according
 		to this argument's value restrictions by checking if it matches any
-		of the regular expressions in this instance's ''format'' list."""
+		of the regular expressions in this instance's ``format`` list."""
+		#TODO: maybe not have configuration keep list of regexes, but its own function instead
 		valid = any([r.search(str) for r in self.format])
 		return valid
+
+
+
+# decorator for argument proposal list generator function
+def proposer(func):
+	"""Functions decorated by this will replace the default
+	argument value suggestion generator in the configurations
+	of all arguments that are listed by the function's docstring.
+	"""
+	fdoc = func.func_doc
+	args = []
+	if fdoc:
+		for line in fdoc.split('\n'):
+			#TODO: also detect regexes for arg validation, or change arg validation to function, too
+			args.extend(re.findall('^\s*`<([^>`]+)`', line))
+		for arg in args:
+			arghs.get(arg, Argument(arg)).propose_func = func
+	return func
+
+
 
 
 
@@ -143,7 +166,9 @@ def validate(arg, input):
 
 # add to arg history
 def to_history(arg, value):
-	"""Append a value to an argument's input history stored in :obj:`arghist`."""
+	"""Append a value to an argument's input history stored in the ``hist`` member of
+	the :class"`.Argument` instance assigned to the argument's identifier in the
+	:obj:`arghs` dictionary."""
 	#hist = arghist.get(arg, [])
 	#if not arg in arghist:
 		#arghist[arg] = hist
@@ -209,7 +234,7 @@ def register(name, proposer=propose_default, format=None):
 
 def lsdir(prefix, filetypes):
 	"""List contents of whatever directory can be
-	dereived from given prefix. Result contains
+	derived from given prefix. Result contains
 	subdirectories and files whose extensions and
 	names match the prefix. filetypes are passed
 	as a list of globs (``['*.rdf', '*.owl', ...]``).
