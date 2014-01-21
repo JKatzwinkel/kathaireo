@@ -110,6 +110,7 @@ def proposer(func):
 	argument value suggestion generator in the configurations
 	of all arguments that are listed by the function's docstring.
 	"""
+	#TODO: save reference to function in this' module namespace..
 	fdoc = func.func_doc
 	args = []
 	if fdoc:
@@ -118,6 +119,7 @@ def proposer(func):
 			args.extend(re.findall('^\s*`<([^>`]+)`', line))
 		for arg in args:
 			arghs.get(arg, Argument(arg)).propose_func = func
+	#TODO: maybe wrap in inner function, making sure that correct number of parameters is given at call..?
 	return func
 
 
