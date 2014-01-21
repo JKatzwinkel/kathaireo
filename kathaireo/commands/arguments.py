@@ -104,18 +104,35 @@ class Argument(object):
 
 
 
+# TODO: we can test this function's argument on being a function
+# TODO: and just proceed the usual way in that case. If the
+# TODO: parameter is not a function, this means that a function
+# TODO: has been decorated like this: @proposer(arg)
+# TODO: in that case, we should have a decorator factory in here,
+# TODO: which will create a wrapped decorator for the decoratee according to the
+# TODO: decorator's parameter. here: http://stackoverflow.com/a/1594484/1933494 
 # decorator for argument proposal list generator function
 def proposer(func):
 	"""Functions decorated by this will replace the default
 	argument value suggestion generator in the configurations
 	of all arguments that are listed by the function's docstring.
 	"""
+	# create a reference to the decorated function (propose handler)
+	# in this module's namespace
+	ns = globals()
+	if ns.get(func.func_name):
+		print 'overwriting completion proposal function {}.'.format(
+			func.func_name)
+	ns[func.func_name] = func
+	# parse docstring of decorated func for references of 
+	# arguments it is meant to take care of (as a propose handler)
+	# arguments must be references like `<argname>`
 	fdoc = func.func_doc
 	args = []
 	if fdoc:
 		for line in fdoc.split('\n'):
 			#TODO: also detect regexes for arg validation, or change arg validation to function, too
-			args.extend(re.findall('^\s*`<([^>`]+)`', line))
+			args.extend(re.findall('^\s*`<([^> `]+)`', line))
 		for arg in args:
 			arghs.get(arg, Argument(arg)).propose_func = func
 	return func
