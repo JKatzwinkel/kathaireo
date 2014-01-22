@@ -78,7 +78,8 @@ class Argument(object):
 		possibly overwriting any configuration assigned earlier."""
 		self.name = name
 		self.propose_func = propose_default
-		self.format = [namex]
+		self.validator_func = regex_validator([namex])
+		self.resolve_func = resolve_default
 		self.hist = []
 		# save configuration for arg id
 		arghs[name] = self
@@ -89,18 +90,35 @@ class Argument(object):
 		and returns a list of suggestions for the given
 		input prefix. Behaviour of suggestion list assembly can be changed
 		by overwriting an instance's ``propose_func`` member with another
-		function of signature ``func(arg, prefix)``."""
+		function of signature ``func(arg, prefix)``. Used by default is
+		function :func:`.propose_default`."""
 		#TODO: multiple proposers for each arg?
-		return self.propose_func.__call__(
-			self.name, prefix)
+		return self.propose_func.__call__(self, prefix)
 
 	def validate(self, str):
 		"""Tests validity of a given string according
 		to this argument's value restrictions by checking if it matches any
 		of the regular expressions in this instance's ``format`` list."""
 		#TODO: maybe not have configuration keep list of regexes, but its own function instead
-		valid = any([r.search(str) for r in self.format])
+		#valid = any([r.search(str) for r in self.format])
+		valid = self.validate_func.__call__(self, str)
 		return valid
+
+	def resolve(self, str):
+		"""Tries to resolve an argument value, e.g. returns an object that a given string
+		value seems to point to rather than the string itself. By thus replacing argument values
+		with their instantiated logical counterparts, command handler functions can be
+		called with parameters of appropriate types to work with, e.g. file objects
+		instead of paths, rdflib graph objects instead of identifiers, http connectors instead
+		of URLs, numeric values instead of digit characters, and so on.
+
+		The default function used to 'resolve' argument values is :func:`.resolve_default`,
+		which actually merely leaves the passed argument value untouched, and is meant to
+		be replaced by a custom implementation.
+		"""
+		return self.resolve_func.__call__(self, str)
+
+
 
 
 
@@ -110,7 +128,7 @@ class Argument(object):
 # TODO: has been decorated like this: @proposer(arg)
 # TODO: in that case, we should have a decorator factory in here,
 # TODO: which will create a wrapped decorator for the decoratee according to the
-# TODO: decorator's parameter. here: http://stackoverflow.com/a/1594484/1933494 
+# TODO: decorator's parameter. here: http://stackoverflow.com/a/1594484/1933494
 # decorator for argument proposal list generator function
 def proposer(func):
 	"""Functions decorated by this will replace the default
@@ -124,7 +142,7 @@ def proposer(func):
 		print 'overwriting completion proposal function {}.'.format(
 			func.func_name)
 	ns[func.func_name] = func
-	# parse docstring of decorated func for references of 
+	# parse docstring of decorated func for references of
 	# arguments it is meant to take care of (as a propose handler)
 	# arguments must be references like `<argname>`
 	fdoc = func.func_doc
@@ -152,10 +170,33 @@ def propose_default(arg, prefix):
 	suggests those that match the given prefix.
 	"""
 	#hist = arghist.get(arg, [])
-	hist = arghs.get(arg, Argument(arg)).hist
+	#hist = arghs.get(arg, Argument(arg)).hist
+	hist = arg.hist
 	# return items of history list in reverse order
 	suggestions = [v for v in hist[::-1] if v.startswith(prefix)]
 	return suggestions
+
+
+# default function for value resolution
+def resolve_default(arg, str):
+	"""Default function for argument value resolution.
+	It just returns the argument value as passed in the ``str`` parameter."""
+	return str
+
+
+# default function for arg input validation
+def regex_validator(regexes):
+	"""Returns a validator function that considers its input valid
+	if it matches any of the ``regexes`` list's items."""
+	# TODO: also accept string as parameter, not only list
+	# regex validator function expecting an argument configuration and
+	# value string as parameters
+	def validator(arg, str):
+		valid = any([r.search(str) for r in regexes])
+		return valid
+	# return customly configurated regex validator function
+	return validator
+
 
 
 # calls an argument placeholder's propose handler and
