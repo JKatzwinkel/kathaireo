@@ -102,9 +102,7 @@ __docformat__ = "restructuredtext en"
 __version__ = "0.0.12-dev"
 __all__ = ['rdf', 'commands', 'shell', 'cmd_handler']
 
-import rdf
-import commands
-import shell
+from kathaireo import rdf, commands, shell
 
 # decorator for command handler functions
 cmd_handler=commands.register_handler
@@ -116,4 +114,4 @@ be registered for any command syntax declared
 within their docstring."""
 
 # demo module showing example custom command declaration
-import extended
+from kathaireo import extended

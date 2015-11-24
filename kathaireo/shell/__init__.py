@@ -28,7 +28,7 @@ __all__ = ['prompt', 'highlights', 'complete', 'run']
 import readline
 
 from . import prompt
-from .. import rdf, commands, util
+from kathaireo import rdf, commands, util
 
 
 def complete(input, state):
@@ -80,7 +80,7 @@ def run():
 	# go!
 	line=''
 	while True:
-		line = prompt.input()
+		line = prompt.readline()
 		readline.redisplay()
 		output = commands.execute(line)
 		prompt.display(output)

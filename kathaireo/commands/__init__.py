@@ -52,8 +52,8 @@ __version__ = "0.0.24-dev"
 import re
 import os
 
-import arguments
-import handlers
+from . import arguments
+from . import handlers
 from .. import rdf
 from .. import util
 
@@ -102,10 +102,10 @@ def register_handler(func):
 	root module (:mod:`..kathaireo``).
 	"""
 	hnd_ns = handlers.__dict__
-	fname = func.func_name
+	fname = func.__name__
 	if fname in hnd_ns:
-		print 'Overwrite handler module pointer {} with'.format(fname),
-		print 'new command handler function at {}.'.format(func.func_code.co_filename)
+		print('Overwrite handler module pointer {} with'.format(fname), end='')
+		print('new command handler function at {}.'.format(func.__code__.co_filename))
 	hnd_ns[fname] = func
 	# if `command ...` is defined in doc line, register
 	sntxs = handlers.extract_cmd_syntax(fname)
@@ -113,7 +113,7 @@ def register_handler(func):
 		for syntax in sntxs:
 			register(syntax, func)
 	else:
-		print "Couldn't find handler function {}!".format(fname)
+		print("Couldn't find handler function {}!".format(fname))
 	return func
 
 
@@ -196,7 +196,7 @@ def register(syntax, function):
 	else:
 		msg=' '.join(['Failed to register function {}{};',
 			'command syntax \"{}\" already binds',
-			'function {}'.format(boundf.func_name)])
+			'function {}'.format(boundf.__name__)])
 		res = False
 	# print msg.format(function.func_name,
 	# 	function.func_code.co_varnames[:2],
@@ -482,11 +482,11 @@ def init():
 			for syntax in sntxs:
 				register(syntax, func)
 		else:
-			print "Not found!"
+			print("Not found!")
 	# read, compile, register stdcmd.py
 	# ok. read commands from stdcmd.py
-	import stdcmd
-	print 'parse', stdcmd.__file__
+	from . import stdcmd
+	print('parse', stdcmd.__file__)
 	for fn, cc in stdcmd.__dict__.items():
 		if hasattr(handlers, fn):
 			f = handlers.__dict__.get(fn)
@@ -496,7 +496,7 @@ def init():
 					register(c, f)
 	# TODO: arguments!
 	del stdcmd
-	print 'done.'
+	print('done.')
 
 
 

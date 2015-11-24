@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 import os
 import rdflib
 
@@ -37,7 +37,7 @@ class Namespace:
 					else:
 						self.classes.append(str(s))
 			self.properties = list(set(self.properties))
-			self.classes = [i for i in set(self.classes) 
+			self.classes = [i for i in set(self.classes)
 											if not i in self.properties] # TODO
 		except:
 			pass
@@ -62,7 +62,7 @@ def load(name, url):
 			ns = Namespace(name, url)
 		return ns #TODO: overwrite url?
 	except Exception as e:
-		print e
+		print(e)
 		return None
 
 
@@ -107,12 +107,12 @@ def reg_graph(g):
 	by loaded graphs are stored at a common location.
 	"""
 	if g:
-		rdfns = {ns:load(ns,str(url)) for ns, url in g.namespaces() 
+		rdfns = {ns:load(ns,str(url)) for ns, url in g.namespaces()
 			if not ns in _namespaces}
 		# insert namespace directory into global registry
 		_namespaces.update(rdfns)
 		# cross file names under urls
-		prfxs = {unicode(url).rstrip('/#'):get(n) 
+		prfxs = {unicode(url).rstrip('/#'):get(n)
 						for n, url in g.namespaces()}
 		_prefixes.update(prfxs)
 		# copy namespace references to module variable namespace
@@ -144,7 +144,7 @@ def get_names():
 
 # list known namespaces
 def spaces():
-	return [_namespaces[n] for n in 
+	return [_namespaces[n] for n in
 		sorted(_namespaces.keys())]
 
 
@@ -154,14 +154,14 @@ def get(name):
 
 
 # FIXME: this is not good on machines without internet connection!!
-# _namespaces['rdf'] = Namespace('rdf', 
+# _namespaces['rdf'] = Namespace('rdf',
 # 	'http://www.w3.org/1999/02/22-rdf-syntax-ns#')
 # _namespaces.get('rdf').properties.extend(['type'])
 # _namespaces.get('rdf').classes.extend(['Property', 'Class'])
 
-# _namespaces['rdfs'] = Namespace('rdfs', 
+# _namespaces['rdfs'] = Namespace('rdfs',
 # 	'http://www.w3.org/2000/01/rdf-schema#')
-# _namespaces.get('rdfs').properties.extend(['domain', 'range', 
+# _namespaces.get('rdfs').properties.extend(['domain', 'range',
 # 	'label', 'comment', 'subClassOf'])
 # _namespaces.get('rdfs').classes.extend([])
 

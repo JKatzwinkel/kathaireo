@@ -11,7 +11,7 @@ import getopt
 from kathaireo import shell
 
 def main():
-	import html5lib
+	#import html5lib
 	import sqlalchemy
 	welcome=[
 		'This is {}, version "{}".'.format(__file__, __version__),
@@ -19,7 +19,7 @@ def main():
 		' *rdflib_sqlalchemy* version: {}'.format(
 		shell.rdf.storage.rdflib_sqlalchemy.__version__),
 		' *sqlalchemy* version: {}'.format(sqlalchemy.__version__),
-		' *html5lib* version: {}'.format(html5lib.__version__),
+		#' *html5lib* version: {}'.format(html5lib.__version__),
 		' *urllib2* version: {}'.format(shell.rdf.remote.urllib2.__version__),
 		'*stats:*',
 		' default commands ready: {}'.format(
@@ -33,7 +33,7 @@ def main():
 		#welcome.append(' {} at {}: version="{}"'.format(
 			#mod.__name__, mod.__path__, mod.__version__))
 	del sqlalchemy
-	del html5lib
+	#del html5lib
 	#shell.prompt.col_demo()
 	shell.prompt.display(welcome)
 	shell.run()

@@ -19,9 +19,9 @@ import rdflib
 import re
 import codecs
 
-import namespaces as ns
-import storage
-import remote
+from . import namespaces as ns
+from . import storage
+from . import remote
 
 
 # directory of existing rdflib.Graph instances, identified
@@ -181,7 +181,7 @@ def load_resource(location, name=None):
 				try:
 					# call rdflib graph parse method
 					#print 'apply format {} to file {}.'.format(mime, location)
-					print 'parsing attempt using mimetype:', mime
+					print('parsing attempt using mimetype: ', mime)
 					#f = codecs.open(location, encoding='utf-8', mode='rb')
 					g = g.parse(location, format=mime)
 					#f.close()
@@ -190,19 +190,19 @@ def load_resource(location, name=None):
 				if g:
 					try:
 						# register namespaces
-						print 'register namespaces bound by graph'
+						print('register namespaces bound by graph')
 						ns.reg_graph(g)
 					except Exception as e:
-						print e.message
-						print e
+						print(e.message)
+						print(e)
 					try:
-						print 'populate namespace container with terms discovered in graph.'
+						print('populate namespace container with terms discovered in graph.')
 						extract_ns_terms(g)
 						return g
 					except Exception as e:
 						#print 'source apparently no {}.'.format(mime)
-						print e.message
-						print e
+						print(e.message)
+						print(e)
 						pass
 			# if none of the default formats could be recognized in
 			# source, return None

@@ -40,13 +40,13 @@ def extract_cmd_syntax(fname):
 	func = globals().get(fname)
 	if func != None:
 		res = []
-        # command syntax extraction from __doc__
-        fdoc = func.func_doc
-        if fdoc:
-	        for line in fdoc.split('\n'):
-	        	sntxs = re.findall('^\s*`([^`]+)`', line)
-	        	res.extend(sntxs)
-        return res
+		# command syntax extraction from __doc__
+		fdoc = func.__doc__
+		if fdoc:
+			for line in fdoc.split('\n'):
+				sntxs = re.findall('^\s*`([^`]+)`', line)
+				res.extend(sntxs)
+		return res
 
 
 # retrieve standard stuff like <graph>

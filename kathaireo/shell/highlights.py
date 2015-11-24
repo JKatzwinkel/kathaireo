@@ -124,9 +124,8 @@ def color(i):
 def col_demo():
 	"""Prints an overview of the available highlights."""
 	for i,col in enumerate(_colors):
-		print '{}{:2}{}'.format(color(i), i, color(0)),
-		if i % 8 > 6:
-			print
+		print('{}{:2}{}'.format(color(i), i, color(0)),
+			end = '\n' if i % 8 > 6 else '')
 
 
 # returns a colored representation of a given token
@@ -180,4 +179,4 @@ def hilite(token):
 
 ########
 stdcol=0
-print u'{}\r'.format(color(stdcol)),
+print(u'{}\r'.format(color(stdcol)), end = '')

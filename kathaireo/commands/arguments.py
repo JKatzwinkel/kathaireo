@@ -139,8 +139,8 @@ def proposer(func):
 	# in this module's namespace
 	ns = globals()
 	if ns.get(func.func_name):
-		print 'overwriting completion proposal function {}.'.format(
-			func.func_name)
+		print('overwriting completion proposal function {}.'.format(
+			func.func_name))
 	ns[func.func_name] = func
 	# parse docstring of decorated func for references of
 	# arguments it is meant to take care of (as a propose handler)

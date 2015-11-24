@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 """\
 This module tries to download rdf contents from places remote
 from the hard disk of the machine we're running on.
@@ -7,7 +7,7 @@ from the hard disk of the machine we're running on.
 __docformat__ = "restructuredtext en"
 __version__ = "0.0.1b-dev"
 
-import urllib2
+import urllib.request as urllib2
 
 mimetypes = ['application/rdf+xml', 'text/n3', 'text/turtle',
 	'application/n-triples','application/x-trig', 'text/owl-functional']
@@ -21,11 +21,11 @@ def parse(g, location, format=None, guesses=mimetypes[:3]):
 	"""\
 	Attempts to parse an RDF resource at a certain location
 	by first downloading and then parsing it offline.
-	Choice of parsing implementation depends on `format` 
+	Choice of parsing implementation depends on `format`
 	parameter; By default, source format autodetection is
 	applied, followed by a few attempts on forcing
 	specific format parsers to process the source, determined
-	by frequent mimetypes listed in :data:`.mimetypes`. 
+	by frequent mimetypes listed in :data:`.mimetypes`.
 
 	Whilst this behaviour will handle RDF sources reliably
 	in most cases, the episode of wild guessing beginning
@@ -55,9 +55,9 @@ def parse(g, location, format=None, guesses=mimetypes[:3]):
 	except Exception as e:
 		if 'Errno -2' in '{}'.format(e):
 			# netz nicht erreichbar
-			print 'Can\'t get {}: network unreachable!'.format(location)
+			print('Can\'t get {}: network unreachable!'.format(location))
 		else:
-			print 'Can\'t get {}.'.format(location)
+			print('Can\'t get {}.'.format(location))
 		return None
 
 	# print conne.headers.dict
@@ -69,7 +69,7 @@ def parse(g, location, format=None, guesses=mimetypes[:3]):
 		g = g.parse(data=content, format=format)
 		return g
 	except:
-		# if (autodetect) parsing fails, 
+		# if (autodetect) parsing fails,
 		# try again a few times, guessing the right format
 		if len(guesses)>0:
 			if format in guesses:
@@ -82,7 +82,7 @@ def parse(g, location, format=None, guesses=mimetypes[:3]):
 					return g
 				except:
 					# output debug msg
-					print 'mimetype {} failed.'.format(mime)
+					print('mimetype {} failed.'.format(mime))
 		# if nothing worked at all, return None
 		return None
 
@@ -94,7 +94,7 @@ def is_internet_available():
 		response = urllib2.socket.gethostbyaddr('8.8.8.8')
 		if 'google.com' in response[0]:
 			return True
-		print response
+		print(response)
 		return False
 	except:
 		return False

@@ -41,7 +41,7 @@ if not hasattr(rdf, 'current_graph'):
 	rdf.set_graph(None)
 
 # wait for input
-def input():
+def readline():
 	"""
 	Displays a single prompt, indicating the RDF
 	graph currently selected for operation, then waits for user input.
@@ -53,8 +53,8 @@ def input():
 	automatic keyword completion.
 	"""
 	gname = rdf.graph_name(rdf.current_graph)
-	line = raw_input(PS.format(gname))
-	print ''.join([color(0), color(stdcol),'\r']),
+	line = input(PS.format(gname))
+	print(''.join([color(0), color(stdcol),'\r']), end='')
 	return line
 
 
@@ -106,17 +106,15 @@ def display(output):
 	list of strings (linebreaks are ignored). Unicode is preferred.
 	"""
 	# prefer list of strings, so try to force content into one
-	if type(output) != unicode:
+	if type(output) != str:
 		if type(output) is not list:
 			output = u'{}'.format(output)
-	else:
-		output = unicode(output)
-	if type(output) is unicode:
+	if type(output) is str:
 		output = output.split('\n')
 	# colorize single tokens
 	for item in output:
 		line = u'{}'.format(item)
 		tokens = tokenize(line)
-		print ''.join([hilite(t) for t in tokens])
+		print(''.join([hilite(t) for t in tokens]))
 
 
