@@ -394,7 +394,7 @@ def choices_left(input, csrange):
 	# possibility 2): input ends where a value should follow
 	# or is partly typed in
 	#print 'fragment, keys:', term, level.keys()
-	choices1 = level.keys()[:]
+	choices1 = [k for k in level.keys()]
 	util.log('autocomplete: possible input is {}.'.format(choices1))
 	#print term, ':', choices1
 	choices = []
