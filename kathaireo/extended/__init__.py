@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 """\
 Some additional functionality, e.g. for debugging reasons."""
 __docformat__ = "restructuredtext en"
@@ -24,10 +24,9 @@ def ls_cmd(*args, **kwargs):
 				np = ' '.join([path, k])
 				if type(v) is dict:
 					deeper[np] = v
-					#print path, k
 				else:
 					cmds.append(np)
-			del heads[path]
+			heads[path] = {}
 		heads.update(deeper)
 		going = len(deeper)>0
 	return '\n'.join(sorted(cmds))
