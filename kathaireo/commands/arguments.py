@@ -101,7 +101,7 @@ class Argument(object):
 		of the regular expressions in this instance's ``format`` list."""
 		#TODO: maybe not have configuration keep list of regexes, but its own function instead
 		#valid = any([r.search(str) for r in self.format])
-		valid = self.validate_func.__call__(self, str)
+		valid = self.validator_func.__call__(self, str)
 		return valid
 
 	def resolve(self, str):
